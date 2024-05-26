@@ -1,0 +1,71 @@
+{
+  "name": "fyi-migration",
+  "version": "1.0.0",
+  "description": "Migration code for eaton.fyi.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    },
+    "import": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "/dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "shx rm -rf dist; pkgroll --minify",
+    "format": "prettier --config prettier.config.js 'src/**/*.ts' --write",
+    "lint": "eslint .",
+    "lint-and-fix": "eslint . --fix",
+    "prepare": "npm run build",
+    "migrate": "node --import=tsimp ./src/migrate.ts",
+    "test": "ava"
+  },
+  "author": "eaton",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eaton/fyi-migration.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "^8.57.0",
+    "@types/node": "^20.11.30",
+    "ava": "^6.1.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^8.10.0",
+    "pkgroll": "^2.0.2",
+    "prettier": "^3.2.5",
+    "prettier-plugin-organize-imports": "^3.2.4",
+    "shx": "^0.3.4",
+    "tsimp": "^2.0.11",
+    "typescript": "^5.4.3",
+    "typescript-eslint": "^7.9.0"
+  },
+  "dependencies": {
+    "@eatonfyi/dates": "github:eaton/dates",
+    "@eatonfyi/fs-jetpack": "github:eaton/fs-jetpack",
+    "@eatonfyi/html": "github:eaton/html",
+    "@eatonfyi/ids": "github:eaton/ids",
+    "@eatonfyi/serializers": "github:eaton/serializers",
+    "@eatonfyi/text": "github:eaton/text",
+    "@eatonfyi/urls": "github:eaton/urls",
+    "arangojs": "^8.8.1",
+    "dotenv": "^16.4.5",
+    "emptier": "^1.0.0",
+    "empty-deep": "^1.0.0",
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.4",
+    "keyv": "^4.5.4",
+    "obby": "^1.2.0",
+    "wretch": "^2.8.1",
+    "zod": "^3.23.8"
+  }
+}
