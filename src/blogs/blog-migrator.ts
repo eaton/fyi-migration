@@ -1,5 +1,5 @@
+import { MarkdownPost } from "../schemas/markdown-post.js";
 import { Migrator, MigratorOptions } from "../util/migrator.js";
-import { JekyllPost } from "./alt-jekyll/schema.js";
 
 export interface BlogMigratorOptions extends MigratorOptions {
   assetInput?: string,
@@ -11,7 +11,7 @@ export interface BlogMigratorOptions extends MigratorOptions {
  * Common code and defaults for blog posts from a variety of locations.
  * In particular, copying and de-duplicating file assets.
  */
-export class BlogMigrator<T = JekyllPost> extends Migrator {
+export class BlogMigrator<T = Record<string, unknown>> extends Migrator {
   declare options: BlogMigratorOptions;
   protected queue: T[] = [];
 
@@ -23,6 +23,15 @@ export class BlogMigrator<T = JekyllPost> extends Migrator {
         { overwrite: true }
       );
     }
+  }
+
+  protected dateToDate(input: Date | undefined) {
+    return input?.toISOString().split('T')[0];
+  }
+
+  protected prepMarkdownFile(input: T): MarkdownPost | undefined {
+    if (input) return undefined;
+    else return undefined;
   }
 
   /**

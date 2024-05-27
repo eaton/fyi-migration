@@ -41,12 +41,16 @@ export const FrontmatterSchema = z.object({
   keywords: z.array(z.string()).optional(),
 
   layout: z.string().optional(),
+  published: z.boolean().optional(),
   eleventyNavigation: EleventyNavigationSchema.optional(),
+
+  migration: z.record(z.unknown()).optional(),
+  engagement: z.record(z.number().or(z.string())).optional()
 });
 
 export const MarkdownPostSchema = z.object({
   file: z.string().optional(),
-  data: FrontmatterSchema.optional(),
+  data: FrontmatterSchema,
   content: z.string().optional()
 });
 

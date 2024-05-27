@@ -1,7 +1,6 @@
 import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import { extract, fromLivejournal, toMarkdown, autop } from "@eatonfyi/html";
 import { toSlug } from '@eatonfyi/text';
-import { FrontmatterInput } from "@eatonfyi/serializers";
 import { isBefore, isAfter } from '@eatonfyi/dates';
 
 import { parseSemagicFile } from "./semagic.js";
@@ -10,6 +9,7 @@ import {
   xmlSchema,
   type LivejournalEntry,
 } from './schema.js'
+import { MarkdownPost } from "../../schemas/markdown-post.js";
 
 export interface LivejournalImportOptions extends BlogMigratorOptions {
   ignoreBefore?: Date,
@@ -107,7 +107,12 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
 
   override async finalize() {
     for (const e of this.queue) {
-      this.output.write(this.entryToFilename(e, 'md'), this.entryToMarkdown(e));
+      const { file, ...entry } = this.prepMarkdownFile(e);
+      if (file) {
+        this.output.write(file, entry);
+      } else {
+        this.log.error(e);
+      }
     }
     await this.copyAssets();
   }
@@ -118,21 +123,30 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
     return `${date}-${slug}.${extension}`
   }
 
-  protected entryToMarkdown(input: LivejournalEntry) {
-    input.body &&= toMarkdown(autop(input.body, false));
-    const md: FrontmatterInput = {
-      data: {
-        date: { created: input.date },
-        id: { lj: input.id },
-      },
-      content: input.body ?? ''
-    };
+  protected override prepMarkdownFile(input: LivejournalEntry) {
+    const md: MarkdownPost = { data: {} };
 
-    if (input.subject) md.data.name = input.subject;
-    if (input.mood) md.data.mood = input.mood;
-    if (input.music) md.data.music = input.music;
-    if (input.avatar) md.data.avatar = input.avatar;
-    if (input.comments?.length) md.data.comments = input.comments.length;
+    md.file = this.entryToFilename(input, 'md');
+
+    md.data.title = input.subject;
+    md.data.date = input.date;
+    md.data.id = `entry/lj-${input.id}`;
+    
+    md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
+
+    md.data.migration = {
+      source: 'livejournal',
+      entryId: input.id
+    };
+    if (input.mood) md.data.migration.mood = input.mood;
+    if (input.music) md.data.migration.music = input.music;
+    if (input.avatar) md.data.migration.avatar = input.avatar;
+      
+    if (input.comments?.length) md.data.engagement = { comments: input.comments.length };
+
+    // If there's a table full of photos in the markup, we also want to set the layout
+    // to 'photo post' or something like that; that comes later, though.
+    // if (hasPhotoTable) md.data.layout = 'photos';
 
     return md;
   }

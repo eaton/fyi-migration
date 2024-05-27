@@ -1,6 +1,8 @@
 import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import { Frontmatter } from "@eatonfyi/serializers";
 import { jekyllPostSchema, type JekyllPost } from "./schema.js";
+import { type MarkdownPost } from "../../schemas/markdown-post.js";
+import { toSlug } from "@eatonfyi/text";
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -13,7 +15,7 @@ const defaults: BlogMigratorOptions = {
   assetOutput: 'src/_static/alt',
 }
 
-export class JekyllImport extends BlogMigrator<JekyllPost> {
+export class JekyllImport extends BlogMigrator<MarkdownPost> {
   constructor(options: BlogMigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -44,13 +46,36 @@ export class JekyllImport extends BlogMigrator<JekyllPost> {
     const data = await this.readCache();
 
     for (const e of data) {
-      if (e?.file) {
-        const [, date, slug] = /(\d{4}-\d{2}-\d{2})-(.+)\.md/.exec(e.file) ?? [];
-        e.data.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined
-        e.data.slug ??= slug;
-      }
-      this.queue.push(e);
+      this.queue.push(this.prepMarkdownFile(e));
     }
+  }
+
+  protected override prepMarkdownFile(input: JekyllPost) {
+    const md: MarkdownPost = { data: {} };
+
+    md.data.title = input.data.title;
+    md.data.date = input.data.date;
+    md.data.summary = input.data.summary;
+    md.data.excerpt = input.data.excerpt;
+    md.data.layout = input.data.layout;
+    md.data.published = input.data.published;
+
+    if (input?.file) {
+      const [, date, slug] = /(\d{4}-\d{2}-\d{2})-(.+)\.md/.exec(input.file) ?? [];
+      md.data.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined
+      md.data.slug ??= slug;
+    }
+
+    // If a slug doesn't exist, construct one by slugifying the title.
+    md.data.slug ??= toSlug(md.data.title)
+
+    // If a filename doesn't already exist, construct one from the date and the slug.
+    md.file = input.file ?? [this.dateToDate(md.data.date), md.data.slug].join('-') + '.md'
+    md.content = input.content;
+    
+    md.data.migration = { source: 'alt-jekyll' };
+
+    return md;
   }
 
   override async finalize() {

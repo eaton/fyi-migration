@@ -4,7 +4,7 @@ export const jekyllPostSchema = z.object({
   file: z.string().optional(),
   data: z.object({
     title: z.string(),
-    // layout: z.string().optional(), // We're ignoring this, as they're all the same
+    layout: z.string().optional(),
     date: z.date().optional(),
     summary: z.string().optional(),
     excerpt: z.string().optional(),
