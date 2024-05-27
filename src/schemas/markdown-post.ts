@@ -36,6 +36,7 @@ export const FrontmatterSchema = z.object({
   headline: z.string().optional(),
   dek: z.string().optional(),
   excerpt: z.string().optional(),
+  image: z.string().optional(),
 
    // We use this instead of 'tags' because 11ty auto-generates collections for 'tags'
   keywords: z.array(z.string()).optional(),

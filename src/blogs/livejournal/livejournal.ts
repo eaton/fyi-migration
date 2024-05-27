@@ -135,7 +135,7 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
     md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
 
     md.data.migration = {
-      source: 'livejournal',
+      site: 'site/livejournal',
       entryId: input.id
     };
     if (input.mood) md.data.migration.mood = input.mood;

@@ -68,7 +68,16 @@ export class Migrator {
   }
 
   get log() {
-    this._logger ??= this.options.logger ?? pino({ name: this.name });
+    this._logger ??= this.options.logger ?? pino({
+      name: this.name,
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          ignore: 'pid,hostname,time'
+        }
+      }
+    });
     return this._logger;
   }
 
@@ -118,6 +127,7 @@ export class Migrator {
      * Perform internal processing steps necessary to scrub, reformat, etc. any of the cached data.
      */
     async process(): Promise<unknown> {
+      await this.readCache();
       return Promise.resolve();
     }
   

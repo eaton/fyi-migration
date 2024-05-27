@@ -73,7 +73,7 @@ export class JekyllImport extends BlogMigrator<MarkdownPost> {
     md.file = input.file ?? [this.dateToDate(md.data.date), md.data.slug].join('-') + '.md'
     md.content = input.content;
     
-    md.data.migration = { source: 'alt-jekyll' };
+    md.data.migration = { site: 'site/alt-jekyll' };
 
     return md;
   }
