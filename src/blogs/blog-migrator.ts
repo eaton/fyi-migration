@@ -25,8 +25,9 @@ export class BlogMigrator<T = Record<string, unknown>> extends Migrator {
     }
   }
 
-  protected dateToDate(input: Date | undefined) {
-    return input?.toISOString().split('T')[0];
+  protected dateToDate(input: string | Date | undefined) {
+    if (typeof input === 'string') return input.split('T')[0];
+    return input?.toISOString()?.split('T')[0];
   }
 
   protected prepMarkdownFile(input: T): MarkdownPost | undefined {
