@@ -18,6 +18,7 @@ Posts and entries from the assorted places I've written over the years. These ar
 - [ ] Medium (minus Growing Up Goddy reprints)
 - [ ] Drupal (Via Positiva, ALT, Growing Up Goddy, Kirkegaard Lips)
 - [x] Jekyll (Angry Little Tree)
+- [ ] Disqus comments spread across both iterations of the AngryLittleTree site
 
 ## Social Media
 
