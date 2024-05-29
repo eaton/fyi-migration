@@ -10,12 +10,10 @@ const defaults: BlogMigratorOptions = {
   description: 'Posts, comments, and images from the Jekyll version of angrylittletree.com',
   input: 'input/blogs/angrylittletree-jekyll',
   cache: 'cache/blogs/angrylittletree-jekyll',
-  output: 'src/entries/alt-jekyll',
-  assetInput: 'input/blogs/angrylittletree-jekyll/files',
-  assetOutput: 'src/_static/alt',
+  output: 'src/entries/alt',
 }
 
-export class JekyllImport extends BlogMigrator<MarkdownPost> {
+export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
   constructor(options: BlogMigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -28,6 +26,7 @@ export class JekyllImport extends BlogMigrator<MarkdownPost> {
     const entries: JekyllPost[] = [];
     const files = this.input.find({ matching: '*.md' });
     for (const file of files) {
+      this.log.debug(`Parsing ${file}`);
       await this.input.readAsync(file, 'auto')
         .then((data: Frontmatter) => jekyllPostSchema.safeParse({ file, ...data }))
         .then(result => {
@@ -73,7 +72,7 @@ export class JekyllImport extends BlogMigrator<MarkdownPost> {
     md.file = input.file ?? [this.dateToDate(md.data.date), md.data.slug].join('-') + '.md'
     md.content = input.content;
     
-    md.data.migration = { site: 'site/alt-jekyll' };
+    md.data.migration = { site: 'alt-jekyll' };
 
     return md;
   }
@@ -82,12 +81,21 @@ export class JekyllImport extends BlogMigrator<MarkdownPost> {
     for (const e of this.queue) {
       const { file, ...contents } = e;
       if (file) {
+        this.log.debug(`Outputting ${file}`);
         this.output.write(file, contents);
       } else {
         this.log.error(e);
       }
     }
 
-    await this.copyAssets();
+    this.data.bucket('sites').set('alt-jekyll', {
+      id: 'alt-jekyll',
+      url: 'https://angrylittletree.com',
+      title: 'Angry Little Tree',
+      hosting: 'Github Pages',
+      software: 'Jekyll',
+    });
+
+    await this.copyAssets('files', 'alt');
   }
 }

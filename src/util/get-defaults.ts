@@ -18,6 +18,8 @@ export function getDefaults() {
     input: process.env.MIGRATION_INPUT ?? 'input',
     cache: process.env.MIGRATION_CACHE ?? 'cache',
     output: process.env.MIGRATION_OUTPUT ?? 'output',
+    assets: process.env.MIGRATION_ASSETS ?? 'assets',
+    data: process.env.MIGRATION_DATA ?? 'data',
   }
 }
 

@@ -21,7 +21,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "shx rm -rf dist; pkgroll --minify",
+    "build": "shx rm -rf dist; shx rm -rf .tsimp; pkgroll --minify",
     "format": "prettier --config prettier.config.js 'src/**/*.ts' --write",
     "lint": "eslint .",
     "lint-and-fix": "eslint . --fix",

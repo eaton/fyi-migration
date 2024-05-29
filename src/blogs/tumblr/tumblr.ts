@@ -4,6 +4,8 @@ import { type TumblrPost, type TumblrBlog, UserInfoSchema, BlogSchema, TumblrUse
 import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { toSlug } from "@eatonfyi/text";
 import { toMarkdown } from "@eatonfyi/html";
+import { nanohash } from '@eatonfyi/ids'
+import { normalize } from "@eatonfyi/urls";
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
@@ -17,11 +19,8 @@ const defaults: TumblrMigratorOptions = {
   name: 'tumblr',
   label: 'Tumblr',
   description: 'Posts from various Tumblr blogs',
-
-  assetInput: 'input/blogs/tumblr/files',
   cache: 'cache/blogs/tumblr',
   output: 'src/entries/tumblr',
-  assetOutput: 'src/_static/tumblr',
 
   consumer_key: process.env.TUMBLR_CONSUMER_KEY ?? undefined,
   consumer_secret: process.env.TUMBLR_CONSUMER_SECRET ?? undefined,
@@ -31,7 +30,7 @@ const defaults: TumblrMigratorOptions = {
   blogs: ['cmswhoops', 'govertainment', 'plf', 'tomyformerself']
 }
 
-export class TumblrMigration extends BlogMigrator<TumblrPost> {
+export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   declare options: TumblrMigratorOptions;
 
   blogs?: TumblrBlog[] = []; // Records for individual Tumblr blogs
@@ -51,6 +50,8 @@ export class TumblrMigration extends BlogMigrator<TumblrPost> {
       this.log.error('No Tumblr auth tokens were given.');
       return Promise.reject();
     }
+
+    this.log.debug(`Hitting Tumblr API`);
 
     const t = new Client({
       consumer_key: this.options.consumer_key,
@@ -100,6 +101,7 @@ export class TumblrMigration extends BlogMigrator<TumblrPost> {
       const md = this.prepMarkdownFile(e);
       const { file, ...post } = md;
       if (file) {
+        this.log.debug(`Outputting ${file}`);
         this.output.write(file, post);
       } else {
         this.log.error(e);
@@ -108,7 +110,7 @@ export class TumblrMigration extends BlogMigrator<TumblrPost> {
 
     this.writeBlogInfo();
     this.writeLinks();
-    await this.copyAssets();
+    await this.copyAssets('blogs/tumblr/files', 'tumblr');
   }
 
   protected override prepMarkdownFile(input: TumblrPost): MarkdownPost {
@@ -127,7 +129,7 @@ export class TumblrMigration extends BlogMigrator<TumblrPost> {
     }
   
     md.data.migration = {
-      site: `site/tumblr-${input.blog_name}`,
+      site: `${input.blog_name}`,
       tumblrId: input.id,
       type: input.type,
     };
@@ -153,24 +155,34 @@ export class TumblrMigration extends BlogMigrator<TumblrPost> {
   protected writeBlogInfo() {
     if (this.blogs) {
       for (const blog of this.blogs) {
-        const blogMd: MarkdownPost = {
-          file: blog.name + '.md',
-          data: {
-            id: 'site/tumblr-' + blog.name,
-            title: blog.title,
-            summary: blog.description,
-            url: blog.url,
-          },
-          content: '',
-        }
-
-        const { file, ...post } = blogMd;
-        this.root.dir('src/sites').write(`tumblr-${file}`, post);
+        this.data.bucket('sites').set(blog.name!, {
+          id: blog.name,
+          title: blog.title,
+          summary: blog.description,
+          url: blog.url,
+          hosting: 'Tumblr',  
+        });
       }
     }
   }
 
   protected writeLinks() {
-    this.log.debug(`TODO: writeLinks() implementation for Tumblr. Skipping ${this.links?.length ?? 0} links`);
+    const linkStore = this.data.bucket('links');
+    for (const l of this.links ?? []) {
+      if (l.url) {
+        const link = {
+          url: normalize(l.url),
+          date: l.date || undefined,
+          title: l.title || l.source_title || undefined,
+          description: l.body || l.description || l.summary || undefined,
+          source: l.blog_name,
+        };
+
+        // Lotta wacky stuff happening, friends.
+        if (link.description) link.description = toMarkdown(link.description);
+
+        linkStore.set(nanohash(link.url), link)
+      }
+    }
   }
 }

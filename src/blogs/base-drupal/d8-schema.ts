@@ -9,14 +9,8 @@ const epochString = z.number().or(z.string())
 const intString = z.number().or(z.string())
   .transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v);
 
-const serializedPHP = z.string().transform(s => {
-  const php = new Php();
-  try {
-    return php.parse(s);
-  } catch {
-    return undefined;
-  }
-});
+const serializedPHP = z.string().transform(s => new Php().parse(s));
+
 export const commentSchema = z.object({
   cid: intString,
   pid: intString.optional(),

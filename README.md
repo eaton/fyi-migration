@@ -11,6 +11,7 @@ Posts and entries from the assorted places I've written over the years. These ar
 `Textfiles` and `Livejournal` in particular will probably need some post-migration curation and careful consideration. Many of those posts were never intended to be publicly published, are extremely full of teen and post-college cringe, or contain snippets of personal information about folks who probably didn't anticipate their melodrama spilling out.
 
 - [ ] Textfiles (woof)
+- [x] Predicate.net
 - [x] Livejournal (minus Textfiles reprints)
 - [ ] MovableType (Viapositiva, Reading Life, Futurism)
 - [x] Tumblr (PLF, Govertainment, CMS Whoops, To My Former Self)

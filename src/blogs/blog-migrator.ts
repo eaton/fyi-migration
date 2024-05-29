@@ -1,9 +1,10 @@
+import { toSlug } from "@eatonfyi/text";
 import { MarkdownPost } from "../schemas/markdown-post.js";
 import { Migrator, MigratorOptions } from "../util/migrator.js";
+import { nanoid } from "@eatonfyi/ids";
+import jetpack from "@eatonfyi/fs-jetpack";
 
 export interface BlogMigratorOptions extends MigratorOptions {
-  assetInput?: string,
-  assetOutput?: string,
   commentOutput?: string,
 }
 
@@ -15,14 +16,10 @@ export class BlogMigrator<T = Record<string, unknown>> extends Migrator {
   declare options: BlogMigratorOptions;
   protected queue: T[] = [];
 
-  async copyAssets() {
-    if (this.options.assetInput && this.options.assetOutput) {
-      return this.input.copyAsync(
-        this.root.dir(this.options.assetInput).path(),
-        this.root.dir(this.options.assetOutput).path(),
-        { overwrite: true }
-      );
-    }
+  protected toFilename(date: string | Date | undefined, title: string | undefined, suffix = '.md') {
+    const segments = [this.dateToDate(date), title ? toSlug(title.slice(0,32)) : undefined].filter(a => !!a);
+    if (segments.length === 0) segments.push(nanoid());
+    return segments.join('-') + suffix;
   }
 
   protected dateToDate(input: string | Date | undefined) {

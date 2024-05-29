@@ -1,6 +1,5 @@
 import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import { extract, fromLivejournal, toMarkdown, autop } from "@eatonfyi/html";
-import { toSlug } from '@eatonfyi/text';
 import { isBefore, isAfter } from '@eatonfyi/dates';
 
 import { parseSemagicFile } from "./semagic.js";
@@ -11,44 +10,43 @@ import {
 } from './schema.js'
 import { MarkdownPost } from "../../schemas/markdown-post.js";
 
-export interface LivejournalImportOptions extends BlogMigratorOptions {
+export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date,
   ignoreAfter?: Date,
   ignoreComments?: boolean,
 }
 
-const defaults: LivejournalImportOptions = {
+const defaults: LivejournalMigrateOptions = {
   name: 'lj',
   label: 'Livejournal',
   description: 'Posts, comments, and images from Livejournal',
   ignoreBefore: new Date('2001-06-01'),
   input: 'input/blogs/livejournal',
-  assetInput: 'input/blogs/livejournal/media/lj-photos',
   cache: 'cache/blogs/livejournal',
   output: 'src/entries/lj',
-  assetOutput: 'src/_static/predicate/users/verb/lj',
 }
 
-export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
-  declare options: LivejournalImportOptions;
+export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
+  declare options: LivejournalMigrateOptions;
 
-  constructor(options: LivejournalImportOptions = {}) {
+  constructor(options: LivejournalMigrateOptions = {}) {
     super({ ...defaults, ...options });
   }
 
   override async cacheIsFilled(): Promise<boolean> {
-    return this.cache.find({ matching: '*/*.json' }).length > 0;
+    return this.cache.find({ matching: '*.json', recursive: false }).length > 0;
   }
 
   async fillCache(): Promise<void> {
-    const sljFiles = this.input.find({ matching: '*.slj' });
+    const sljFiles = this.input.find({ matching: '*.slj', recursive: false });
     for (const file of sljFiles) {
+      this.log.debug(`Parsing ${file}`);
       const raw = this.input.read(file, 'buffer');
       if (raw) {
         try {
           const entry = parseSemagicFile(raw);
           if (entry) {
-            this.cache.write(this.entryToFilename(entry), entry);
+            this.cache.write(this.toFilename(entry.date, entry.subject || entry.id.toString(), '.json'), entry);
           }  
         } catch (err: unknown) {
           this.log.error({ err, file }, 'Error parsing Semagic file');
@@ -56,13 +54,15 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
       };
     }
 
-    const xmlFiles = this.input.find({ matching: '*.xml' });
+    const xmlFiles = this.input.find({ matching: '*.xml', recursive: false });
     for (const file of xmlFiles) {
+      this.log.debug(`Parsing ${file}`);
       const xml = this.input.read(file);
       if (xml) {
         const extracted = await extract(xml, xmlTemplate, xmlSchema, { xml: true });
         for (const entry of extracted) {
-          this.cache.write(this.entryToFilename(entry), entry);
+          const filename = this.toFilename(entry.date, entry.subject || entry.id.toString(), '.json');
+          this.cache.write(filename, entry);
         }  
       };
     }
@@ -72,7 +72,7 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
 
   override async readCache(): Promise<LivejournalEntry[]> {
     const entries: LivejournalEntry[] = [];
-    const files = this.cache.find({ matching: '*.json' });
+    const files = this.cache.find({ matching: '*.json', recursive: false });
     for (const file of files) {
       entries.push(this.cache.read(file, 'jsonWithDates') as LivejournalEntry);
     }
@@ -109,24 +109,27 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
     for (const e of this.queue) {
       const { file, ...entry } = this.prepMarkdownFile(e);
       if (file) {
+        this.log.debug(`Outputting ${file}`);
         this.output.write(file, entry);
       } else {
         this.log.error(e);
       }
     }
-    await this.copyAssets();
-  }
 
-  protected entryToFilename(input: LivejournalEntry, extension = 'json'): string {
-    const date = input.date.toISOString().split('T')[0]?.replace('/', '-') ?? '0000-00-00';
-    const slug = input.subject ? toSlug(input.subject.slice(0,32)) : input.id
-    return `${date}-${slug}.${extension}`
+    this.data.bucket('sites').set('livejournal', {
+      id: 'livejournal',
+      url: 'https://predicate.livejournal.com',
+      title: 'Livejournal',
+      hosting: 'Livejournal',
+    });
+
+    await this.copyAssets('media/lj-photos', 'lj');
   }
 
   protected override prepMarkdownFile(input: LivejournalEntry) {
     const md: MarkdownPost = { data: {} };
 
-    md.file = this.entryToFilename(input, 'md');
+    md.file = this.toFilename(input.date, input.subject || input.id.toString());
 
     md.data.title = input.subject;
     md.data.date = input.date;
@@ -135,7 +138,7 @@ export class LivejournalImport extends BlogMigrator<LivejournalEntry> {
     md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
 
     md.data.migration = {
-      site: 'site/livejournal',
+      site: 'livejournal',
       entryId: input.id
     };
     if (input.mood) md.data.migration.mood = input.mood;
