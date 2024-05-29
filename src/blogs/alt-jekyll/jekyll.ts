@@ -3,6 +3,7 @@ import { Frontmatter } from "@eatonfyi/serializers";
 import { jekyllPostSchema, type JekyllPost } from "./schema.js";
 import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { toSlug } from "@eatonfyi/text";
+import { nanohash } from "@eatonfyi/ids";
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -64,16 +65,19 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
       md.data.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined
       md.data.slug ??= slug;
     }
-
+  
     // If a slug doesn't exist, construct one by slugifying the title.
     md.data.slug ??= toSlug(md.data.title)
+
+    md.data.commentUrl = `http://angrylittletree.com/${md.data.date?.getFullYear()}/${md.data.date?.getUTCMonth()}/${md.data.slug}.html`;
+    md.data.commentGuid = nanohash(md.data.commentUrl);
 
     // If a filename doesn't already exist, construct one from the date and the slug.
     md.file = input.file ?? [this.dateToDate(md.data.date), md.data.slug].join('-') + '.md'
     md.content = input.content;
     
     md.data.migration = { site: 'alt-jekyll' };
-
+    
     return md;
   }
 

@@ -2,71 +2,88 @@ import { z } from 'zod';
 import { ExtractTemplateObject } from '@eatonfyi/html';
 
 export const xmlTemplate: ExtractTemplateObject = {
-  categories: {
-    $: 'category',
-    forum: '> forum',
+  categories: [{
+    $: 'disqus > category',
+    dsqId: '| xmlAttr:dsq%id',
     title: '> title',
-    isDefault: '> isDefault | parseAs:bool'
-  },
+    isDefault: '> isDefault'
+  }],
   threads: [{
-    $: 'thread',
-    dsqId: "|attr:'dsq:id'",
-    id: 'id',
-    forum:  '> forum',
-    category:  '> category',
-    link:  '> link',
+    $: 'disqus > thread',
+    dsqId: '| xmlAttr:dsq%id',
+    id: '> id',
+    forum: '> forum',
+    category: '> category | xmlAttr:dsq%id',
+    link: '> link',
     title: '> title',
-    createdAt: '> createdAt | parseAs:date',
+    message: '> message',
+    createdAt: '> createdAt',
     author: {
-      name: '> author > name',
-      isAnonymous: '> author > isAnonymous',
-      username: '> author > username'
+      $: '> author',
+      name: '> name | text',
+      isAnonymous: '> isAnonymous',
+      username: '> username | text',    
     },
-    isClosed: '> isClosed | parseAs:bool',
-    isDeleted: '> isDeleted | parseAs:bool'
+    isClosed: '> isClosed',
+    isDeleted: '> isDeleted',
   }],
   posts: [{
-    $: 'post',
-
+    $: 'disqus > post',
+    dsqId: '| xmlAttr:dsq%id',
+    id: '> id',
+    message: '> message',
+    createdAt: '> createdAt',
+    isDeleted: '> isDeleted',
+    isSpam: '> isSpam',
+    author: {
+      $: '> author',
+      name: '> name | text',
+      isAnonymous: '> isAnonymous',
+      username: '> username | text',    
+    },
+    thread: '> thread | xmlAttr:dsq%id',
+    parent: '> parent | xmlAttr:dsq%id',
   }]
 }
 
 export const categorySchema = z.object({
-  forum: z.string(),
+  forum: z.string().optional(),
   title: z.string(),
-  isDefault: z.boolean(),
-});
+  isDefault: z.unknown(),
+}).passthrough();
 
 export const authorSchema = z.object({
   name: z.string().optional(),
-  isAnonymous: z.boolean().optional(),
+  isAnonymous: z.unknown(),
   username: z.string().optional()
 });
+
+export const postSchema = z.object({
+  dsqId: z.coerce.string(),
+  wp_id: z.coerce.string(),
+  message: z.string(),
+  createdAt: z.coerce.date(),
+  isSpam: z.unknown(),
+  isDeleted: z.unknown(),
+  author: authorSchema,
+  thread: z.coerce.string(),
+  parent: z.coerce.string().optional()
+}).passthrough();
 
 export const threadSchema = z.object({
   dsqId: z.coerce.string(),
   id: z.coerce.string(),
-  forum: z.string(),
-  category: z.string(),
-  link: z.string(),
-  title: z.string(),
-  createdAt: z.date(),
+  forum: z.string().optional(),
+  category: z.string().optional(),
+  link: z.string().optional(),
+  title: z.string().optional(),
+  createdAt: z.coerce.date(),
   author: authorSchema,
-  isClosed: z.boolean().optional(),
-  isDeleted: z.boolean().optional()
-});
+  isClosed: z.unknown(),
+  isDeleted: z.unknown(),
+  posts: z.array(postSchema).default([]),
+}).passthrough();
 
-export const postSchema = z.object({
-  dsqid: z.coerce.string(),
-  wp_id: z.coerce.string(),
-  message: z.string(),
-  createdAt: z.date(),
-  isSpam: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  author: authorSchema,
-  threadId: z.coerce.string(),
-  parent: z.coerce.string().optional()
-});
 
 export const disqusSchema = z.object({
   categories: z.array(categorySchema),
@@ -74,7 +91,8 @@ export const disqusSchema = z.object({
   posts: z.array(postSchema).optional(),
 });
 
-
+export type Post = z.infer<typeof postSchema>
+export type Thread = z.infer<typeof threadSchema>;
 
 /*
 <category dsq:id="1276385">

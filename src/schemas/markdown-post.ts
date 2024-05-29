@@ -47,7 +47,7 @@ export const FrontmatterSchema = z.object({
 
   migration: z.record(z.unknown()).optional(),
   engagement: z.record(z.number().or(z.string())).optional()
-});
+}).passthrough();
 
 export const MarkdownPostSchema = z.object({
   file: z.string().optional(),

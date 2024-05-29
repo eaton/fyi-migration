@@ -1,6 +1,7 @@
 import { Migrator, MigratorOptions } from "../../util/migrator.js";
-import { extract } from '@eatonfyi/html';
+import { extract, toMarkdown } from '@eatonfyi/html';
 import * as schemas from './schema.js';
+import { nanohash } from "@eatonfyi/ids";
 
 export interface DiscusMigratorOptions extends MigratorOptions {
   file?: string | string[];
@@ -18,6 +19,9 @@ export class DisqusMigrator extends Migrator {
     super({ ...defaults, ...options});
   }
   
+  override async cacheIsFilled(): Promise<boolean> {
+    return Promise.resolve(this.cache.find({ matching: 'thread-*', directories: true }).length > 0);
+  }
 
   override async fillCache(): Promise<unknown> {
     let files: string[] = [];
@@ -40,13 +44,53 @@ export class DisqusMigrator extends Migrator {
         this.cache.write(`forum-${c.forum}.json`, c);
       }
       for (const t of extracted.threads ?? []) {
-        this.cache.write(`thread-${t.dsqId}.json`, t);
+        this.cache.write(`thread-${t.dsqId}/thread.json`, t);
       }
       for (const p of extracted.posts ?? []) {
-        this.cache.write(`thread-${p.threadId}/post-${p.dsqid}.json`, p);
+        if (p.isSpam === 'true') continue;
+        this.cache.write(`thread-${p.thread}/post-${p.dsqId}.json`, p);
+      }
+      this.log.debug(`Cached ${extracted.posts?.length ?? 0} comments`);
+    }
+    return Promise.resolve();
+  }
+
+  override async readCache(): Promise<schemas.Thread[]> {
+    this.log.debug(`Loading cached Disqus comments`);
+    const threads: schemas.Thread[] = [];
+    const directories = this.cache.find({ directories: true, files: false });
+    for (const d of directories) {
+      const thread = this.cache.dir(d).read('thread.json', 'jsonWithDates') as schemas.Thread | undefined;
+      const posts = this.cache.dir(d).find({ matching: 'post-*.json' })
+        .map(p => this.cache.dir(d).read(p, 'jsonWithDates') as schemas.Post | undefined)
+        .filter(p => p !== undefined);
+
+      if (thread && posts.length) {
+        thread.posts = posts;
+        threads.push(thread);
       }
     }
+    return Promise.resolve(threads);
+  }
 
-    return Promise.resolve();
+  // We skip a 'process' step here; finalize and process end up being…
+  // kinda redundant, and force each migrator to do extra book-keeping
+  // to sync everything up.
+  override async finalize(): Promise<void> {
+    const commentStore = this.data.bucket('comments');
+    const threads = await this.readCache();
+    for (const t of threads) {
+      if (t.posts && t.posts.length) {
+        const posts = t.posts?.map(p => ({
+          id: `dsq-${p.dsqId}`,
+          parent: p.parent ? `dsq-${p.parent}` : undefined,
+          name: p.author.name,
+          date: p.createdAt,
+          body: toMarkdown(p.message),
+        }));
+        this.log.debug(`Wrote ${posts.length} comments for ${t.link}`);
+        commentStore.set(nanohash(t.link), posts);
+      }
+    }
   }
 }
