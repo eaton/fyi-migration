@@ -4,6 +4,19 @@ A cluster of kludgy migration tools and content transformers to move all of my o
 
 What's in-scope? An awful lot of stuff. Long term this will likely be split out into a few different forms. Twitter posts, for example, don't make a lot of sense sandwiched into my personal site.
 
+## Oldschool Sites
+
+- [ ] The AOL.com era
+- [ ] wwa.com
+  - [ ] home page permutations and redesigns
+  - [ ] Hope Station, Hope Station Phoenix
+  - [ ] Cornerstone: Off The Beaten Path
+- [ ] dancingmongoose.com
+- [ ] ferretshock.com
+- [ ] predicate.net
+- [ ] predicate.org, when it was my personal site
+- [ ] havana-mod.com, when it was a pseudo-aggregator
+
 ## Blogs
 
 Posts and entries from the assorted places I've written over the years. These are being imported as `post` content in Eleventy.
@@ -12,7 +25,6 @@ Posts and entries from the assorted places I've written over the years. These ar
 
 - [ ] Textfiles covering the mid-late 90s
 - [ ] THE LIST, a small-distribution listserv lists that served as a pseudo-blog
-- [x] Predicate.net
 - [x] Livejournal (minus Textfiles reprints)
 - [ ] MovableType
   - [ ] Viapositiva
