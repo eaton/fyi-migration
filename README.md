@@ -89,7 +89,7 @@ Employment timeline; this is less of a primary focus and more splashover data fr
 - [ ] Kidstuff
 - [ ] America Online
 - [ ] Robis
-- [ ] Will Creek
+- [ ] Willow Creek
 - [ ] Geneer
 - [ ] Retail Vision Systems
 - [ ] Lullabot
