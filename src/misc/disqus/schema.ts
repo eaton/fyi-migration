@@ -1,0 +1,121 @@
+import { z } from 'zod';
+import { ExtractTemplateObject } from '@eatonfyi/html';
+
+export const xmlTemplate: ExtractTemplateObject = {
+  categories: {
+    $: 'category',
+    forum: '> forum',
+    title: '> title',
+    isDefault: '> isDefault | parseAs:bool'
+  },
+  threads: [{
+    $: 'thread',
+    dsqId: "|attr:'dsq:id'",
+    id: 'id',
+    forum:  '> forum',
+    category:  '> category',
+    link:  '> link',
+    title: '> title',
+    createdAt: '> createdAt | parseAs:date',
+    author: {
+      name: '> author > name',
+      isAnonymous: '> author > isAnonymous',
+      username: '> author > username'
+    },
+    isClosed: '> isClosed | parseAs:bool',
+    isDeleted: '> isDeleted | parseAs:bool'
+  }],
+  posts: [{
+    $: 'post',
+
+  }]
+}
+
+export const categorySchema = z.object({
+  forum: z.string(),
+  title: z.string(),
+  isDefault: z.boolean(),
+});
+
+export const authorSchema = z.object({
+  name: z.string().optional(),
+  isAnonymous: z.boolean().optional(),
+  username: z.string().optional()
+});
+
+export const threadSchema = z.object({
+  dsqId: z.coerce.string(),
+  id: z.coerce.string(),
+  forum: z.string(),
+  category: z.string(),
+  link: z.string(),
+  title: z.string(),
+  createdAt: z.date(),
+  author: authorSchema,
+  isClosed: z.boolean().optional(),
+  isDeleted: z.boolean().optional()
+});
+
+export const postSchema = z.object({
+  dsqid: z.coerce.string(),
+  wp_id: z.coerce.string(),
+  message: z.string(),
+  createdAt: z.date(),
+  isSpam: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  author: authorSchema,
+  threadId: z.coerce.string(),
+  parent: z.coerce.string().optional()
+});
+
+export const disqusSchema = z.object({
+  categories: z.array(categorySchema),
+  threads: z.array(threadSchema).optional(),
+  posts: z.array(postSchema).optional(),
+});
+
+
+
+/*
+<category dsq:id="1276385">
+  <forum>angrylittletree</forum>
+  <title>General</title>
+  <isDefault>true</isDefault>
+</category>
+*/
+
+/*
+<thread dsq:id="573937173">
+  <id>/2011/05/gutters.html</id>
+  <forum>angrylittletree</forum>
+  <category dsq:id="1276385" />
+  <link>http://angrylittletree.com/2011/05/gutters.html</link>
+  <title>Gutters - Angry Little Tree</title>
+  <message />
+  <createdAt>2012-02-13T03:17:15Z</createdAt>
+  <author>
+    <name>Jeff Eaton</name>
+    <isAnonymous>false</isAnonymous>
+    <username>angrylittletree</username>
+  </author>
+  <isClosed>false</isClosed>
+  <isDeleted>false</isDeleted>
+</thread>
+*/
+
+/*
+<post dsq:id="437331231">
+  <id>wp_id=1446</id>
+  <message>
+<![CDATA[<p>Hi Eaton</p><p>Today I was here :<br><a href="http://www.lullabot.com/articles/photo-galleries-views-attach" rel="nofollow noopener" title="http://www.lullabot.com/articles/photo-galleries-views-attach">http://www.lullabot.com/art...</a></p><p>Please Eaton, could you put Drupal 7x features compatible or do a tutorial?<br>Your photo gallery is the best of the world !<br>Thanks Eaton...<br>Sorry for my English.<br>I am from Spain [Barcelona].</p>]]>
+  </message>
+  <createdAt>2011-05-23T17:45:38Z</createdAt>
+  <isDeleted>false</isDeleted>
+  <isSpam>false</isSpam>
+  <author>
+    <name>Alek</name>
+    <isAnonymous>true</isAnonymous>
+  </author>
+  <thread dsq:id="573937173" />
+</post>
+*/

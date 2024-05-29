@@ -27,24 +27,39 @@ export class JekyllMigrator extends BlogMigrator {
   constructor(options: JekyllMigratorOptions = {}) {
     const opt = { ...defaults, ...options };
     super(opt);
-  }
-
-  async loadConfigFile() {
-    this.configFile = schemas.jekyllConfigSchema.parse(
-      (this.input.read('_config.yml', 'auto') ?? {})
-    );
-  }
-
-  async loadDataFiles() {
-    const dataDir = this.input.dir(this.configFile?.data_dir ?? '_data');
-    for (const dataFile of dataDir.find({ matching: '*.(yml,yaml,json,tsv,csv)' })) {
-      const key = parsePath(dataFile).name;
-      const data = dataDir.read(dataFile, 'auto') ?? undefined;
-      this.dataFiles[key] = data;
+    
+    if (this.options.loadConfig) {
+      this.loadConfigFile();
     }
   }
 
-  async loadPosts() {
+  loadConfigFile() {
+    const config = schemas.jekyllConfigSchema.safeParse(
+      (this.input.read('_config.yml', 'auto') ?? {})
+    );
+
+    if (config.error) {
+      this.log.error({ error: config.error }, `Error loading _config.yml`);
+    } else {
+      this.configFile = config.data;
+    }
+  }
+
+  loadDataFiles() {
+    const dataDir = this.input.dir(this.configFile?.data_dir ?? '_data');
+    
+    for (const dataFile of dataDir.find({ matching: '*.(yml,yaml,json,tsv,csv)' })) {
+      try {
+        const key = parsePath(dataFile).name;
+        const data = dataDir.read(dataFile, 'auto') ?? undefined;
+        this.dataFiles[key] = data;  
+      } catch(error: unknown) {
+        this.log.error({ filename: dataFile, error }, `Error loading datafile`);
+      }
+    }
+  }
+
+  loadPosts() {
     let defaults = {};
     if (this.options.mergeFrontmatterDefaults && this.configFile) {
       defaults = get(this.configFile, 'defaults') ?? {};
@@ -53,9 +68,14 @@ export class JekyllMigrator extends BlogMigrator {
     const markdown_ext = this.configFile?.markdown_ext ?? 'markdown,mkdown,mkdn,mkd,md';
     const postsDir = this.input.dir('_posts');
     const fm = new Frontmatter();
+    
     for (const postFile of postsDir.find({ matching: `**/*.(${markdown_ext},htm,html)` })) {
-      this.posts[postFile] = postsDir.read(postFile, fm.parse) ?? undefined;
-      this.posts[postFile].data = merge(defaults, this.posts[postFile].data);
+      try {
+        this.posts[postFile] = postsDir.read(postFile, fm.parse) ?? undefined;
+        this.posts[postFile].data = merge(defaults, this.posts[postFile].data);
+      } catch(error: unknown) {
+        this.log.error({ filename: postFile, error }, `Error loading post`);
+      }
     }
   }
 }

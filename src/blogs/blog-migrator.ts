@@ -2,7 +2,6 @@ import { toSlug } from "@eatonfyi/text";
 import { MarkdownPost } from "../schemas/markdown-post.js";
 import { Migrator, MigratorOptions } from "../util/migrator.js";
 import { nanoid } from "@eatonfyi/ids";
-import jetpack from "@eatonfyi/fs-jetpack";
 
 export interface BlogMigratorOptions extends MigratorOptions {
   commentOutput?: string,

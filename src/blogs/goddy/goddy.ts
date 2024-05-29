@@ -1,8 +1,6 @@
 import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import * as schemas from "./schema.js";
 import { type MarkdownPost } from "../../schemas/markdown-post.js";
-// import { autop, toMarkdown } from "@eatonfyi/html";
-// import { toSlug } from "@eatonfyi/text";
 import { z, ZodTypeAny } from 'zod';
 import { autop, toMarkdown } from "@eatonfyi/html";
 

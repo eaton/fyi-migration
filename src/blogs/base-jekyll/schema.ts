@@ -3,6 +3,7 @@ import { z } from 'zod';
 /**
  * @see {@link https://jekyllrb.com/docs/configuration/default/ }
  */
+
 export const jekyllConfigSchema = z.object({
   source: z.string().default('.'),
   destination: z.string().default('./_site'),
@@ -14,9 +15,7 @@ export const jekyllConfigSchema = z.object({
   sass: z.object({
     sass_dir: z.string().default('_sass')
   }),
-  collections: z.record(z.object({
-    output: z.boolean().default(true)
-  })),
+  collections: z.array(z.string()).or(z.record(z.unknown())).optional(),
 
   safe: z.boolean().default(true),
   include: z.array(z.string()).default(['.htaccess']),
@@ -30,7 +29,7 @@ export const jekyllConfigSchema = z.object({
   limit_posts: z.number().default(0),
   future: z.boolean().default(false),
   unpublished: z.boolean().default(false)
-});
+}).passthrough();
 
 export type JekyllConfig = z.infer<typeof jekyllConfigSchema>;
 

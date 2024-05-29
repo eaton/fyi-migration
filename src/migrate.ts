@@ -1,6 +1,7 @@
 
 import * as blogs from "./blogs/index.js";
 import { BlogMigrator } from "./blogs/blog-migrator.js";
+import { DisqusMigrator } from "./misc/disqus/disqus.js";
 
 export class AllBlogs extends BlogMigrator {
   override async run() {
@@ -15,4 +16,6 @@ export class AllBlogs extends BlogMigrator {
 }
 
 // await new AllBlogs().run();
-await new blogs.GoddyMigrator({ logger: { level: 'debug' }}).run();
+// await new blogs.GoddyMigrator({ logger: { level: 'debug' }}).run();
+
+await new DisqusMigrator({ logger: { level: 'debug' }}).run();
