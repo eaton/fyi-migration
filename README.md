@@ -7,6 +7,8 @@ What's in-scope? An awful lot of stuff. Long term this will likely be split out 
 ## Oldschool Sites
 
 - [ ] The AOL.com era
+  - [ ] The Kumquat Kuriosity's Home Page Of Fun
+  - [ ] Mac Reviews Digest
 - [ ] wwa.com
   - [ ] home page permutations and redesigns
   - [ ] Hope Station, Hope Station Phoenix
