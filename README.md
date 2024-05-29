@@ -34,7 +34,11 @@ Posts and entries from the assorted places I've written over the years. These ar
   - [ ] Viapositiva
   - [ ] Reading Life
   - [ ] Futurism
-- [x] Tumblr (PLF, Govertainment, CMS Whoops, To My Former Self)
+- [x] Tumblr
+  - [x] PLF
+  - [x] Govertainment
+  - [x] CMS Whoops
+  - [x] To My Former Self
 - [ ] Medium (minus Growing Up Goddy reprints)
 - [ ] Drupal
   - [ ] Via Positiva
@@ -42,7 +46,7 @@ Posts and entries from the assorted places I've written over the years. These ar
   - [x] Growing Up Goddy
   - [ ] Kirkegaard Lips
 - [x] Jekyll (Angry Little Tree)
-- [ ] Disqus comments spread across both iterations of the AngryLittleTree site
+- [x] Disqus comments spread across both iterations of the AngryLittleTree site
 
 ## Social Media
 
