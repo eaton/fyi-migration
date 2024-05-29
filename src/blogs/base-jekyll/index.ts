@@ -2,8 +2,7 @@ import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import { Frontmatter, FrontmatterInput } from "@eatonfyi/serializers";
 import * as schemas from './schema.js';
 import { parse as parsePath } from 'path'
-import { get, set, merge } from 'obby';
-
+import { get, merge } from 'obby';
 
 export interface JekyllMigratorOptions extends BlogMigratorOptions {
   loadConfig?: boolean;
