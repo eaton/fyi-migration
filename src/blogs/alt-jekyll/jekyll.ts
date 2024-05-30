@@ -38,6 +38,7 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
           }
         });
     }
+
     return Promise.resolve(entries);
   }
 

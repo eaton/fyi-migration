@@ -124,6 +124,7 @@ export async function parse(xml: string | Buffer, options: Options = {}) {
   }
 }
 
+/** @see {@link https://help.disqus.com/en/articles/1717164-comments-export } */
 export const DisqusXmlTemplate: ExtractTemplateObject = {
   categories: [{
     $: 'disqus > category',
