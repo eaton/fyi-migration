@@ -14,8 +14,7 @@ Takes a string or buffer containing a raw Disqus XML export, returns all of the 
 
 ## MDB
 
-Accepts the path of an MS Access database and returns a data structure containing its metadata, tables, and table rows. Optionally, you can pass in:
+Accepts the path of an MS Access database and returns a data structure containing its metadata, tables, and table rows. Additional functions include:
 
-- A list of tables to ignore (supports glob-style wildcards)
-- A dictionary keyed by table name, with a Zod schema that will be used to parse and validate each row.
-- A boolean to indicate whether rows failing Zod validation should be discarded, or throw errors.
+- Parse *a specific table* and validate every row using a Zod schema
+- Extract just the Db metadata — creation date, password, and a list of tables (including internal system tables)

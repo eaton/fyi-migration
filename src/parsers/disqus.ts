@@ -71,7 +71,7 @@ export async function parse(xml: string | Buffer, options: Options = {}) {
     // Then loop through the posts, creating a 'sort string'
     posts.sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf());
     for (const post of posts) {
-      post.sort = '/' + (post.parent ? post.parent + '/' : '') + post.id;
+      post.sort = '/' + (post.parent ? byId(posts, post.parent)?.dsqId + '/' : '') + post.id;
     }
     posts.sort((a, b) => a.sort!.localeCompare(b.sort!));
   }
@@ -94,6 +94,10 @@ export async function parse(xml: string | Buffer, options: Options = {}) {
         threadPosts.sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf());
       }  
     }
+  }
+
+  function byId(posts: { dsqId: string }[], id: string) {
+    return posts.find(p => p.dsqId === id);
   }
 
   if (options.discardEmpty && options.groupContainers) {
