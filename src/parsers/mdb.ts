@@ -15,8 +15,12 @@ export function parse(mdbFile: string, tables: string | string[] = '*') {
   return Object.fromEntries(tableNames.map(t => [t, reader.getTable(t).getData()]));
 }
 
-export function parseTable<T extends z.ZodTypeAny>(mdbFile: string, table: string, schema?: T, strict = false): z.infer<T>{
-  const reader = new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer);
+export function parseTable<T extends z.ZodTypeAny>(mdbFile: string | MDBReader, table: string, schema?: T, strict = false): z.infer<T>{
+  const reader = 
+    (typeof mdbFile === 'string') ? 
+    new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer) : 
+    mdbFile;
+  
   const rows = reader.getTable(table).getData();
 
   if (schema) {
