@@ -5,6 +5,7 @@ export const xmlTemplate: ExtractTemplateObject = {
   categories: [{
     $: 'disqus > category',
     dsqId: '| xmlAttr:dsq%id',
+    forum: '> forum',
     title: '> title',
     isDefault: '> isDefault'
   }],
@@ -47,27 +48,28 @@ export const xmlTemplate: ExtractTemplateObject = {
 }
 
 export const categorySchema = z.object({
+  dsqId: z.coerce.string(),
   forum: z.string().optional(),
   title: z.string(),
   isDefault: z.unknown(),
-}).passthrough();
+});
 
-export const authorSchema = z.object({
+const authorSchema = z.object({
   name: z.string().optional(),
   isAnonymous: z.unknown(),
-  username: z.string().optional()
+  username: z.string().optional(),
 });
 
 export const postSchema = z.object({
   dsqId: z.coerce.string(),
   wp_id: z.coerce.string(),
-  message: z.string(),
+  thread: z.coerce.string(),
+  parent: z.coerce.string().optional(),
   createdAt: z.coerce.date(),
   isSpam: z.unknown(),
   isDeleted: z.unknown(),
   author: authorSchema,
-  thread: z.coerce.string(),
-  parent: z.coerce.string().optional()
+  message: z.string(),
 }).passthrough();
 
 export const threadSchema = z.object({
@@ -93,6 +95,7 @@ export const disqusSchema = z.object({
 
 export type Post = z.infer<typeof postSchema>
 export type Thread = z.infer<typeof threadSchema>;
+export type Category = z.infer<typeof categorySchema>;
 
 /*
 <category dsq:id="1276385">
@@ -100,9 +103,6 @@ export type Thread = z.infer<typeof threadSchema>;
   <title>General</title>
   <isDefault>true</isDefault>
 </category>
-*/
-
-/*
 <thread dsq:id="573937173">
   <id>/2011/05/gutters.html</id>
   <forum>angrylittletree</forum>
@@ -119,13 +119,10 @@ export type Thread = z.infer<typeof threadSchema>;
   <isClosed>false</isClosed>
   <isDeleted>false</isDeleted>
 </thread>
-*/
-
-/*
 <post dsq:id="437331231">
   <id>wp_id=1446</id>
   <message>
-<![CDATA[<p>Hi Eaton</p><p>Today I was here :<br><a href="http://www.lullabot.com/articles/photo-galleries-views-attach" rel="nofollow noopener" title="http://www.lullabot.com/articles/photo-galleries-views-attach">http://www.lullabot.com/art...</a></p><p>Please Eaton, could you put Drupal 7x features compatible or do a tutorial?<br>Your photo gallery is the best of the world !<br>Thanks Eaton...<br>Sorry for my English.<br>I am from Spain [Barcelona].</p>]]>
+<![CDATA[<p>Hi Eaton</p><p>Today I was here...</p>]]>
   </message>
   <createdAt>2011-05-23T17:45:38Z</createdAt>
   <isDeleted>false</isDeleted>
