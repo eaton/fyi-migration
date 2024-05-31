@@ -5,5 +5,5 @@
  * data returned by the parse function.
  */
 
-export * as Disqus from './disqus.js';
+export * as Disqus from './disqus-export.js';
 export * as Mdb from './mdb.js';

@@ -1,5 +1,4 @@
 import { Frontmatter } from "@eatonfyi/serializers";
-import { autop } from "@eatonfyi/html";
 import { Migrator, MigratorOptions } from "../util/migrator.js";
 
 const defaults: MigratorOptions = {
@@ -9,7 +8,7 @@ const defaults: MigratorOptions = {
   output: 'src/entries/textfiles',
 }
 
-export class JournalMigrator extends Migrator {
+export class TextJournalsMigrator extends Migrator {
   constructor(options: MigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -23,7 +22,6 @@ export class JournalMigrator extends Migrator {
       this.log.debug(`Processing ${file}`);
       const txt = mds.parse(this.input.read(file, 'utf8') ?? '');
       texts.add(txt.data?.textfile);
-      txt.content = autop(txt.content ?? '', true);
       this.output.write(file.replace('.txt', '.md'), txt);
       return Promise.resolve(); 
     }

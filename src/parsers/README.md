@@ -2,7 +2,7 @@
 
 This is a grab bag of semi-reusable file type parsers that don't belong to a single, specific import. Generally speaking, each one is an exported module with a parse function, an Options interface, and a set of type definitions for each important bit of data returned by the parse function.
 
-## Disqus
+## Disqus Export
 
 Takes a string or buffer containing a raw Disqus XML export, returns all of the account's categories, threads, and posts. By default, it will also:
 
@@ -18,3 +18,9 @@ Accepts the path of an MS Access database and returns a data structure containin
 
 - Parse *a specific table* and validate every row using a Zod schema
 - Extract just the Db metadata — creation date, password, and a list of tables (including internal system tables)
+
+## HTML Pages
+
+- Amazon Product
+- A Book Apart product
+- Rosenfeld Media product

@@ -6,8 +6,10 @@ What's in-scope? An awful lot of stuff. Long term this will likely be split out 
 
 Really, most of this just grew out of an earnest if compulsive desire to figure out how much written crap I've actually pushed out onto the internet over the years. If you want to count shit, well, you have to organize it. And if you want to organize it, you need *test harnesses*, and now you're debating the merits of different Typescript document storage abstractions. It's an ugly cycle, but progress is made.
 
-## Oldschool Sites
+## Oldschool Stuff
 
+- [ ] Textfiles covering the mid-late 90s
+- [ ] THE LIST, a small-distribution listserv lists that served as a pseudo-blog
 - [ ] The AOL.com era
   - [ ] The Kumquat Kuriosity's Home Page Of Fun
   - [ ] Mac Reviews Digest
@@ -27,12 +29,10 @@ Posts and entries from the assorted places I've written over the years. These ar
 
 `Textfiles` and `Livejournal` in particular will probably need some post-migration curation and careful consideration. Many of those posts were never intended to be publicly published, are extremely full of teen and post-college cringe, or contain snippets of personal information about folks who probably didn't anticipate their melodrama spilling out.
 
-- [ ] Textfiles covering the mid-late 90s
-- [ ] THE LIST, a small-distribution listserv lists that served as a pseudo-blog
 - [x] Livejournal (minus Textfiles reprints)
 - [ ] MovableType
-  - [ ] Viapositiva
-  - [ ] Reading Life
+  - [x] Viapositiva
+  - [x] Reading Life
   - [ ] Futurism
 - [x] Tumblr
   - [x] PLF
@@ -41,7 +41,7 @@ Posts and entries from the assorted places I've written over the years. These ar
   - [x] To My Former Self
 - [ ] Medium (minus Growing Up Goddy reprints)
 - [ ] Drupal
-  - [ ] Via Positiva
+  - [x] Via Positiva
   - [x] ALT
   - [x] Growing Up Goddy
   - [ ] Kirkegaard Lips
