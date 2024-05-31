@@ -4,6 +4,9 @@ import { jekyllPostSchema, type JekyllPost } from "./schema.js";
 import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { toSlug } from "@eatonfyi/text";
 import { nanohash } from "@eatonfyi/ids";
+import * as CommentOutput from '../../schemas/comment.js';
+import { Disqus } from "../../parsers/index.js";
+import { autop, toMarkdown } from "@eatonfyi/html";
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -23,7 +26,7 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     return true;
   }
 
-  override async readCache(): Promise<JekyllPost[]> {
+  override async readCache() {
     const entries: JekyllPost[] = [];
     const files = this.input.find({ matching: '*.md' });
     for (const file of files) {
@@ -39,17 +42,13 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
         });
     }
 
-    return Promise.resolve(entries);
-  }
-
-  override async process() {
-    this.queue = [];
-    const data = await this.readCache();
-
-    for (const e of data) {
-      this.queue.push(this.prepMarkdownFile(e));
+    const comments: Disqus.Thread[] = []
+    for (const file of this.input.find({ matching: 'disqus*.xml'})) {
+      const xml = this.input.read(file, 'utf8') ?? '';
+      comments.push(...(await Disqus.parse(xml)).threads);
     }
-    return Promise.resolve();
+
+    return Promise.resolve({ entries, comments });
   }
 
   protected override prepMarkdownFile(input: JekyllPost) {
@@ -84,12 +83,35 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   override async finalize() {
-    for (const e of this.queue) {
-      const { file, ...contents } = e;
+    const data = await this.readCache();
+    const commentStore = this.data.bucket('comments');
+
+    for (const e of data.entries) {
+      const { file, ...contents } = this.prepMarkdownFile(e);
+
       if (file) {
-        const outFile = file.replace('_posts/', '')
-        this.log.debug(`Outputting ${outFile}`);
+        const outFile = file.replace('_posts/', '');
         this.output.write(outFile, contents);
+        this.log.debug(`Wrote ${outFile}`);
+
+        // Find a thread that matches this file.
+        const comments = (data.comments.find(t => t.id === contents.data.id)?.posts ?? []);
+        const mapped = comments.map(c => {
+          const comment: CommentOutput.Comment = {
+            id: `altj-c${c.dsqId}`,
+            parent: c.parent ? `altj-c${c.parent}` : undefined,
+            sort: c.sort,
+            about: contents.data.id!,
+            date: c.createdAt,
+            author: { name: c.author.name },
+            body: toMarkdown(autop(c.message)),
+          };
+          return comment;
+        });
+        if (mapped.length) {
+          commentStore.set(contents.data.id!, mapped);
+          this.log.debug(`Saved ${mapped.length} comments for ${contents.data.id}`);
+        }
       } else {
         this.log.error(e);
       }

@@ -14,7 +14,7 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize(): Promise<void> {
-    this.input.copy(this.input.path('posts'), this.output.path());
+    this.input.copy(this.input.path('posts'), this.output.path(), { overwrite: true });
     await this.copyAssets('images', 'medium');
     return Promise.resolve();
   }

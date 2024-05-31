@@ -4,6 +4,7 @@ import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { z, ZodTypeAny } from 'zod';
 import { autop, toMarkdown } from "@eatonfyi/html";
 import { toSlug } from "@eatonfyi/text";
+import * as CommentOutput from '../../schemas/comment.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean,
@@ -19,6 +20,7 @@ const defaults: DrupalMigratorOptions = {
   cache: 'cache/blogs/goddy',
   output: 'src/entries/goddy',
   comments: true,
+  nodeTypes: ['blog', 'review', 'site', 'page'],
   uids: [2]
 }
 
@@ -77,7 +79,6 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
     for (const c of comments) {
       if (!c.status) continue;
       if (!approvedNodes.has(c.nid)) continue;
-
       c.body = commentBodies.find(f => f.entity_type === 'comment' && f.entity_id === c.cid)?.comment_body_value;
       this.cache.write(`comment-${c.cid}.json`, c);
     }
@@ -115,6 +116,26 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
+    const commentStore = this.data.bucket('comments');
+
+    // Prep the comments first, so they're easier to attach to the nodes.
+    const comments = cache.comments.map(c => {
+      const comment: CommentOutput.Comment = {
+        id: `goddy-c${c.cid}`,
+        about: `goddy-${c.nid}`,
+        parent: c.pid ? `goddy-c${c.pid}` : undefined,
+        sort: c.thread,
+        date: c.created,
+        author: {
+          name: c.name,
+          mail: c.mail,
+          url: c.homepage
+        },
+        subject: c.subject,
+        body: toMarkdown(autop(c.body ?? '')),
+      };
+      return comment;
+    });
 
     const nodes = cache.nodes.map(n => ({
       data: {
@@ -130,19 +151,18 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
       },
       content: toMarkdown(autop(n.body ?? '')),
     }));
+
     for (const n of nodes) {
       const file = this.toFilename(n.data.date, n.data.title);
-      this.log.debug(`Wrote ${file}`);
       this.output.write(this.toFilename(n.data.date, n.data.title), n);
-    }
+      this.log.debug(`Wrote ${file}`);
 
-    // Skip comments for now
-    const comments = cache.comments.map(c => ({
-      data: {
-        
-      },
-      content: toMarkdown(autop(c.body ?? '')),
-    }));
+      const nodeComments = comments.filter(c => c.about === n.data.id);
+      if (nodeComments.length) {
+        commentStore.set(n.data.id, nodeComments);
+        this.log.debug(`Saved ${nodeComments.length} comments for ${n.data.id}`);
+      }
+    }
 
     this.data.bucket('sites').set('goddy', {
       id: 'goddy',

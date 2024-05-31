@@ -11,7 +11,7 @@ export const commentSchema = z.object({
   parent: z.string().optional().describe('An entry ID or a URL the comment was posted in reply to.'),
   sort: z.string().optional().describe("A sortable representation of the comment's position in the thread."),
   about: z.string().describe('An entry ID or a URL the comment was posted in reply to.'),
-  date: z.date(),
+  date: z.date().optional(),
   author: authorSchema.optional(),
   subject: z.string().optional(),
   body: z.string(),

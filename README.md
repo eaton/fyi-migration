@@ -8,8 +8,7 @@ Really, most of this just grew out of an earnest if compulsive desire to figure 
 
 ## Oldschool Stuff
 
-- [ ] Textfiles covering the mid-late 90s
-- [ ] THE LIST, a small-distribution listserv lists that served as a pseudo-blog
+- [x] Textfiles covering the mid-late 90s
 - [ ] The AOL.com era
   - [ ] The Kumquat Kuriosity's Home Page Of Fun
   - [ ] Mac Reviews Digest
@@ -19,7 +18,7 @@ Really, most of this just grew out of an earnest if compulsive desire to figure 
   - [ ] Cornerstone: Off The Beaten Path
 - [ ] dancingmongoose.com
 - [ ] ferretshock.com
-- [ ] predicate.net
+- [x] predicate.net
 - [ ] predicate.org, when it was my personal site
 - [ ] havana-mod.com, when it was a pseudo-aggregator
 
@@ -39,7 +38,7 @@ Posts and entries from the assorted places I've written over the years. These ar
   - [x] Govertainment
   - [x] CMS Whoops
   - [x] To My Former Self
-- [ ] Medium (minus Growing Up Goddy reprints)
+- [x] Medium (minus Growing Up Goddy reprints)
 - [ ] Drupal
   - [x] Via Positiva
   - [x] ALT
@@ -75,12 +74,12 @@ Places I've written, presented, been quoted, and so on.
 - [ ] Talks and presentations
 - [ ] Podcast appearances
 - [ ] Citations and quotes
-- [ ] Article reprints
-  - [ ] Lullabot
-  - [ ] Pastry Box
-  - [ ] Mac Action
-  - [ ] Inside Mac Games
-  - [ ] Misc freelancing and one-offs
+- [x] Article reprints
+  - [x] Lullabot
+  - [x] Pastry Box
+  - [x] Mac Action
+  - [x] Inside Mac Games
+  - [x] Misc freelancing and one-offs
 
 ## Projects
 

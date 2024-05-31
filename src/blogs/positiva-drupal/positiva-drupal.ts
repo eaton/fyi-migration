@@ -7,6 +7,7 @@ import { toSlug } from "@eatonfyi/text";
 import { nanohash } from "@eatonfyi/ids";
 import { normalize } from "@eatonfyi/urls";
 import { set } from 'obby';
+import * as CommentOutput from '../../schemas/comment.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -90,6 +91,7 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
     const cache = await this.readCache();
     const quoteStore = this.data.bucket('quotes');
     const linkStore = this.data.bucket('links');
+    const commentStore = this.data.bucket('comments');
 
     for (const n of cache.nodes) {
 
@@ -116,7 +118,7 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
 
       } else if (n.type === 'blog' || n.type === 'review') {
         // TODO: entries vs notes
-        let md = {
+        const md = {
           data: {
             id: `positiva-drupal-${n.nid}`,
             type: n.type,
@@ -134,10 +136,33 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
         md.content = this.fixInlineImages(md.content, n.files); // Need to pass in the array of files, too
         md.content = toMarkdown(md.content);
 
+        // Prep comments
+        const mappedComments = cache.comments.filter(c => c.nid === n.nid).map(c => {
+          const comment: CommentOutput.Comment = {
+            id: `vpd-c${c.cid}`,
+            parent: c.pid ? `vpd-c${c.pid}` : undefined,
+            sort: c.thread,
+            about: md.data.id,
+            date: c.timestamp,
+            author: {
+              name: c.name,
+              mail: c.mail,
+              url: c.homepage,
+            },
+            subject: c.subject,
+            body: toMarkdown(autop(c.comment ?? '')),
+          };
+          return comment;
+        });
+
         const file = this.toFilename(md.data.date, md.data.title);
         try {
           this.output.write(file, md);
           this.log.debug(`Wrote ${file}`);  
+          if (mappedComments.length) {
+            commentStore.set(md.data.id, mappedComments);
+            this.log.debug(`Saved ${mappedComments.length} comments for ${md.data.id}`);
+          }
         } catch(err: unknown) {
           this.log.error(`Error writing ${file}`);  
         }
@@ -154,15 +179,6 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
     });
 
     this.copyAssets('files', 'positiva');
-
-
-    // Skip comments for now
-    const comments = cache.comments.map(c => ({
-      data: {
-        
-      },
-      content: toMarkdown(autop(c.comment ?? '')),
-    }));
     return Promise.resolve();
   }
 

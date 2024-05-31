@@ -4,6 +4,7 @@ import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { z } from 'zod';
 import { autop, toMarkdown } from "@eatonfyi/html";
 import { toSlug } from "@eatonfyi/text";
+import * as CommentOutput from '../../schemas/comment.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -28,7 +29,7 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   entries: MarkdownPost[] = [];
-  comments: MarkdownPost[] = [];
+  comments: CommentOutput.Comment[] = [];
   site?: MarkdownPost;
 
 
@@ -113,7 +114,7 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
       const md: MarkdownPost = {
         content: n.body ? toMarkdown(autop(n.body)) : '',
         data: {
-          id: `entry/alt-${n.nid}`,
+          id: `alt-${n.nid}`,
           title: n.title,
           date: n.created,
           summary: n.summary ? toMarkdown(n.summary) : undefined,
@@ -125,41 +126,42 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
           }
         },
       };
-
       this.entries.push(md);
     };
 
     for (const c of Object.values(this.entityData.comments)) {
-      const md: MarkdownPost = {
-        content: c.body ? toMarkdown(c.body) : '',
-        data: {
-          id: `comment/alt-${c.nid}-${c.cid}`,
-          permalink: false,
-          title: c.subject?.toString() ?? undefined,
-          date: c.created,
-          migration: {
-            site: 'alt-drupal',
-            parent: c.pid ? `comment/alt-${c.nid}-${c.pid}` : undefined,
-            thread: c.thread,
-            author: {
-              name: c.name,
-              url: c.homepage,
-              email: c.mail,
-              ip: c.hostname
-            }
-          }
+      const comment: CommentOutput.Comment = {
+        id: `altd-c${c.cid}`,
+        parent: c.pid ? `altd-c${c.pid}` : undefined,
+        sort: c.thread,
+        about: `altd-${c.nid}`,
+        date: c.created,
+        author: {
+          name: c.name,
+          mail: c.mail,
+          url: c.homepage,
         },
+        subject: c.subject,
+        body: toMarkdown(autop(c.body ?? '')),
       };
-      this.comments.push(md);
+      this.comments.push(comment);
     }
   }
 
   override async finalize() {
     // Currently ignoring comments, whoop whoop
+    const commentStore = this.data.bucket('comments');
+
     for (const entry of this.entries) {
       const filename = this.toFilename(entry.data.date, entry.data.slug ?? entry.data.title);
       this.log.debug(`Outputting ${filename}`);
       this.output.write(filename, entry);
+
+      const entryComments = this.comments.filter(c => c.about === entry.data.id);
+      if (entryComments.length) {
+        commentStore.set(entry.data.id!, entryComments);
+        this.log.debug(`Saved ${entryComments.length} comments for ${entry.data.id}`);
+      }
     }
 
     this.data.bucket('sites').set('alt-drupal', {

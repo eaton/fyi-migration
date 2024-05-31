@@ -23,15 +23,15 @@ export const commentSchema = z.object({
   pid: intString.optional(),
   nid: intString,
   uid: intString,
-  subject: z.unknown(),
-  hostname: z.unknown(),
+  subject: z.string().optional(),
+  hostname: z.string().optional(),
   created: epochString,
   changed: epochString,
   status: z.number(),
   thread: z.string(),
-  name: z.unknown(),
-  mail: z.unknown(),
-  homepage: z.unknown(),
+  name: z.string().optional(),
+  mail: z.string().optional(),
+  homepage: z.string().optional(),
   body: z.string().optional()
 });
 
@@ -58,9 +58,9 @@ export const commentBodySchema = fieldSchema.extend({
 export const fileSchema = z.object({
   fid: intString,
   uid: intString,
-  filename: z.unknown(),
-  uri: z.unknown(),
-  filemime: z.unknown(),
+  filename: z.string().optional(),
+  uri: z.string().optional(),
+  filemime: z.string().optional(),
   filesize: intString,
   status: z.unknown(),
   timestamp: epochString

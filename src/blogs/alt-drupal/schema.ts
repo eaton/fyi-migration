@@ -22,15 +22,15 @@ export const commentSchema = z.object({
   pid: intString.optional(),
   nid: intString,
   uid: intString,
-  subject: z.unknown(),
-  hostname: z.unknown(),
+  subject: z.string().optional(),
+  hostname: z.string().optional(),
   created: epochString,
   changed: epochString,
   status: z.number(),
   thread: z.string(),
-  name: z.unknown(),
-  mail: z.unknown(),
-  homepage: z.unknown(),
+  name: z.string().optional(),
+  mail: z.string().optional(),
+  homepage: z.string().optional(),
   body: z.string().optional()
 });
 

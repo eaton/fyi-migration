@@ -1,6 +1,7 @@
 import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
 import { extract, fromLivejournal, toMarkdown, autop } from "@eatonfyi/html";
 import { isBefore, isAfter } from '@eatonfyi/dates';
+import * as CommentOutput from '../../schemas/comment.js';
 
 import { parseSemagicFile } from "./semagic.js";
 import {
@@ -89,12 +90,6 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
       if (this.options.ignoreBefore && isBefore(e.date, this.options.ignoreBefore)) continue;
       if (this.options.ignoreAfter && isAfter(e.date, this.options.ignoreAfter)) continue;
 
-      if (!this.options.ignoreComments) {
-        for (const comment of e.comments ?? []) {
-          comment.entry = e.id;
-        }
-      }
-
       const formattedEntry = {
         ...e,
         body: fromLivejournal(e.body ?? '', { breaks: true, usernames: true }),
@@ -107,11 +102,37 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
   }
 
   override async finalize() {
+    const commentStore = this.data.bucket('comments');
+
     for (const e of this.queue) {
       const { file, ...entry } = this.prepMarkdownFile(e);
+
+      // process comments
+      const comments = (e.comments ?? []).map(c => {
+        const comment: CommentOutput.Comment = {
+          id: `lj-c${c.id}`,
+          parent: c.parent ? `vpd-c${c.parent}` : undefined,
+          about: entry.data.id!,
+          date: c.date,
+          author: {
+            name: c.name,
+            mail: c.email,
+          },
+          subject: c.subject,
+          body: toMarkdown(autop(c.body ?? '')),
+        };
+        return comment;
+      });
+
       if (file) {
-        this.log.debug(`Outputting ${file}`);
+        this.log.debug(`Wrote ${file}`);
         this.output.write(file, entry);
+
+        // write entry comments
+        if (comments.length) {
+          commentStore.set(entry.data.id!, comments);
+          this.log.debug(`Saved ${comments.length} comments for ${entry.data.id}`);
+        }
       } else {
         this.log.error(e);
       }
@@ -135,7 +156,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
 
     md.data.title = input.subject;
     md.data.date = input.date;
-    md.data.id = `entry/lj-${input.id}`;
+    md.data.id = `lj-${input.id}`;
     
     md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
 

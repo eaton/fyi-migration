@@ -4,6 +4,7 @@ import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { z, ZodTypeAny } from 'zod';
 import { toSlug } from "@eatonfyi/text";
 import { autop, fromTextile, toMarkdown } from "@eatonfyi/html";
+import * as CommentOutput from '../../schemas/comment.js';
 //import { nanohash } from "@eatonfyi/ids";
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
@@ -105,6 +106,7 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
     const siteStore = this.data.bucket('sites');
+    const commentStore = this.data.bucket('comments');
 
     for (const b of cache.blogs) {
       siteStore.set(b.blog_shortname ?? 'movabletype', {
@@ -132,16 +134,36 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
           content: toMarkdown(autop(fromTextile(text))),
         };
 
+        // Prep comments
+        const mappedComments = (e.comments ?? []).map(c => {
+          const comment: CommentOutput.Comment = {
+            id: `mt-c${c.comment_entry_id}`,
+            about: md.data.id,
+            date: c.comment_created_on,
+            author: {
+              name: c.comment_author,
+              mail: c.comment_email,
+              url: c.comment_url
+            },
+            body: toMarkdown(autop(fromTextile(c.comment_text))),
+          };
+          return comment;
+        });
+
+
         const prefix = b.blog_shortname || this.options.name || 'movabletype';
         const file = prefix + '/' + this.toFilename(md.data.date, md.data.title);
         try {
           this.output.write(file, md);
           this.log.debug(`Wrote ${file}`);
+          if (mappedComments.length) {
+            commentStore.set(md.data.id, mappedComments);
+            this.log.debug(`Saved ${mappedComments.length} comments for ${md.data.id}`);
+          }
         } catch(error: unknown) {
           this.log.error(error, `Failure writing ${file}`)
         }
 
-        // Save comments
       }
     }
 

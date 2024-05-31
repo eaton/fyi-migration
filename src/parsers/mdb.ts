@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import MDBReader from "mdb-reader";
 import jetpack from '@eatonfyi/fs-jetpack';
-import { isMatch } from 'micromatch';
+import micromatch from 'micromatch';
+const isMatch = micromatch.isMatch;
 
 export interface Options {
   ignore?: string | string[];

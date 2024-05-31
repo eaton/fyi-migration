@@ -23,7 +23,8 @@ export class TextJournalsMigrator extends Migrator {
       const txt = mds.parse(this.input.read(file, 'utf8') ?? '');
       texts.add(txt.data?.textfile);
       this.output.write(file.replace('.txt', '.md'), txt);
-      return Promise.resolve(); 
     }
+    
+    return Promise.resolve(); 
   }
 }

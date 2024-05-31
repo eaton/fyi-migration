@@ -27,13 +27,13 @@ export const commentSchema = z.object({
   status: z.number(),
   spam: z.unknown(),
 
-  name: z.unknown(),
-  mail: z.unknown(),
-  hostname: z.unknown(),
-  homepage: z.unknown(),
+  name: z.string().optional(),
+  mail: z.string().optional(),
+  hostname: z.string().optional(),
+  homepage: z.string().optional(),
 
   timestamp: epochString,
-  subject: z.unknown(),
+  subject: z.string().optional(),
   comment: z.string().optional()
 });
 
