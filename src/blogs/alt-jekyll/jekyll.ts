@@ -87,8 +87,9 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     for (const e of this.queue) {
       const { file, ...contents } = e;
       if (file) {
-        this.log.debug(`Outputting ${file}`);
-        this.output.write(file, contents);
+        const outFile = file.replace('_posts/', '')
+        this.log.debug(`Outputting ${outFile}`);
+        this.output.write(outFile, contents);
       } else {
         this.log.error(e);
       }

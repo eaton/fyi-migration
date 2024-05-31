@@ -40,9 +40,9 @@ export const commentSchema = z.object({
 export const fileSchema = z.object({
   nid: intString,
   vid: intString,
-  filepath: z.unknown(),
-  filename: z.unknown(),
-  filemime: z.unknown(),
+  filepath: z.string(),
+  filename: z.string(),
+  filemime: z.string(),
   filesize: intString,
   description: z.string().optional(),
 });

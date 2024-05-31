@@ -6,13 +6,14 @@ import { autop, toMarkdown } from "@eatonfyi/html";
 import { toSlug } from "@eatonfyi/text";
 import { nanohash } from "@eatonfyi/ids";
 import { normalize } from "@eatonfyi/urls";
+import { set } from 'obby';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
   label: 'Via Positiva (Drupal)',
   input: 'input/blogs/viapositiva-drupal',
   cache: 'cache/blogs/vp-drupal',
-  output: 'src/entries/viapositiva',
+  output: 'src/entries/positiva-drupal',
 }
 
 export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
@@ -115,7 +116,7 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
 
       } else if (n.type === 'blog' || n.type === 'review') {
         // TODO: entries vs notes
-        const md = {
+        let md = {
           data: {
             id: `positiva-drupal-${n.nid}`,
             type: n.type,
@@ -123,14 +124,23 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
             title: n.title,
             slug: toSlug(n.title),
             path: cache.slugs[`node/${n.nid}`] ?? `node/${n.nid}`,
-            about: n.amazon ? 'book/' + n.amazon.asin : undefined,
           },
-          content: toMarkdown(autop(n.body ?? '')),
+          content: autop(n.body ?? ''),
         }
-        md.content = this.fixInlineImages(md.content); // Need to pass in the array of files, too
+        if (n.amazon?.asin) {
+          set(md, 'data.about', n.amazon.asin)
+        }
+
+        md.content = this.fixInlineImages(md.content, n.files); // Need to pass in the array of files, too
+        md.content = toMarkdown(md.content);
+
         const file = this.toFilename(md.data.date, md.data.title);
-        this.output.write(file, n);
-        this.log.debug(`Wrote ${file}`);
+        try {
+          this.output.write(file, md);
+          this.log.debug(`Wrote ${file}`);  
+        } catch(err: unknown) {
+          this.log.error(`Error writing ${file}`);  
+        }
       }
     }
 
@@ -156,7 +166,14 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
     return Promise.resolve();
   }
 
-  fixInlineImages(body: string, images: Record<string, string>[] = []) {
+  fixInlineImages(body: string, images: z.infer<typeof schemas.fileSchema>[] = []) {
+    if (body.indexOf('[inline') > 0) {
+      let tmp = body.replaceAll(/\[inline:(.+)\]/g, '<img src="$1" />');
+      for (const img of images) {
+        tmp = tmp.replaceAll(img.description ?? '', img.filepath);
+      }
+      return tmp;
+    }
     return body;
   }
 }
