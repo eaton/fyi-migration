@@ -71,5 +71,6 @@ export class PredicateNetMigrator extends BlogMigrator {
     await this.writeQuotes();
 
     await this.copyAssets('files', 'predicatenet');
+    return Promise.resolve();
   }
 }

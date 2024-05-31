@@ -3,6 +3,7 @@ import * as schemas from "./schema.js";
 import { type MarkdownPost } from "../../schemas/markdown-post.js";
 import { z, ZodTypeAny } from 'zod';
 import { autop, toMarkdown } from "@eatonfyi/html";
+import { toSlug } from "@eatonfyi/text";
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean,
@@ -29,7 +30,6 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   override async cacheIsFilled(): Promise<boolean> {
-    return false
     return Promise.resolve(this.cache.exists('variables.json') === 'file');
   }
 
@@ -93,6 +93,7 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
 
     const vars = Object.fromEntries(this.readTableCsv('variable.csv', schemas.variableSchema).map(e => [e.name, e.value]));
     this.cache.write(`variables.json`, vars);
+    return Promise.resolve();
   }
 
   protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {
@@ -101,52 +102,58 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   override async readCache() {
-    const nodes = this.cache.find({ matching: 'node-*.json' }).map(f => this.cache.read(f, 'auto') as schemas.GoddyNode);
-    const comments = this.cache.find({ matching: 'comment-*.json' }).map(f => this.cache.read(f, 'auto') as schemas.GoddyComment);
-    const vars = this.cache.read('variables.json', 'auto') as Record<string, unknown>;
+    const nodes = this.cache.find({ matching: 'node-*.json' }).map(f => this.cache.read(f, 'jsonWithDates') as schemas.GoddyNode);
+    const comments = this.cache.find({ matching: 'comment-*.json' }).map(f => this.cache.read(f, 'jsonWithDates') as schemas.GoddyComment);
+    const vars = this.cache.read('variables.json', 'jsonWithDates') as Record<string, unknown>;
 
-    for (const n of nodes) {
-      if (n.type === 'site') {
-        // save links
-      } else if (n.type === 'review') {
-        // save book records
-      }
-    }
-
-    return Promise.resolve({ nodes, comments, vars });
+    const slugs = Object.fromEntries(
+      (this.cache.read('paths.json', 'jsonWithDates') as { source: string, alias: string }[])
+        .map(a => [a.source, a.alias])
+    );
+    return Promise.resolve({ nodes, comments, vars, slugs });
   }
 
-  override async process(): Promise<void> {
+  override async finalize(): Promise<void> {
     const cache = await this.readCache();
 
     const nodes = cache.nodes.map(n => ({
       data: {
-        id: '',
-        date: '',
-        title: '',
-        slug: '',
+        id: `goddy-${n.nid}`,
+        type: n.type,
+        date: n.created,
+        title: n.title,
+        path: cache.slugs[`node/${n.nid}`] ?? `node/${n.nid}`,
+        slug: toSlug(n.title),
+        summary: n.summary,
+        quote: n.money_quote ? toMarkdown(autop(n.money_quote.field_money_quote_value)) : undefined,
+        about: (n.product ? 'book/' + n.product.field_product_asin : undefined) ?? (n.link?.field_link_url) ?? undefined,
       },
       content: toMarkdown(autop(n.body ?? '')),
     }));
+    for (const n of nodes) {
+      const file = this.toFilename(n.data.date, n.data.title);
+      this.log.debug(`Wrote ${file}`);
+      this.output.write(this.toFilename(n.data.date, n.data.title), n);
+    }
 
+    // Skip comments for now
     const comments = cache.comments.map(c => ({
       data: {
-
+        
       },
       content: toMarkdown(autop(c.body ?? '')),
     }));
 
-    const site = {
+    this.data.bucket('sites').set('goddy', {
       id: 'goddy',
       title: 'Growing Up Goddy',
       url: 'https://growingupgoddy.com',
       slogan: cache.vars['site_slogan'] || undefined,
       software: 'Drupal 6',
       hosting: 'Linode'
-    }
-  }
+    });
 
-  override async finalize(): Promise<void> {
     this.copyAssets('files', 'goddy');
+    return Promise.resolve();
   }
 }

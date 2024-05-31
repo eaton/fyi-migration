@@ -103,6 +103,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
 
       this.queue.push(formattedEntry);
     }
+    return Promise.resolve();
   }
 
   override async finalize() {
@@ -124,6 +125,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
     });
 
     await this.copyAssets('media/lj-photos', 'lj');
+    return Promise.resolve();
   }
 
   protected override prepMarkdownFile(input: LivejournalEntry) {

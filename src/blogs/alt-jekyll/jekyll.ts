@@ -11,7 +11,7 @@ const defaults: BlogMigratorOptions = {
   description: 'Posts, comments, and images from the Jekyll version of angrylittletree.com',
   input: 'input/blogs/angrylittletree-jekyll',
   cache: 'cache/blogs/angrylittletree-jekyll',
-  output: 'src/entries/alt',
+  output: 'src/entries/alt-jekyll',
 }
 
 export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
@@ -49,6 +49,7 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     for (const e of data) {
       this.queue.push(this.prepMarkdownFile(e));
     }
+    return Promise.resolve();
   }
 
   protected override prepMarkdownFile(input: JekyllPost) {
@@ -102,5 +103,6 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     });
 
     await this.copyAssets('files', 'alt');
+    return Promise.resolve();
   }
 }

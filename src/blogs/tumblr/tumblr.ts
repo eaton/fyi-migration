@@ -84,7 +84,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   }
 
   override async readCache(): Promise<TumblrPost[]> {
-    this.user = this.cache.read('user-info.json', 'auto') as TumblrUser;
+    this.user = this.cache.read('user-info.json', 'jsonWithDates') as TumblrUser;
     this.blogs = this.cache.find({ matching: '*/blog-info.json' }).map(b => this.cache.read(b, 'auto') as TumblrBlog);
     const posts = this.cache.find({ matching: '*/post-*.json' }).map(p => this.cache.read(p, 'auto') as TumblrPost);
 
@@ -111,6 +111,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
     this.writeBlogInfo();
     this.writeLinks();
     await this.copyAssets('blogs/tumblr/files', 'tumblr');
+    return Promise.resolve();
   }
 
   protected override prepMarkdownFile(input: TumblrPost): MarkdownPost {

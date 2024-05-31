@@ -11,7 +11,7 @@ const defaults: BlogMigratorOptions = {
   description: 'Posts from the short-lived Drupal version of Angry Little Tree',
   input: 'input/blogs/angrylittletree-drupal',
   cache: 'cache/blogs/alt-drupal',
-  output: 'src/entries/alt',
+  output: 'src/entries/alt-drupal',
 }
 
 type drupalEntityData = {
@@ -68,14 +68,14 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   override async readCache(): Promise<drupalEntityData> {
-    const nodes = this.cache.read('nodes.json', 'auto') as z.infer<typeof schemas.nodeSchema>[];
-    const nodeBodies = this.cache.read('nodeBodies.json', 'auto') as z.infer<typeof schemas.bodySchema>[];
-    const attachments = this.cache.read('attachments.json', 'auto') as z.infer<typeof schemas.attachmentSchema>[];
-    this.entityData.files = this.cache.read('files.json', 'auto') as z.infer<typeof schemas.fileSchema>[];
-    const comments = this.cache.read('comments.json', 'auto') as z.infer<typeof schemas.commentSchema>[];
-    const commentBodies = this.cache.read('commentBodies.json', 'auto') as z.infer<typeof schemas.commentBodySchema>[];
-    this.entityData.aliases = this.cache.read('aliases.json', 'auto') as z.infer<typeof schemas.aliasSchema>[];
-    const variables = this.cache.read('variables.json', 'auto') as z.infer<typeof schemas.variableSchema>[];
+    const nodes = this.cache.read('nodes.json', 'jsonWithDates') as z.infer<typeof schemas.nodeSchema>[];
+    const nodeBodies = this.cache.read('nodeBodies.json', 'jsonWithDates') as z.infer<typeof schemas.bodySchema>[];
+    const attachments = this.cache.read('attachments.json', 'jsonWithDates') as z.infer<typeof schemas.attachmentSchema>[];
+    this.entityData.files = this.cache.read('files.json', 'jsonWithDates') as z.infer<typeof schemas.fileSchema>[];
+    const comments = this.cache.read('comments.json', 'jsonWithDates') as z.infer<typeof schemas.commentSchema>[];
+    const commentBodies = this.cache.read('commentBodies.json', 'jsonWithDates') as z.infer<typeof schemas.commentBodySchema>[];
+    this.entityData.aliases = this.cache.read('aliases.json', 'jsonWithDates') as z.infer<typeof schemas.aliasSchema>[];
+    const variables = this.cache.read('variables.json', 'jsonWithDates') as z.infer<typeof schemas.variableSchema>[];
 
     this.log.debug(`Processing nodes`);
     for (const n of nodes) {

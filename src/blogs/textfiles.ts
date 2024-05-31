@@ -31,7 +31,8 @@ export class TextfilesMigrator extends BlogMigrator {
       unset(txt, 'data.slug');
 
       txt.content = autop(txt.content ?? '', true);
-      this.output.write(file.replace('.txt', '.md'), txt); 
+      this.output.write(file.replace('.txt', '.md'), txt);
+      return Promise.resolve(); 
     }
   }
 }
