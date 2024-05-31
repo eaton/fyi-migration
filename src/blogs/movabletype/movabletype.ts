@@ -16,7 +16,7 @@ const defaults: MovableTypeMigratorOptions = {
   label: 'Movable Type',
   input: 'input/blogs/movabletype',
   cache: 'cache/blogs/movabletype',
-  output: 'src/entries/viapositiva',
+  output: 'src/entries/',
   authors: [4],
   blogs: [3,4]
 }
@@ -131,7 +131,9 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
           },
           content: toMarkdown(autop(fromTextile(text))),
         };
-        const file = this.toFilename(md.data.date, md.data.title);
+
+        const prefix = b.blog_shortname || this.options.name || 'movabletype';
+        const file = prefix + '/' + this.toFilename(md.data.date, md.data.title);
         try {
           this.output.write(file, md);
           this.log.debug(`Wrote ${file}`);
@@ -144,7 +146,7 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
     }
 
     // Save blogroll links
-    await this.copyAssets('files', 'viapositiva');
+    await this.copyAssets('files', 'positiva');
     return Promise.resolve();
   }
 
