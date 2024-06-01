@@ -1,7 +1,7 @@
 import { BlogMigrator } from './blogs/blog-migrator.js';
 import * as blogs from './blogs/index.js';
 // import { ArticleReprintMigrator } from "./misc/article-reprints.js";
-import { TwitterMigrator } from './misc/twitter.js';
+import { TwitterMigrator } from './twitter/twitter.js';
 
 export class AllBlogs extends BlogMigrator {
   override async run() {

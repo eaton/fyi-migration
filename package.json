@@ -64,6 +64,7 @@
     "empty-deep": "^1.0.0",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
+    "humanize-url": "^3.0.0",
     "mdb-reader": "^3.0.0",
     "micromatch": "^4.0.7",
     "obby": "^1.2.0",

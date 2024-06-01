@@ -11,9 +11,11 @@ import {
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
-import { z } from 'zod';
 import { Migrator, MigratorOptions } from '../util/migrator.js';
 import { toText } from '@eatonfyi/html';
+import { Tweet, TweetThread, tweetSchema } from '../schemas/tweet.js';
+import humanizeUrl from 'humanize-url';
+import { toCase, toSlug } from '@eatonfyi/text';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   makeThreads?: boolean;
@@ -26,8 +28,8 @@ const defaults: TwitterMigratorOptions = {
   name: 'twitter',
   description: 'Tweets from multiple accounts',
   input: '/Volumes/archives/Backup/Service Migration Downloads/twitter',
-  cache: '/Volumes/Syntax/scratch/social/twitter',
-  output: 'src/social',
+  cache: 'cache/twitter',
+  output: 'src/threads',
   makeThreads: true,
   saveMedia: true,
   saveFavorites: false,
@@ -36,7 +38,7 @@ const defaults: TwitterMigratorOptions = {
 
 export class TwitterMigrator extends Migrator {
   declare options: TwitterMigratorOptions;
-  tweets = new Map<string, ParsedTweet>();
+  tweets = new Map<string, Tweet>();
   threads = new Map<string, Set<string>>();
 
   constructor(options: TwitterMigratorOptions = {}) {
@@ -44,7 +46,7 @@ export class TwitterMigrator extends Migrator {
   }
 
   override async cacheIsFilled(): Promise<boolean> {
-    return Promise.resolve(this.cache.exists('tweets.ndjson') === 'file');
+    return this.cache.exists('tweets.ndjson') === 'file';
   }
 
   override async fillCache(): Promise<unknown> {
@@ -74,7 +76,7 @@ export class TwitterMigrator extends Migrator {
           this.tweets.set(tweet.id, tweet);
         }
       }
-      this.cache.write(`accounts/${archive.user.screen_name}/${archive.hash}.json`, archive.synthetic_info);
+      await this.saveArchiveInfo(archive);
       this.log.debug(`Done with ${file}`);
       archive.releaseZip();
     }
@@ -88,37 +90,93 @@ export class TwitterMigrator extends Migrator {
     }
 
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
-    this.cache.write('threads.ndjson', [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]));
+    this.cache.write('threadids.ndjson', [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]));
 
-    return Promise.resolve();
+    return;
   }
 
   override async readCache(): Promise<unknown> {
     if (this.tweets.size === 0) {
-      const tweets = this.cache.read('tweets.ndjson', 'auto') as ParsedTweet[] | undefined;
+      const tweets = this.cache.read('tweets.ndjson', 'auto') as Tweet[] | undefined;
       if (tweets) {
-        for (const t of tweets) this.tweets.set(t.id, t);
+        for (const t of tweets) this.tweets.set(t.id, tweetSchema.parse(t));
       }
     }
 
     if (this.threads.size === 0) {
-      const threads = this.cache.read('threads.ndjson', 'auto') as Record<string, string[]> | undefined;
+      const threads = this.cache.read('threads.ndjson', 'auto') as [string, string[]] | undefined;
       if (threads) {
-        for (const [thread, children] of Object.entries(threads)) {
-          this.threads.set(thread, new Set<string>(...children));
+        for (const [thread, children] of threads) {
+          this.threads.set(thread, new Set<string>(children));
         }
       }
     }
 
-    return Promise.resolve({ tweets: this.tweets, threads: this.threads });
+    return { tweets: this.tweets, threads: this.threads };
   }
 
   override async finalize() {
     // Write a giant datafile with ndjson for each year of each tweet.
     // Build a thread for each thread.
+
+    for (const th of [...this.threads.entries()]) {
+      const first = this.tweets.get(th[0]);
+      const children = [...th[1].values()].map(id => this.tweets.get(id)).filter(tw => tw !== undefined);
+      if (first && first.about === undefined) {
+        const thread: TweetThread = {
+          id: first.id,
+          user: first.handle,
+          start: first.date,
+          end: first.date,
+          about: first.about,
+          aboutId: first.aboutId,
+          favorites: 0,
+          retweets: 0,
+          length: children.length + 1,
+          tweets: [first, ...children]
+        };
+        thread.favorites = thread.tweets.map(t => t.favorites).reduce((partialSum, a) => partialSum + a, 0);
+        thread.retweets = thread.tweets.map(t => t.retweets).reduce((partialSum, a) => partialSum + a, 0);
+        thread.end = thread.tweets.map(t => t.date).sort().pop()!;
+      
+        const content = this.threadToMarkdown(thread);
+        let title = content.replaceAll('\n', ' ').slice(0,48);
+        title = toCase.title(title);
+        const data = {
+          id: `${thread.id}`,
+          title: title,
+          slug: toSlug(title),
+          date: thread.start,
+          endDate: thread.end,
+          account: thread.user,
+          tweets: thread.tweets.map(t => t.id),
+          favorites: thread.favorites,
+          retweets: thread.retweets, 
+        }
+        const dateString = thread.start.toISOString().split('T')[0];
+        this.output.write(`${thread.start.getFullYear()}/${dateString}-t${data.id}.md`, {content, data})
+      };
+    }
+
+    this.cache.copy('media', this.output.path('../_static/twitter'));
   }
 
-  protected findAncestor(tweet: ParsedTweet): ParsedTweet | undefined {
+  async saveArchiveInfo(archive: TwitterArchive) {
+    this.cache.write(`${archive.user.screen_name}/${archive.hash}.json`, archive.synthetic_info);
+    const avatar = await archive.medias.getProfilePictureOf(archive.user, true);
+    if (avatar) {
+      const baseName = parsePath(archive.user.profile_img_url).base;
+      this.cache.write(`${archive.user.screen_name}/${baseName}`, Buffer.from(avatar as ArrayBuffer));
+    }
+    const banner = await archive.medias.getProfileBannerOf(archive.user, true);
+    if (banner) {
+      const baseName = parsePath(archive.user.profile_banner_url).base;
+      this.cache.write(`${archive.user.screen_name}/${baseName}.jpg`, Buffer.from(banner as ArrayBuffer));
+    }
+    return;
+  }
+
+  protected findAncestor(tweet: Tweet): Tweet | undefined {
     if (tweet.about) {
       const parent = this.tweets.get(tweet.about);
       if (parent) {
@@ -145,13 +203,6 @@ export class TwitterMigrator extends Migrator {
       favorites: tweet.favorite_count,
       retweets: tweet.retweet_count,
     });
-  }
-
-  protected cacheTweet(tweet: ParsedTweet) {
-    this.cache.write(
-      `accounts/${tweet.handle}/${tweet.date.getFullYear()}/${tweet.id}.json`,
-      tweet,
-    );
   }
 
   protected async saveTweetMedia(archive: TwitterArchive, tweet: PartialTweet) {
@@ -202,33 +253,30 @@ export class TwitterMigrator extends Migrator {
       tweet.in_reply_to_user_id_str === tweet.user.id_str
     );
   }
+
+  protected threadToMarkdown(thread: TweetThread) {
+    return thread.tweets.map(t => this.tweetToMarkdown(t)).join('\n\n');
+  }
+
+  protected tweetToMarkdown(tweet: Tweet) {
+    let output = tweet.text;
+
+    // Remove the single link to the twitpic URL, and put each media item on its own line.
+    // Later, we can wrap them in something.
+    for (const [short, mediaFiles] of Object.entries(tweet.media ?? {})) {
+      output = output.replaceAll(short, '');
+      output += mediaFiles.map(m => `\n\n![](media://${m.replace('media', 'twitter')})`);
+    }
+
+    // Humanize URLs; deal with expanding link shorteners later.
+    for (const [short, long] of Object.entries(tweet.links ?? {})) {
+      output = output.replaceAll(short, `[${humanizeUrl(long)}](${long})`);
+    }
+
+    if (output.startsWith(`@${tweet.handle} `)) {
+      output = output.replace(`@${tweet.handle} `, '');
+    }
+
+    return output;
+  }
 }
-
-const tweetSchema = z.object({
-  id: z.coerce.string(),
-  date: z.date(),
-  handle: z.string(),
-  text: z.string(),
-
-  thread: z
-    .string()
-    .optional()
-    .describe('The ID of the topmost parent in a string of replies'),
-  about: z
-    .string()
-    .optional()
-    .describe(
-      'If the tweet is a reply, the ID of the status it is in reply to',
-    ),
-  aboutId: z
-    .string()
-    .optional()
-    .describe('If the tweet is a reply, the ID of account it is replying to'),
-  links: z.record(z.string().url()).optional(),
-  media: z.record(z.array(z.string().url())).optional(),
-
-  source: z.string().optional(),
-  favorites: z.number().default(0),
-  retweets: z.number().default(0),
-});
-type ParsedTweet = z.infer<typeof tweetSchema>;
