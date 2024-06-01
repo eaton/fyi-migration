@@ -1,15 +1,15 @@
-import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
-import * as schemas from "./schema.js";
-import { type MarkdownPost } from "../../schemas/markdown-post.js";
-import { z, ZodTypeAny } from 'zod';
-import { toSlug } from "@eatonfyi/text";
-import { autop, fromTextile, toMarkdown } from "@eatonfyi/html";
+import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
+import { toSlug } from '@eatonfyi/text';
+import { ZodTypeAny, z } from 'zod';
 import * as CommentOutput from '../../schemas/comment.js';
+import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
+import * as schemas from './schema.js';
 //import { nanohash } from "@eatonfyi/ids";
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
-  authors?: number[],
-  blogs?: number[],
+  authors?: number[];
+  blogs?: number[];
 }
 
 const defaults: MovableTypeMigratorOptions = {
@@ -19,8 +19,8 @@ const defaults: MovableTypeMigratorOptions = {
   cache: 'cache/blogs/movabletype',
   output: 'src/entries/',
   authors: [4],
-  blogs: [3,4]
-}
+  blogs: [3, 4],
+};
 
 export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
   declare options: MovableTypeMigratorOptions;
@@ -38,10 +38,16 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
 
     const authors = this.readTableCsv('mt_author.csv', schemas.authorSchema);
     const blogs = this.readTableCsv('mt_blog.csv', schemas.blogSchema);
-    const categories = this.readTableCsv('mt_category.csv', schemas.categorySchema);
+    const categories = this.readTableCsv(
+      'mt_category.csv',
+      schemas.categorySchema,
+    );
     const entries = this.readTableCsv('mt_entry.csv', schemas.entrySchema);
     const comments = this.readTableCsv('mt_comment.csv', schemas.commentSchema);
-    const plugins = this.readTableCsv('mt_plugindata.csv', schemas.pluginSchema);
+    const plugins = this.readTableCsv(
+      'mt_plugindata.csv',
+      schemas.pluginSchema,
+    );
 
     for (const a of authors) {
       this.cache.write(`authors/${toSlug(a.author_name)}.json`, a);
@@ -53,7 +59,10 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
       this.cache.write(`entries/${e.entry_basename}.json`, e);
     }
     for (const c of comments) {
-      this.cache.write(`comments/${c.comment_entry_id}-${c.comment_id}.json`, c);
+      this.cache.write(
+        `comments/${c.comment_entry_id}-${c.comment_id}.json`,
+        c,
+      );
     }
     this.cache.write(`categories.json`, categories);
     this.cache.write(`plugins.json`, plugins);
@@ -62,25 +71,35 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
   override async readCache() {
     this.log.debug(`Loading cached data`);
 
-    let authors = this.cache.find({ matching: 'authors/*.json' }).map(file =>
-      this.cache.read(file, 'jsonWithDates') as schemas.Author
-    )
-    let blogs = this.cache.find({ matching: 'blogs/*.json' }).map(file =>
-      this.cache.read(file, 'jsonWithDates') as schemas.Blog
-    )
-    let entries = this.cache.find({ matching: 'entries/*.json' }).map(file =>
-      this.cache.read(file, 'jsonWithDates') as schemas.Entry
-    )
-    const comments = this.cache.find({ matching: 'comments/*.json' }).map(file =>
-      this.cache.read(file, 'jsonWithDates') as schemas.Comment
-    )
+    let authors = this.cache
+      .find({ matching: 'authors/*.json' })
+      .map(file => this.cache.read(file, 'jsonWithDates') as schemas.Author);
+    let blogs = this.cache
+      .find({ matching: 'blogs/*.json' })
+      .map(file => this.cache.read(file, 'jsonWithDates') as schemas.Blog);
+    let entries = this.cache
+      .find({ matching: 'entries/*.json' })
+      .map(file => this.cache.read(file, 'jsonWithDates') as schemas.Entry);
+    const comments = this.cache
+      .find({ matching: 'comments/*.json' })
+      .map(file => this.cache.read(file, 'jsonWithDates') as schemas.Comment);
 
-    const categories = this.cache.read('categories.json', 'jsonWithDates') as schemas.Category[];
-    const plugins = this.cache.read('plugins.json', 'jsonWithDates') as schemas.Plugin[];
+    const categories = this.cache.read(
+      'categories.json',
+      'jsonWithDates',
+    ) as schemas.Category[];
+    const plugins = this.cache.read(
+      'plugins.json',
+      'jsonWithDates',
+    ) as schemas.Plugin[];
 
     if (this.options.authors) {
-      entries = entries.filter(e => this.options.authors?.includes(e.entry_author_id));
-      authors = authors.filter(a => this.options.authors?.includes(a.author_id));
+      entries = entries.filter(e =>
+        this.options.authors?.includes(e.entry_author_id),
+      );
+      authors = authors.filter(a =>
+        this.options.authors?.includes(a.author_id),
+      );
     }
 
     if (this.options.blogs) {
@@ -99,7 +118,7 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
     return Promise.resolve({
       authors,
       blogs,
-      plugins
+      plugins,
     });
   }
 
@@ -115,12 +134,16 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
         url: b.blog_site_url,
         slogan: b.blog_description,
         software: 'Movable Type',
-        hosting: 'Site5 Hosting'
+        hosting: 'Site5 Hosting',
       });
-  
+
       for (const e of b.entries ?? []) {
-        const text = [e.entry_text, e.entry_text_more].filter(e => e.length > 0).join('\n\n');
-        const category = b.categories?.find(c => c.category_id === e.entry_category_id)?.category_label || undefined;
+        const text = [e.entry_text, e.entry_text_more]
+          .filter(e => e.length > 0)
+          .join('\n\n');
+        const category =
+          b.categories?.find(c => c.category_id === e.entry_category_id)
+            ?.category_label || undefined;
 
         const md = {
           data: {
@@ -143,27 +166,28 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
             author: {
               name: c.comment_author,
               mail: c.comment_email,
-              url: c.comment_url
+              url: c.comment_url,
             },
             body: toMarkdown(autop(fromTextile(c.comment_text))),
           };
           return comment;
         });
 
-
         const prefix = b.blog_shortname || this.options.name || 'movabletype';
-        const file = prefix + '/' + this.toFilename(md.data.date, md.data.title);
+        const file =
+          prefix + '/' + this.toFilename(md.data.date, md.data.title);
         try {
           this.output.write(file, md);
           this.log.debug(`Wrote ${file}`);
           if (mappedComments.length) {
             commentStore.set(md.data.id, mappedComments);
-            this.log.debug(`Saved ${mappedComments.length} comments for ${md.data.id}`);
+            this.log.debug(
+              `Saved ${mappedComments.length} comments for ${md.data.id}`,
+            );
           }
-        } catch(error: unknown) {
-          this.log.error(error, `Failure writing ${file}`)
+        } catch (error: unknown) {
+          this.log.error(error, `Failure writing ${file}`);
         }
-
       }
     }
 
@@ -173,7 +197,7 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {
-    const raw = this.input.read('tables/' + file, 'auto') as unknown[] ?? [];
-    return raw.map(u => schema.parse(u) as z.infer<T>) ;
+    const raw = (this.input.read('tables/' + file, 'auto') as unknown[]) ?? [];
+    return raw.map(u => schema.parse(u) as z.infer<T>);
   }
 }

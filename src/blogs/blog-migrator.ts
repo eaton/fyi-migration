@@ -1,10 +1,10 @@
-import { toSlug } from "@eatonfyi/text";
-import { MarkdownPost } from "../schemas/markdown-post.js";
-import { Migrator, MigratorOptions } from "../util/migrator.js";
-import { nanoid } from "@eatonfyi/ids";
+import { nanoid } from '@eatonfyi/ids';
+import { toSlug } from '@eatonfyi/text';
+import { MarkdownPost } from '../schemas/markdown-post.js';
+import { Migrator, MigratorOptions } from '../util/migrator.js';
 
 export interface BlogMigratorOptions extends MigratorOptions {
-  commentOutput?: string,
+  commentOutput?: string;
 }
 
 /**
@@ -15,8 +15,15 @@ export class BlogMigrator<T = Record<string, unknown>> extends Migrator {
   declare options: BlogMigratorOptions;
   protected queue: T[] = [];
 
-  protected toFilename(date: string | Date | undefined, title: string | undefined, suffix = '.md') {
-    const segments = [this.dateToDate(date), title ? toSlug(title.slice(0,32)) : undefined].filter(a => !!a);
+  protected toFilename(
+    date: string | Date | undefined,
+    title: string | undefined,
+    suffix = '.md',
+  ) {
+    const segments = [
+      this.dateToDate(date),
+      title ? toSlug(title.slice(0, 32)) : undefined,
+    ].filter(a => !!a);
     if (segments.length === 0) segments.push(nanoid());
     return segments.join('-') + suffix;
   }

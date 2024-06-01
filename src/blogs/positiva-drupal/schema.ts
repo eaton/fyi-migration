@@ -1,13 +1,21 @@
-import { z } from 'zod';
 import { Php } from '@eatonfyi/serializers';
+import { z } from 'zod';
 
-const epochString = z.number().or(z.string())
-.transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v)
-.transform(n => n ? new Date(n * 1000) : undefined)
+const epochString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  )
+  .transform(n => (n ? new Date(n * 1000) : undefined))
   .optional();
 
-const intString = z.number().or(z.string())
-  .transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v);
+const intString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  );
 
 const serializedPHP = z.string().transform(s => {
   const php = new Php();
@@ -34,7 +42,7 @@ export const commentSchema = z.object({
 
   timestamp: epochString,
   subject: z.string().optional(),
-  comment: z.string().optional()
+  comment: z.string().optional(),
 });
 
 export const fileSchema = z.object({
@@ -63,7 +71,7 @@ export const photoSchema = z.object({
 export const linkSchema = z.object({
   nid: z.number(),
   title: z.string().optional(),
-  url: z.string().optional()
+  url: z.string().optional(),
 });
 
 export const amazonSchema = z.object({
@@ -109,16 +117,18 @@ export const userSchema = z.object({
 
 export const variableSchema = z.object({
   name: z.string(),
-  value: serializedPHP
+  value: serializedPHP,
 });
 
-export const positivaNodeSchema = nodeSchema.and(z.object({
-  link: linkSchema.optional(),
-  quote: quoteSchema.optional(),
-  photo: photoSchema.optional(),
-  amazon: amazonSchema.optional(),
-  files: z.array(fileSchema).optional(),
-}))
+export const positivaNodeSchema = nodeSchema.and(
+  z.object({
+    link: linkSchema.optional(),
+    quote: quoteSchema.optional(),
+    photo: photoSchema.optional(),
+    amazon: amazonSchema.optional(),
+    files: z.array(fileSchema).optional(),
+  }),
+);
 
 export type Node = z.infer<typeof positivaNodeSchema>;
 export type Comment = z.infer<typeof commentSchema>;

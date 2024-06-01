@@ -15,7 +15,7 @@ export class Arango {
     const { databaseName, ...config } = input;
 
     const db = new Database(config);
-    
+
     if (await db.database(databaseName).exists()) {
       return new Arango(db);
     } else {
@@ -30,16 +30,20 @@ export class Arango {
     } else {
       this.db = new Database(input);
     }
-  };
+  }
 
   /**
    * Returns a promise resolving to the named collection; the collection will
    * be created if it does not already exist.
    */
-  async ensure(name: string, options: CreateCollectionOptions & { type?: string } = {} ) {
+  async ensure(
+    name: string,
+    options: CreateCollectionOptions & { type?: string } = {},
+  ) {
     const { type, ...opt } = options;
 
-    return this.db.collection(name)
+    return this.db
+      .collection(name)
       .exists()
       .then(async exists => {
         if (exists) {
@@ -58,16 +62,19 @@ export class Arango {
    * did not exist, the number of removed documents will be -1.
    */
   async empty(name: string) {
-    return this.db.collection(name)
+    return this.db
+      .collection(name)
       .exists()
-      .then((exists) => {
+      .then(exists => {
         if (exists) {
-          return this.db.collection(name)
+          return this.db
+            .collection(name)
             .count()
-            .then((count) =>
-              this.db.collection(name)
+            .then(count =>
+              this.db
+                .collection(name)
                 .truncate()
-                .then(() => count.count)
+                .then(() => count.count),
             );
         } else {
           return -1;
@@ -81,16 +88,19 @@ export class Arango {
    * did not exist, the number of removed documents will be -1.
    */
   async destroy(name: string) {
-    return this.db.collection(name)
+    return this.db
+      .collection(name)
       .exists()
-      .then((exists) => {
+      .then(exists => {
         if (exists) {
-          return this.db.collection(name)
+          return this.db
+            .collection(name)
             .count()
-            .then((count) =>
-              this.db.collection(name)
+            .then(count =>
+              this.db
+                .collection(name)
                 .drop()
-                .then(() => count.count)
+                .then(() => count.count),
             );
         } else {
           return -1;

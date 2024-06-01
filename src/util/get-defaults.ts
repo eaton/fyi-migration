@@ -1,6 +1,14 @@
-import 'dotenv/config';
 import jetpack from '@eatonfyi/fs-jetpack';
-import { Json, NdJson, Json5, Csv, Tsv, Yaml, Frontmatter } from '@eatonfyi/serializers';
+import {
+  Csv,
+  Frontmatter,
+  Json,
+  Json5,
+  NdJson,
+  Tsv,
+  Yaml,
+} from '@eatonfyi/serializers';
+import 'dotenv/config';
 // import { Arango } from '../storage/arango-store.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
@@ -20,7 +28,7 @@ export function getDefaults() {
     output: process.env.MIGRATION_OUTPUT ?? 'output',
     assets: process.env.MIGRATION_ASSETS ?? 'assets',
     data: process.env.MIGRATION_DATA ?? 'data',
-  }
+  };
 }
 
 /*

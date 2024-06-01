@@ -1,9 +1,9 @@
-/** 
+/**
  * A roughly Map-like interface, with the exception that return values are Promises.
  * Might consider making this a 'malleable' interface with both Promise and Sync
  * versions, and allowing providers to use either, though I'd have to dig into the
  * best ways to make that work.
- * 
+ *
  * Some providers need it while others don't; no sense in forcing the issue.
  */
 

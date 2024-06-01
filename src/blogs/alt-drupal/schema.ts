@@ -1,13 +1,21 @@
-import { z } from 'zod';
 import { Php } from '@eatonfyi/serializers';
+import { z } from 'zod';
 
-const epochString = z.number().or(z.string())
-.transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v)
-.transform(n => n ? new Date(n * 1000) : undefined)
+const epochString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  )
+  .transform(n => (n ? new Date(n * 1000) : undefined))
   .optional();
 
-const intString = z.number().or(z.string())
-  .transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v);
+const intString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  );
 
 const serializedPHP = z.string().transform(s => {
   const php = new Php();
@@ -31,7 +39,7 @@ export const commentSchema = z.object({
   name: z.string().optional(),
   mail: z.string().optional(),
   homepage: z.string().optional(),
-  body: z.string().optional()
+  body: z.string().optional(),
 });
 
 export const fieldSchema = z.object({
@@ -42,18 +50,18 @@ export const fieldSchema = z.object({
   revision_id: intString,
   language: z.string(),
   delta: z.number(),
-})
+});
 
 export const bodySchema = fieldSchema.extend({
   body_value: z.string(),
   body_summary: z.string().optional(),
-  body_format: z.string()
+  body_format: z.string(),
 });
 
 export const commentBodySchema = fieldSchema.extend({
   comment_body_value: z.string(),
   comment_comment_body_summary: z.string().optional(),
-  comment_body_format: z.string()
+  comment_body_format: z.string(),
 });
 
 export const fileSchema = z.object({
@@ -64,7 +72,7 @@ export const fileSchema = z.object({
   filemime: z.unknown(),
   filesize: intString,
   status: z.unknown(),
-  timestamp: epochString
+  timestamp: epochString,
 });
 
 export const attachmentSchema = fieldSchema.extend({
@@ -89,7 +97,7 @@ export const nodeSchema = z.object({
   sticky: z.coerce.boolean(),
   body: z.string().optional(),
   summary: z.string().optional(),
-  attachments: z.array(attachmentSchema).optional()
+  attachments: z.array(attachmentSchema).optional(),
 });
 
 export const aliasSchema = z.object({
@@ -115,5 +123,5 @@ export const userSchema = z.object({
 
 export const variableSchema = z.object({
   name: z.string(),
-  value: serializedPHP
+  value: serializedPHP,
 });

@@ -1,18 +1,24 @@
-import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
+import { toMarkdown } from '@eatonfyi/html';
+import { nanohash } from '@eatonfyi/ids';
+import { toSlug } from '@eatonfyi/text';
+import { normalize } from '@eatonfyi/urls';
 import { Client } from '@serguun42/tumblr.js';
-import { type TumblrPost, type TumblrBlog, UserInfoSchema, BlogSchema, TumblrUser } from "./schema.js";
-import { type MarkdownPost } from "../../schemas/markdown-post.js";
-import { toSlug } from "@eatonfyi/text";
-import { toMarkdown } from "@eatonfyi/html";
-import { nanohash } from '@eatonfyi/ids'
-import { normalize } from "@eatonfyi/urls";
+import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
+import {
+  BlogSchema,
+  TumblrUser,
+  UserInfoSchema,
+  type TumblrBlog,
+  type TumblrPost,
+} from './schema.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
   consumer_secret?: string;
   token?: string;
   token_secret?: string;
-  blogs?: string[]
+  blogs?: string[];
 }
 
 const defaults: TumblrMigratorOptions = {
@@ -25,10 +31,10 @@ const defaults: TumblrMigratorOptions = {
   consumer_key: process.env.TUMBLR_CONSUMER_KEY ?? undefined,
   consumer_secret: process.env.TUMBLR_CONSUMER_SECRET ?? undefined,
   token: process.env.TUMBLR_TOKEN ?? undefined,
-  token_secret: process.env.TUMBLR_TOKEN_SECRET ?? undefined, 
+  token_secret: process.env.TUMBLR_TOKEN_SECRET ?? undefined,
 
-  blogs: ['cmswhoops', 'govertainment', 'plf', 'tomyformerself']
-}
+  blogs: ['cmswhoops', 'govertainment', 'plf', 'tomyformerself'],
+};
 
 export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   declare options: TumblrMigratorOptions;
@@ -46,7 +52,12 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   }
 
   override async fillCache(): Promise<unknown> {
-    if (!this.options.consumer_key || !this.options.consumer_secret || !this.options.token || !this.options.token_secret) {
+    if (
+      !this.options.consumer_key ||
+      !this.options.consumer_secret ||
+      !this.options.token ||
+      !this.options.token_secret
+    ) {
       this.log.error('No Tumblr auth tokens were given.');
       return Promise.reject();
     }
@@ -57,7 +68,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
       consumer_key: this.options.consumer_key,
       consumer_secret: this.options.consumer_secret,
       token: this.options.token,
-      token_secret: this.options.token_secret, 
+      token_secret: this.options.token_secret,
     });
 
     const userRaw = await t.userInfo();
@@ -65,13 +76,17 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
     this.cache.write('user-info.json', user, { jsonIndent: 2 });
 
     for (const blog of blogs ?? []) {
-      if (blog.admin && blog.name && (!this.options.blogs || this.options.blogs.includes(blog.name))) {
+      if (
+        blog.admin &&
+        blog.name &&
+        (!this.options.blogs || this.options.blogs.includes(blog.name))
+      ) {
         const blogDir = this.cache.dir(blog.name);
         blogDir.write('blog-info.json', blog, { jsonIndent: 2 });
 
         const rawPosts = await t.blogPosts(blog.name);
         const { posts } = BlogSchema.parse(rawPosts);
-        
+
         if (typeof posts === 'number') continue;
 
         for (const post of posts ?? []) {
@@ -84,12 +99,19 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   }
 
   override async readCache(): Promise<TumblrPost[]> {
-    this.user = this.cache.read('user-info.json', 'jsonWithDates') as TumblrUser;
-    this.blogs = this.cache.find({ matching: '*/blog-info.json' }).map(b => this.cache.read(b, 'auto') as TumblrBlog);
-    const posts = this.cache.find({ matching: '*/post-*.json' }).map(p => this.cache.read(p, 'auto') as TumblrPost);
+    this.user = this.cache.read(
+      'user-info.json',
+      'jsonWithDates',
+    ) as TumblrUser;
+    this.blogs = this.cache
+      .find({ matching: '*/blog-info.json' })
+      .map(b => this.cache.read(b, 'auto') as TumblrBlog);
+    const posts = this.cache
+      .find({ matching: '*/post-*.json' })
+      .map(p => this.cache.read(p, 'auto') as TumblrPost);
 
     const isLink = (p: TumblrPost) => p.type === 'link';
-    
+
     this.queue = posts.filter(p => !isLink(p));
     this.links = posts.filter(p => isLink(p));
 
@@ -125,23 +147,26 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
         date: input.date ? new Date(input.date) : undefined,
         published: !!input.date,
         keywords: input.tags,
-        url: input.url
-      }
-    }
-  
+        url: input.url,
+      },
+    };
+
     md.data.migration = {
       site: `${input.blog_name}`,
       tumblrId: input.id,
       type: input.type,
     };
-  
+
     md.file = `${this.dateToDate(md.data.date)}-${md.data.slug}.md`;
 
     if (input.type === 'photo') {
-      md.data.image = input.photos?.pop()?.original_size?.url?.toString() ?? undefined;
+      md.data.image =
+        input.photos?.pop()?.original_size?.url?.toString() ?? undefined;
       md.content ||= input.caption ? toMarkdown(input.caption) : '';
     } else if (input.type === 'video') {
-      md.content ||= input.permalink_url + (input.caption ? '\n\n' + toMarkdown(input.caption) : '');
+      md.content ||=
+        input.permalink_url +
+        (input.caption ? '\n\n' + toMarkdown(input.caption) : '');
     } else {
       md.content = input.body ? toMarkdown(input.body) : '';
     }
@@ -161,7 +186,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
           title: blog.title,
           summary: blog.description,
           url: blog.url,
-          hosting: 'Tumblr',  
+          hosting: 'Tumblr',
         });
       }
     }
@@ -182,7 +207,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
         // Lotta wacky stuff happening, friends.
         if (link.description) link.description = toMarkdown(link.description);
 
-        linkStore.set(nanohash(link.url), link)
+        linkStore.set(nanohash(link.url), link);
       }
     }
   }

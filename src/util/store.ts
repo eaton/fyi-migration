@@ -1,4 +1,4 @@
-import jetpack from "@eatonfyi/fs-jetpack";
+import jetpack from '@eatonfyi/fs-jetpack';
 
 export type StoreableData = string | object | Array<unknown> | Buffer;
 export type StoreKey = string | number | symbol;
@@ -9,7 +9,10 @@ export type StoreKey = string | number | symbol;
 export class Store<T extends StoreableData = StoreableData> {
   protected root: typeof jetpack;
 
-  constructor(rootDir: string | typeof jetpack, protected readable = false) {
+  constructor(
+    rootDir: string | typeof jetpack,
+    protected readable = false,
+  ) {
     this.root = typeof rootDir === 'string' ? jetpack.dir(rootDir) : rootDir;
   }
 
@@ -18,7 +21,7 @@ export class Store<T extends StoreableData = StoreableData> {
   }
 
   set(key: StoreKey, value: T) {
-    this.root.write(asKey(key), value, { jsonIndent: this.readable ? 2 : 0});
+    this.root.write(asKey(key), value, { jsonIndent: this.readable ? 2 : 0 });
   }
 
   get(key: StoreKey) {
@@ -28,7 +31,7 @@ export class Store<T extends StoreableData = StoreableData> {
   delete(key: StoreKey) {
     if (this.has(key)) {
       this.root.remove(asKey(key));
-    } 
+    }
   }
 
   async download(key: StoreKey, url: string | URL | Request) {

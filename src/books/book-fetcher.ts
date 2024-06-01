@@ -1,5 +1,5 @@
-import jetpack from "@eatonfyi/fs-jetpack";
-import { Fetcher, FetcherOptions } from "../util/fetcher.js";
+import jetpack from '@eatonfyi/fs-jetpack';
+import { Fetcher, FetcherOptions } from '../util/fetcher.js';
 
 export class BookFetcher extends Fetcher {
   // Cache subdirectories

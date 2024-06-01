@@ -1,20 +1,16 @@
-import { BlogMigrator, BlogMigratorOptions } from "../blog-migrator.js";
-import { extract, fromLivejournal, toMarkdown, autop } from "@eatonfyi/html";
-import { isBefore, isAfter } from '@eatonfyi/dates';
+import { isAfter, isBefore } from '@eatonfyi/dates';
+import { autop, extract, fromLivejournal, toMarkdown } from '@eatonfyi/html';
 import * as CommentOutput from '../../schemas/comment.js';
+import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 
-import { parseSemagicFile } from "./semagic.js";
-import {
-  xmlTemplate,
-  xmlSchema,
-  type LivejournalEntry,
-} from './schema.js'
-import { MarkdownPost } from "../../schemas/markdown-post.js";
+import { MarkdownPost } from '../../schemas/markdown-post.js';
+import { xmlSchema, xmlTemplate, type LivejournalEntry } from './schema.js';
+import { parseSemagicFile } from './semagic.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
-  ignoreBefore?: Date,
-  ignoreAfter?: Date,
-  ignoreComments?: boolean,
+  ignoreBefore?: Date;
+  ignoreAfter?: Date;
+  ignoreComments?: boolean;
 }
 
 const defaults: LivejournalMigrateOptions = {
@@ -25,7 +21,7 @@ const defaults: LivejournalMigrateOptions = {
   input: 'input/blogs/livejournal',
   cache: 'cache/blogs/livejournal',
   output: 'src/entries/lj',
-}
+};
 
 export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
   declare options: LivejournalMigrateOptions;
@@ -47,12 +43,19 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
         try {
           const entry = parseSemagicFile(raw);
           if (entry) {
-            this.cache.write(this.toFilename(entry.date, entry.subject || entry.id.toString(), '.json'), entry);
-          }  
+            this.cache.write(
+              this.toFilename(
+                entry.date,
+                entry.subject || entry.id.toString(),
+                '.json',
+              ),
+              entry,
+            );
+          }
         } catch (err: unknown) {
           this.log.error({ err, file }, 'Error parsing Semagic file');
         }
-      };
+      }
     }
 
     const xmlFiles = this.input.find({ matching: '*.xml', recursive: false });
@@ -60,12 +63,18 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
       this.log.debug(`Parsing ${file}`);
       const xml = this.input.read(file);
       if (xml) {
-        const extracted = await extract(xml, xmlTemplate, xmlSchema, { xml: true });
+        const extracted = await extract(xml, xmlTemplate, xmlSchema, {
+          xml: true,
+        });
         for (const entry of extracted) {
-          const filename = this.toFilename(entry.date, entry.subject || entry.id.toString(), '.json');
+          const filename = this.toFilename(
+            entry.date,
+            entry.subject || entry.id.toString(),
+            '.json',
+          );
           this.cache.write(filename, entry);
-        }  
-      };
+        }
+      }
     }
 
     return Promise.resolve();
@@ -85,16 +94,24 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
     const data = await this.readCache();
 
     for (const e of data) {
-
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      if (this.options.ignoreBefore && isBefore(e.date, this.options.ignoreBefore)) continue;
-      if (this.options.ignoreAfter && isAfter(e.date, this.options.ignoreAfter)) continue;
+      if (
+        this.options.ignoreBefore &&
+        isBefore(e.date, this.options.ignoreBefore)
+      )
+        continue;
+      if (this.options.ignoreAfter && isAfter(e.date, this.options.ignoreAfter))
+        continue;
 
       const formattedEntry = {
         ...e,
         body: fromLivejournal(e.body ?? '', { breaks: true, usernames: true }),
-        teaser: fromLivejournal(e.body ?? '', { breaks: true, usernames: true, teaser: true }),
-      }
+        teaser: fromLivejournal(e.body ?? '', {
+          breaks: true,
+          usernames: true,
+          teaser: true,
+        }),
+      };
 
       this.queue.push(formattedEntry);
     }
@@ -131,7 +148,9 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
         // write entry comments
         if (comments.length) {
           commentStore.set(entry.data.id!, comments);
-          this.log.debug(`Saved ${comments.length} comments for ${entry.data.id}`);
+          this.log.debug(
+            `Saved ${comments.length} comments for ${entry.data.id}`,
+          );
         }
       } else {
         this.log.error(e);
@@ -157,18 +176,19 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
     md.data.title = input.subject;
     md.data.date = input.date;
     md.data.id = `lj-${input.id}`;
-    
+
     md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
 
     md.data.migration = {
       site: 'livejournal',
-      entryId: input.id
+      entryId: input.id,
     };
     if (input.mood) md.data.migration.mood = input.mood;
     if (input.music) md.data.migration.music = input.music;
     if (input.avatar) md.data.migration.avatar = input.avatar;
-      
-    if (input.comments?.length) md.data.engagement = { comments: input.comments.length };
+
+    if (input.comments?.length)
+      md.data.engagement = { comments: input.comments.length };
 
     // If there's a table full of photos in the markup, we also want to set the layout
     // to 'photo post' or something like that; that comes later, though.

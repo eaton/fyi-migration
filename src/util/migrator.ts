@@ -1,19 +1,19 @@
-import jetpack from "@eatonfyi/fs-jetpack";
-import { getDefaults } from "./get-defaults.js";
-import { pino, Logger, LoggerOptions } from 'pino';
-import { Store, StoreableData } from "./store.js";
+import jetpack from '@eatonfyi/fs-jetpack';
+import { Logger, LoggerOptions, pino } from 'pino';
+import { getDefaults } from './get-defaults.js';
+import { Store, StoreableData } from './store.js';
 
 export interface MigratorOptions {
-  name?: string,
-  label?: string,
-  description?: string,
-  root?: string,
-  input?: string,
-  cache?: string,
-  output?: string,
-  assets?: string,
-  data?: string,
-  logger?: Logger | LoggerOptions,
+  name?: string;
+  label?: string;
+  description?: string;
+  root?: string;
+  input?: string;
+  cache?: string;
+  output?: string;
+  assets?: string;
+  data?: string;
+  logger?: Logger | LoggerOptions;
 }
 
 const defaults = getDefaults();
@@ -22,10 +22,10 @@ const loggerDefaults: LoggerOptions = {
     target: 'pino-pretty',
     options: {
       colorize: true,
-      ignore: 'pid,hostname,time'
-    }
-  }
-}
+      ignore: 'pid,hostname,time',
+    },
+  },
+};
 
 function isLogger(input: unknown): input is Logger {
   return input !== null && typeof input === 'object' && 'child' in input;
@@ -33,10 +33,10 @@ function isLogger(input: unknown): input is Logger {
 
 /**
  * Base class for all Migrators, with helper functions for lazy instantiation
- * of jetpack instances, centralized logging and , 
+ * of jetpack instances, centralized logging and ,
  */
 export class Migrator {
-  protected options: MigratorOptions; 
+  protected options: MigratorOptions;
 
   protected _root?: typeof jetpack;
   protected _input?: typeof jetpack;
@@ -53,11 +53,13 @@ export class Migrator {
     if (isLogger(this.options.logger)) {
       // Parent logger
       this.log = this.options.logger.child({ name: this.name });
-
     } else if (typeof this.options.logger === 'object') {
       // Settings object
-      this.log = pino({ ...loggerDefaults, name: this.name, ...this.options.logger });
-
+      this.log = pino({
+        ...loggerDefaults,
+        name: this.name,
+        ...this.options.logger,
+      });
     } else {
       // No options passed in
       this.log = pino({ ...loggerDefaults, name: this.name });
@@ -70,11 +72,11 @@ export class Migrator {
   }
 
   get label() {
-    return this.options.label ??= this.name;
+    return (this.options.label ??= this.name);
   }
 
   get description() {
-    return this.options.description ??= this.name;
+    return (this.options.description ??= this.name);
   }
 
   get root() {
@@ -121,23 +123,23 @@ export class Migrator {
     await this.finalize();
     return Promise.resolve();
   }
-  
+
   /**
    * Based on information from the import settings, populate the cache. This may consist of
    * copying and organizing input files, retrieving data from a remote API, etc.
-   * 
+   *
    * This stage is meant to avoid unecessarily thrashing remote APIs, slow database lookups,
    * and so on. As such, it should cache the retieved data in as 'raw' a form as possible to
    * avoid re-fetching if needs change.
-   * 
+   *
    * The cache should be UPDATED whenever possible rather than REPLACED.
    */
   async populate(): Promise<unknown> {
-    const full = await this.cacheIsFilled()
+    const full = await this.cacheIsFilled();
     if (!full) await this.fillCache();
     return Promise.resolve();
   }
-  
+
   async cacheIsFilled(): Promise<boolean> {
     return Promise.resolve(false);
   }
@@ -173,7 +175,7 @@ export class Migrator {
     const inp = this.input.dir(input ?? '').path();
     const outp = this.assets.dir(output ?? '').path();
 
-    this.log.debug(`Copying assets from ${inp} to ${outp}`)
+    this.log.debug(`Copying assets from ${inp} to ${outp}`);
     jetpack.copyAsync(inp, outp, { overwrite });
   }
 }

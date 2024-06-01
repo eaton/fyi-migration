@@ -1,12 +1,12 @@
-import { Frontmatter } from "@eatonfyi/serializers";
-import { Migrator, MigratorOptions } from "../util/migrator.js";
+import { Frontmatter } from '@eatonfyi/serializers';
+import { Migrator, MigratorOptions } from '../util/migrator.js';
 
 const defaults: MigratorOptions = {
   name: 'textfiles',
   label: 'Assorted text files',
   input: 'input/blogs/textfiles',
   output: 'src/entries/textfiles',
-}
+};
 
 export class TextJournalsMigrator extends Migrator {
   constructor(options: MigratorOptions = {}) {
@@ -24,7 +24,7 @@ export class TextJournalsMigrator extends Migrator {
       texts.add(txt.data?.textfile);
       this.output.write(file.replace('.txt', '.md'), txt);
     }
-    
-    return Promise.resolve(); 
+
+    return Promise.resolve();
   }
 }

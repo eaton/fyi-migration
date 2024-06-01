@@ -27,16 +27,24 @@ export const entrySchema = z.object({
   entry_status: z.number(),
   entry_author_id: z.number(),
   entry_convert_breaks: z.coerce.boolean(),
-  entry_category_id: z.string().optional().transform(s => (s === 'NULL' || s === undefined) ? undefined : Number.parseInt(s)),
+  entry_category_id: z
+    .string()
+    .optional()
+    .transform(s =>
+      s === 'NULL' || s === undefined ? undefined : Number.parseInt(s),
+    ),
   entry_title: z.string(),
   entry_excerpt: z.string(),
   entry_text: z.string(),
   entry_text_more: z.string(),
-  entry_keywords: z.string().optional().transform(s => (s === 'NULL') ? undefined : s),
+  entry_keywords: z
+    .string()
+    .optional()
+    .transform(s => (s === 'NULL' ? undefined : s)),
   entry_created_on: z.coerce.date(),
   entry_modified_on: z.coerce.date(),
   entry_basename: z.string(),
-  comments: z.array(commentSchema).optional()
+  comments: z.array(commentSchema).optional(),
 });
 
 export const categorySchema = z.object({
@@ -57,16 +65,15 @@ export const blogSchema = z.object({
   blog_site_url: z.string(),
   blog_convert_paras: z.string(),
   categories: z.array(categorySchema).optional(),
-  entries: z.array(entrySchema).optional()
+  entries: z.array(entrySchema).optional(),
 });
 
 export const pluginSchema = z.object({
   plugindata_id: z.number(),
   plugindata_plugin: z.string(),
   plugindata_key: z.coerce.string(),
-  plugindata_data : z.string(),
+  plugindata_data: z.string(),
 });
-
 
 export type Author = z.infer<typeof authorSchema>;
 export type Blog = z.infer<typeof blogSchema>;

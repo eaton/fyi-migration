@@ -17,8 +17,8 @@ Really, most of this just grew out of an earnest if compulsive desire to figure 
   - [ ] Hope Station, Hope Station Phoenix
   - [ ] Cornerstone: Off The Beaten Path
 - [ ] dancingmongoose.com
-- [ ] ferretshock.com
 - [x] predicate.net
+- [ ] ferretshock.com
 - [ ] predicate.org, when it was my personal site
 - [ ] havana-mod.com, when it was a pseudo-aggregator
 
@@ -28,11 +28,12 @@ Posts and entries from the assorted places I've written over the years. These ar
 
 `Textfiles` and `Livejournal` in particular will probably need some post-migration curation and careful consideration. Many of those posts were never intended to be publicly published, are extremely full of teen and post-college cringe, or contain snippets of personal information about folks who probably didn't anticipate their melodrama spilling out.
 
+- [ ] Blogger
+- [ ] TypePad
 - [x] Livejournal (minus Textfiles reprints)
-- [ ] MovableType
+- [x] MovableType
   - [x] Viapositiva
   - [x] Reading Life
-  - [ ] Futurism
 - [x] Tumblr
   - [x] PLF
   - [x] Govertainment

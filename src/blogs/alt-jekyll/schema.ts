@@ -11,7 +11,7 @@ export const jekyllPostSchema = z.object({
     slug: z.string().optional(),
     published: z.boolean().optional(),
   }),
-  content: z.string()
-})
+  content: z.string(),
+});
 
 export type JekyllPost = z.infer<typeof jekyllPostSchema>;

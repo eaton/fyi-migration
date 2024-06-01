@@ -1,13 +1,21 @@
-import { z } from 'zod';
 import { Php } from '@eatonfyi/serializers';
+import { z } from 'zod';
 
-const epochString = z.number().or(z.string())
-.transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v)
-.transform(n => n ? new Date(n * 1000) : undefined)
+const epochString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  )
+  .transform(n => (n ? new Date(n * 1000) : undefined))
   .optional();
 
-const intString = z.number().or(z.string())
-  .transform(v => typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v);
+const intString = z
+  .number()
+  .or(z.string())
+  .transform(v =>
+    typeof v === 'string' ? Number.parseInt(v.replaceAll(/[^\d]/g, '')) : v,
+  );
 
 const serializedPHP = z.string().transform(s => {
   const php = new Php();
@@ -32,7 +40,7 @@ export const commentSchema = z.object({
   name: z.string().optional(),
   mail: z.string().optional(),
   homepage: z.string().optional(),
-  body: z.string().optional()
+  body: z.string().optional(),
 });
 
 export const fieldSchema = z.object({
@@ -43,7 +51,7 @@ export const fieldSchema = z.object({
   revision_id: intString,
   language: z.string(),
   delta: z.number(),
-})
+});
 
 export const bodySchema = fieldSchema.extend({
   body_value: z.string(),
@@ -63,7 +71,7 @@ export const fileSchema = z.object({
   filemime: z.string().optional(),
   filesize: intString,
   status: z.unknown(),
-  timestamp: epochString
+  timestamp: epochString,
 });
 
 export const uploadSchema = fieldSchema.extend({
@@ -76,7 +84,7 @@ export const uploadSchema = fieldSchema.extend({
 export const linkSchema = fieldSchema.extend({
   field_link_url: z.string().url(),
   field_link_title: z.string(),
-  field_link_attributes: serializedPHP.optional()
+  field_link_attributes: serializedPHP.optional(),
 });
 
 export const moneyQuoteSchema = fieldSchema.extend({
@@ -88,7 +96,7 @@ export const asinParticipantSchema = z.object({
   asin: z.coerce.string(),
   type: z.string(),
   participant: z.string(),
-})
+});
 
 export const asinBookSchema = z.object({
   asin: z.coerce.string(),
@@ -98,7 +106,7 @@ export const asinBookSchema = z.object({
   edition: z.coerce.string().optional(),
   numberofpages: z.coerce.string().optional(),
   publicationdate: z.coerce.string().optional(),
-})
+});
 
 export const asinItemSchema = z.object({
   asin: z.coerce.string(),
@@ -176,15 +184,15 @@ export const userSchema = z.object({
 
 export const variableSchema = z.object({
   name: z.string(),
-  value: serializedPHP
+  value: serializedPHP,
 });
 
 export const goddyNodeSchema = nodeSchema.extend({
   money_quote: moneyQuoteSchema.optional(),
   product: productSchema.optional(),
   link: linkSchema.optional(),
-  uploads: z.array(uploadSchema).optional()
-})
+  uploads: z.array(uploadSchema).optional(),
+});
 
 export type GoddyNode = z.infer<typeof goddyNodeSchema>;
 export type GoddyComment = z.infer<typeof commentSchema>;
