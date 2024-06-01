@@ -62,7 +62,7 @@ export class TwitterMigrator extends Migrator {
     for (const file of archiveFiles) {
       this.log.debug(`Loading ${file}`);
       const archive = new TwitterArchive(file, { ignore });
-      await archive.loadArchivePart();
+      await archive.ready();
       this.log.debug(`Processing tweets for ${archive.info.user.screen_name}`);
       for (const pt of archive.tweets.sortedIterator('asc')) {
         if (this.isOwnTweet(pt, archive)) {

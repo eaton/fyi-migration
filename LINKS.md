@@ -14,4 +14,3 @@ There are *loads* of internal links in these old posts that will need updating. 
 | `http://(,*.)skitch.com/*` | `/static/skitch/*` |
 
 Because these occur almost exclusively in blog posts (although there are a fair number of tweets that link to skitch images), having a consistent replacer mechanism probably makes sense.
-
