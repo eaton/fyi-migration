@@ -1,10 +1,3 @@
-// Stage 1
-// Build per-year, per-account NDJson files for tweets, perhaps?
-// Copy Tweet media
-
-// Stage 2
-// Generate 'thread' pages for multi-tweet threads, store by year
-
 import { parse as parsePath } from 'path';
 import {
   ArchiveReadPart,
@@ -260,6 +253,7 @@ export class TwitterMigrator extends Migrator {
 
   protected tweetToMarkdown(tweet: Tweet) {
     let output = tweet.text;
+    output = output.replaceAll(/\n+/g, '\n\n');
 
     // Remove the single link to the twitpic URL, and put each media item on its own line.
     // Later, we can wrap them in something.
