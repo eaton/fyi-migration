@@ -1,11 +1,10 @@
 import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
-import * as CommentOutput from '../../schemas/comment.js';
-import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import { CommentSchema } from '../../schemas/comment.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
-//import { nanohash } from "@eatonfyi/ids";
+import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -22,7 +21,7 @@ const defaults: MovableTypeMigratorOptions = {
   blogs: [3, 4],
 };
 
-export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
+export class MovableTypeMigrator extends BlogMigrator {
   declare options: MovableTypeMigratorOptions;
 
   constructor(options: MovableTypeMigratorOptions = {}) {
@@ -127,66 +126,25 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
     const siteStore = this.data.bucket('sources');
     const commentStore = this.data.bucket('comments');
 
-    for (const b of cache.blogs) {
-      siteStore.set(b.blog_shortname ?? 'movabletype', {
-        id: b.blog_shortname ?? 'movabletype',
-        title: b.blog_name,
-        url: b.blog_site_url,
-        slogan: b.blog_description,
-        software: 'Movable Type',
-        hosting: 'Site5 Hosting',
-      });
+    for (const blog of cache.blogs) {
+      const site = this.prepSite(blog);
+      siteStore.set(site.id, site);
 
-      for (const e of b.entries ?? []) {
-        const text = [e.entry_text, e.entry_text_more]
-          .filter(e => e.length > 0)
-          .join('\n\n');
-        const category =
-          b.categories?.find(c => c.category_id === e.entry_category_id)
-            ?.category_label || undefined;
+      for (const entry of blog.entries ?? []) {
+        const category = blog.categories?.find(c => c.category_id === entry.entry_category_id);
 
-        const md = {
-          data: {
-            id: `${b.blog_shortname}-${e.entry_id}`,
-            date: e.entry_created_on.toISOString(),
-            title: e.entry_title,
-            slug: toSlug(e.entry_title),
-            path: e.entry_basename,
-            category,
-          },
-          content: toMarkdown(autop(fromTextile(text))),
-        };
+        const { text, ...frontmatter } = this.prepEntry(entry, blog, category);
+        const mappedComments = (entry.comments ?? []).map(c => this.prepComment(c, frontmatter));
 
-        // Prep comments
-        const mappedComments = (e.comments ?? []).map(c => {
-          const comment: CommentOutput.Comment = {
-            id: `mt-c${c.comment_entry_id}`,
-            about: md.data.id,
-            date: c.comment_created_on,
-            author: {
-              name: c.comment_author,
-              mail: c.comment_email,
-              url: c.comment_url,
-            },
-            body: toMarkdown(autop(fromTextile(c.comment_text))),
-          };
-          return comment;
-        });
+        const file = [site.id, this.toFilename(frontmatter)].join('/');
+        this.output.write(file, { content: text, data: frontmatter});
+        this.log.debug(`Wrote ${file}`);
 
-        const prefix = b.blog_shortname || this.options.name || 'movabletype';
-        const file =
-          prefix + '/' + this.toFilename(md.data.date, md.data.title);
-        try {
-          this.output.write(file, md);
-          this.log.debug(`Wrote ${file}`);
-          if (mappedComments.length) {
-            commentStore.set(md.data.id, mappedComments);
-            this.log.debug(
-              `Saved ${mappedComments.length} comments for ${md.data.id}`,
-            );
-          }
-        } catch (error: unknown) {
-          this.log.error(error, `Failure writing ${file}`);
+        if (mappedComments.length) {
+          commentStore.set(frontmatter.id, mappedComments);
+          this.log.debug(
+            `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
+          );
         }
       }
     }
@@ -194,6 +152,50 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
     // Save blogroll links
     await this.copyAssets('files', 'positiva');
     return Promise.resolve();
+  }
+
+  protected prepSite(input: schemas.Blog): CreativeWork {
+    return CreativeWorkSchema.parse({
+      id: input.blog_shortname ?? this.options.name,
+      type: 'WebSite',
+      name: input.blog_name,
+      url: input.blog_site_url,
+      description: input.blog_description,
+      software: 'Movable Type',
+      hosting: 'Site5 Hosting',
+    });
+  }
+
+  protected prepEntry(input: schemas.Entry, blog?: schemas.Blog, category?: schemas.Category): CreativeWork {
+    const text = [input.entry_text, input.entry_text_more]
+      .filter(e => e.length > 0)
+      .join('\n\n');
+
+    const entry = CreativeWorkSchema.parse({
+      id: `${blog?.blog_id ?? 'mt'}-${input.entry_id}`,
+      date: input.entry_created_on.toISOString(),
+      name: input.entry_title,
+      slug: input.entry_basename,
+      isPartOf: blog?.blog_id,
+      text: toMarkdown(fromTextile(text)),
+      keywords: category ? [category.category_label] : undefined
+    });
+
+    return entry;
+  }
+
+  protected prepComment(input: schemas.Comment, entry: CreativeWork) {
+    return CommentSchema.parse({
+      id: `mt-c${input.comment_entry_id}`,
+      date: input.comment_created_on,
+      about: entry.id,
+      author: {
+        name: input.comment_author || undefined,
+        mail: input.comment_email || undefined,
+        url: input.comment_url || undefined,
+      },
+      text: toMarkdown(autop(fromTextile(input.comment_text))),
+    });
   }
 
   protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {

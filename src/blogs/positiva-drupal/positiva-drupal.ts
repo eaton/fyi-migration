@@ -136,17 +136,22 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('sources').set('positiva-drupal', {
-      id: this.options.name,
-      name: 'Via Positiva (Drupal)',
-      url: 'https://jeff.viapositiva.net',
-      slogan: cache.vars['site_slogan'] || undefined,
-      software: 'Drupal 5',
-      hosting: 'Site5 Hosting',
-    });
+    const site = this.prepSite(cache.vars);
+    this.data.bucket('sources').set(site.id, site);
 
     this.copyAssets('files', 'positiva');
     return Promise.resolve();
+  }
+
+  protected prepSite(vars?: Record<string, unknown>) {
+    return CreativeWorkSchema.parse({
+      id: this.name,
+      url: 'https://jeff.viapositiva.net',
+      name: vars?.['site_slogan'] || this.label,
+      description: vars?.['site_slogan'] || undefined,
+      software: 'Drupal 5',
+      hosting: 'Site5 Hosting',
+    });
   }
 
   protected prepEntry(input: drupal.Node): CreativeWork {
