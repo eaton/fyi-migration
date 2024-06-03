@@ -15,7 +15,7 @@ type baseInput = Record<string, unknown>;
  */
 export function toFilename(input: baseInput, suffix = '.md') {
   const parts: string[] = [];
-  const date = get(input, 'date dates.*');
+  const date = get(input, 'date dates.start dates.*');
   if (isDate(date)) parts.push(toShortDate(date)!);
 
   const name = get(input, 'slug name id');

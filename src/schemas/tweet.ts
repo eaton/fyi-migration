@@ -10,13 +10,13 @@ export const TweetSchema = z.object({
     .string()
     .optional()
     .describe('The ID of the topmost parent in a string of replies'),
-  about: z
+  aboutId: z
     .string()
     .optional()
     .describe(
       'If the tweet is a reply, the ID of the status it is in reply to',
     ),
-  aboutId: z
+  aboutHandle: z
     .string()
     .optional()
     .describe('If the tweet is a reply, the ID of account it is replying to'),
@@ -31,9 +31,9 @@ export const TweetSchema = z.object({
 export type Tweet = z.infer<typeof TweetSchema>;
 export type TweetThread = {
   id: string;
-  user: string;
-  about?: string;
+  handle: string;
   aboutId?: string;
+  aboutHandle?: string;
   start: Date;
   end: Date;
   favorites: number;

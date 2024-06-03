@@ -8,6 +8,7 @@ import {
 } from 'twitter-archive-reader';
 import { Tweet, TweetSchema, TweetThread } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { CreativeWorkSchema } from '../schemas/creative-work.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   makeThreads?: boolean;
@@ -124,14 +125,14 @@ export class TwitterMigrator extends Migrator {
       const children = [...th[1].values()]
         .map(id => this.tweets.get(id))
         .filter(tw => tw !== undefined);
-      if (first && first.about === undefined) {
+      if (first && first.aboutId === undefined) {
         const thread: TweetThread = {
           id: first.id,
-          user: first.handle,
+          handle: first.handle,
           start: first.date,
           end: first.date,
-          about: first.about,
           aboutId: first.aboutId,
+          aboutHandle: first.aboutHandle,
           favorites: 0,
           retweets: 0,
           length: children.length + 1,
@@ -156,7 +157,7 @@ export class TwitterMigrator extends Migrator {
           slug: toSlug(name),
           date: thread.start,
           endDate: thread.end,
-          account: thread.user,
+          account: thread.handle,
           tweets: thread.tweets.map(t => t.id),
           favorites: thread.favorites,
           retweets: thread.retweets,
@@ -199,8 +200,8 @@ export class TwitterMigrator extends Migrator {
   }
 
   protected findAncestor(tweet: Tweet): Tweet | undefined {
-    if (tweet.about) {
-      const parent = this.tweets.get(tweet.about);
+    if (tweet.aboutId) {
+      const parent = this.tweets.get(tweet.aboutId);
       if (parent) {
         return this.findAncestor(parent) ?? parent;
       }
@@ -215,8 +216,8 @@ export class TwitterMigrator extends Migrator {
       handle: tweet.user.screen_name,
       text: tweet.text,
 
-      about: tweet.in_reply_to_status_id_str,
-      aboutId: tweet.in_reply_to_user_id_str,
+      aboutId: tweet.in_reply_to_status_id_str,
+      aboutHandle: tweet.in_reply_to_screen_name,
       links: Object.fromEntries(
         tweet.entities.urls.map(u => [u.url, u.expanded_url]),
       ),
@@ -276,6 +277,37 @@ export class TwitterMigrator extends Migrator {
       tweet.in_reply_to_status_id_str &&
       tweet.in_reply_to_user_id_str === tweet.user.id_str
     );
+  }
+
+  protected prepTweet(tweet: Tweet) {
+    return CreativeWorkSchema.parse({
+      id: 'twt-' + tweet.id,
+      type: 'SocialMediaPosting',
+      about: tweet.aboutId ? `https://x.com/${tweet.aboutHandle}/status/${tweet.aboutHandle}` : undefined,
+      date: tweet.date,
+      text: this.tweetToMarkdown(tweet),
+      isPartOf: `twt-@${tweet.handle}`,
+      favorites: tweet.favorites,
+      retweets: tweet.retweets,
+      software: tweet.source,
+    })
+  }
+
+  protected prepThread(thread: TweetThread) {
+    return CreativeWorkSchema.parse({
+      id: 'twt-' + thread.id + 't',
+      type: 'SocialMediaPosting',
+      about: thread.aboutId ? `https://x.com/${thread.aboutHandle}/status/${thread.aboutId}` : undefined,
+      dates: {
+        start: thread.start,
+        end: thread.end,
+      },
+      text: this.threadToMarkdown(thread),
+      isPartOf: `twt-@${thread.handle}`,
+      hasPart: thread.tweets.map(t => `https://www.x.com/${t.handle}/status/${t.id}`),
+      favorites: thread.favorites,
+      retweets: thread.retweets,
+    })
   }
 
   protected threadToMarkdown(thread: TweetThread) {
