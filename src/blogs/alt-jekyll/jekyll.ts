@@ -100,7 +100,7 @@ export class AltJekyllMigrator extends BlogMigrator {
   }
 
   protected prepEntry(input: JekyllPost): CreativeWork {
-    const md: CreativeWorkInput = {
+    const cw: CreativeWorkInput = {
       id: 'tmp',
       date: input.data.date,
       title: input.data.title,
@@ -111,16 +111,16 @@ export class AltJekyllMigrator extends BlogMigrator {
     if (input?.file) {
       const [, date, slug] =
         /(\d{4}-\d{2}-\d{2})-(.+)\.md/.exec(input.file) ?? [];
-      md.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined;
-      md.slug ??= slug;
+      cw.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined;
+      cw.slug ??= slug;
     }
-    md.url = `http://angrylittletree.com/${input.data.date?.getFullYear()}/${input.data.date?.getUTCMonth()}/${input.data.slug}.html`;
-    md.id = 'alt-' + nanohash(md.url);
-    md.isPartOf = 'alt-jekyll';
+    cw.url = `http://angrylittletree.com/${input.data.date?.getFullYear()}/${input.data.date?.getUTCMonth()}/${input.data.slug}.html`;
+    cw.id = 'alt-' + nanohash(cw.url);
+    cw.isPartOf = 'alt-jekyll';
 
-    md.content = input.content;
+    cw.text = input.content;
 
-    return CreativeWorkSchema.parse(md);
+    return CreativeWorkSchema.parse(cw);
   }
 
   protected prepComment(comment: Disqus.Post): Comment {

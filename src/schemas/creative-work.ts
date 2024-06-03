@@ -10,6 +10,7 @@ export const CreativeWorkSchema = ThingSchema.extend({
   type: z.string().default('CreativeWork'),
   date: z.coerce.date().optional(),
   dates: z.record(z.coerce.date()).optional(),
+  headline: z.string().optional(),
   creator: z
     .string()
     .or(z.record(z.string().or(z.array(z.string()))))
