@@ -7,6 +7,7 @@ export const jekyllPostSchema = z.object({
     layout: z.string().optional(),
     date: z.date().optional(),
     summary: z.string().optional(),
+    subtitle: z.string().optional(),
     excerpt: z.string().optional(),
     slug: z.string().optional(),
     published: z.boolean().optional(),

@@ -90,7 +90,7 @@ export class AltJekyllMigrator extends BlogMigrator {
     this.data.bucket('sources').set('alt-jekyll', {
       id: 'alt-jekyll',
       url: 'https://angrylittletree.com',
-      title: 'Angry Little Tree',
+      name: 'Angry Little Tree',
       hosting: 'Github Pages',
       software: 'Jekyll',
     });
@@ -103,9 +103,10 @@ export class AltJekyllMigrator extends BlogMigrator {
     const cw: CreativeWorkInput = {
       id: 'tmp',
       date: input.data.date,
-      title: input.data.title,
+      name: input.data.title,
+      description: input.data.title,
+      headline: input.data.subtitle ? (input.data.title + ': ' + input.data.subtitle): undefined,
       slug: input.data.slug,
-      description: input.data.summary,
     };
 
     if (input?.file) {
@@ -114,6 +115,7 @@ export class AltJekyllMigrator extends BlogMigrator {
       cw.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined;
       cw.slug ??= slug;
     }
+    
     cw.url = `http://angrylittletree.com/${input.data.date?.getFullYear()}/${input.data.date?.getUTCMonth()}/${input.data.slug}.html`;
     cw.id = 'alt-' + nanohash(cw.url);
     cw.isPartOf = 'alt-jekyll';
