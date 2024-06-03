@@ -143,13 +143,10 @@ export class LivejournaMigrator extends BlogMigrator {
       id: `lj-c${comment.id}`,
       parent: comment.parent ? `lj-c${comment.parent}` : undefined,
       about: comment.entry ? `lj-${comment.entry}` : undefined,
-      author:
-        comment.name || comment.email
-          ? {
-              name: comment.name,
-              mail: comment.email,
-            }
-          : undefined,
+      commenter: {
+        name: comment.name,
+        email: comment.email
+      },
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
     });

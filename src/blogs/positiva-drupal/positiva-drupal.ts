@@ -200,7 +200,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       sort: input.thread,
       about: `vpd-${input.nid}`,
       date: input.timestamp,
-      author: {
+      commenter: {
         name: input.name,
         mail: input.mail,
         url: input.homepage,

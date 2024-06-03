@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
 
-export const AuthorSchema = z.object({
+export const CommentAuthorSchema = z.object({
   name: z.string().optional(),
   url: z.string().optional(),
   mail: z.string().optional(),
@@ -21,9 +21,9 @@ export const CommentSchema = CreativeWorkSchema.extend({
     ),
   upvotes: z.number().optional(),
   downvotes: z.number().optional(),
-  commenter: AuthorSchema.optional(),
+  commenter: CommentAuthorSchema.optional(),
 });
 
-export type Author = z.infer<typeof AuthorSchema>;
+export type CommentAuthor = z.infer<typeof CommentAuthorSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 export type CommentInput = typeof CommentSchema._input;

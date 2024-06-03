@@ -209,6 +209,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       name: input.title,
       description: input.summary ? toMarkdown(input.summary) : undefined,
       text: input.body ? toMarkdown(autop(input.body)) : '',
+      isPartOf: this.name,
       attachments: input.attachments?.map(a => ({
         filename: a.file?.filename,
         description: a.field_attachments_description,
@@ -223,7 +224,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       sort: input.thread,
       about: `alt-${input.nid}`,
       date: input.created,
-      author: {
+      commenter: {
         name: input.name,
         mail: input.mail,
         url: input.homepage,

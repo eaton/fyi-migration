@@ -221,7 +221,7 @@ export class GoddyMigrator extends BlogMigrator {
       parent: input.pid ? `goddy-c${input.pid}` : undefined,
       sort: input.thread,
       date: input.created,
-      author: {
+      commenter: {
         name: input.name,
         mail: input.mail,
         url: input.homepage,

@@ -39,12 +39,13 @@ const defaults: TumblrMigratorOptions = {
   blogs: ['cmswhoops', 'govertainment', 'plf', 'tomyformerself'],
 };
 
-export class TumblrMigrator extends BlogMigrator<TumblrPost> {
+export class TumblrMigrator extends BlogMigrator {
   declare options: TumblrMigratorOptions;
 
-  blogs?: TumblrBlog[] = []; // Records for individual Tumblr blogs
+  blogs: TumblrBlog[] = []; // Records for individual Tumblr blogs
+  posts: TumblrPost[] = []; // Records for individual posts
+  links: TumblrPost[] = []; // Records for link, photo, and video posts
   user?: TumblrUser; // Records for individual Tumblr blogs
-  links?: TumblrPost[]; // Records for link, photo, and video posts
 
   constructor(options: TumblrMigratorOptions = {}) {
     super({ ...defaults, ...options });
@@ -101,11 +102,8 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
     return Promise.resolve();
   }
 
-  override async readCache(): Promise<TumblrPost[]> {
-    this.user = this.cache.read(
-      'user-info.json',
-      'jsonWithDates',
-    ) as TumblrUser;
+  override async readCache() {
+    this.user = this.cache.read('user-info.json', 'auto') as TumblrUser;
     this.blogs = this.cache
       .find({ matching: '*/blog-info.json' })
       .map(b => this.cache.read(b, 'auto') as TumblrBlog);
@@ -114,34 +112,54 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
       .map(p => this.cache.read(p, 'auto') as TumblrPost);
 
     const isLink = (p: TumblrPost) => p.type === 'link';
-
-    this.queue = posts.filter(p => !isLink(p));
+    this.posts = posts.filter(p => !isLink(p));
     this.links = posts.filter(p => isLink(p));
 
-    return Promise.resolve(this.queue);
+    return { posts: this.posts, links: this.links, user: this.user };
   }
 
   override async finalize() {
-    for (const e of this.queue) {
+    const linkStore = this.data.bucket('links');
+    const siteStore = this.data.bucket('sites');
+
+
+    for (const e of this.posts) {
       const md = this.prepEntry(e);
       const file = this.toFilename(md);
       const { text, ...frontmatter } = md;
-      if (file) {
-        this.log.debug(`Outputting ${file}`);
-        this.output.write(file, { content: text, data: frontmatter });
-      } else {
-        this.log.error(e);
+      this.output.write(file, { content: text, data: frontmatter });
+      this.log.debug(`Wrote ${file}`);
+    }
+
+    if (this.links && this.links.length) {
+      for (const l of this.links.map(l => this.prepLink(l))) {
+        linkStore.set(l.id, l);
       }
     }
 
-    this.writeBlogInfo();
-    this.writeLinks();
+    if (this.blogs && this.blogs.length) {
+      for (const b of this.blogs.map(b => this.prepSite(b))) {
+        siteStore.set(b.id, b);
+      }
+    }
+
     await this.copyAssets('blogs/tumblr/files', 'tumblr');
     return Promise.resolve();
   }
 
+  protected prepSite(input: TumblrBlog) {
+    return CreativeWorkSchema.parse({
+      id: input.name,
+      type: 'WebSite',
+      name: input.title,
+      description: input.description,
+      url: input.url,
+      hosting: 'Tumblr',
+    });
+  }
+
   protected prepEntry(input: TumblrPost) {
-    const md: CreativeWorkInput = {
+    const cw: CreativeWorkInput = {
       id: `entry/tumblr-${input.id}`,
       title: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
@@ -156,55 +174,36 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
     };
 
     if (input.type === 'photo') {
-      md.image =
+      cw.image =
         input.photos?.pop()?.original_size?.url?.toString() ?? undefined;
-      md.text ||= input.caption ? toMarkdown(input.caption) : '';
+      cw.text ||= input.caption ? toMarkdown(input.caption) : '';
     } else if (input.type === 'video') {
-      md.text ||=
+      cw.text ||=
         input.permalink_url +
         (input.caption ? '\n\n' + toMarkdown(input.caption) : '');
     } else {
-      md.text = input.body ? toMarkdown(input.body) : '';
+      cw.text = input.body ? toMarkdown(input.body) : '';
     }
 
     if (input.publisher) {
       // TODO: 'via X' links
     }
 
-    return CreativeWorkSchema.parse(md);
+    return CreativeWorkSchema.parse(cw);
   }
 
-  protected writeBlogInfo() {
-    if (this.blogs) {
-      for (const blog of this.blogs) {
-        this.data.bucket('sources').set(blog.name!, {
-          id: blog.name,
-          title: blog.title,
-          summary: blog.description,
-          url: blog.url,
-          hosting: 'Tumblr',
-        });
-      }
-    }
-  }
+  protected prepLink(input: TumblrPost) {
+    const link = CreativeWorkSchema.parse({
+      id: nanohash(input.url),
+      url: normalize(input.url!).toString(),
+      date: input.date || undefined,
+      title: input.title || input.source_title || undefined,
+      description: input.body || input.description || input.summary || undefined,
+      isPartOf: input.blog_name
+    });
 
-  protected writeLinks() {
-    const linkStore = this.data.bucket('links');
-    for (const l of this.links ?? []) {
-      if (l.url) {
-        const link = {
-          url: normalize(l.url),
-          date: l.date || undefined,
-          title: l.title || l.source_title || undefined,
-          description: l.body || l.description || l.summary || undefined,
-          source: l.blog_name,
-        };
-
-        // Lotta wacky stuff happening, friends.
-        if (link.description) link.description = toMarkdown(link.description);
-
-        linkStore.set(nanohash(link.url), link);
-      }
-    }
+    // Lotta wacky stuff happening, friends.
+    if (link.description) link.description = toMarkdown(link.description);
+    return link;
   }
 }
