@@ -1,25 +1,86 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { Logger, LoggerOptions, pino } from 'pino';
-import { getDefaults, isLogger } from '../util/index.js';
+import { isLogger } from '../util/index.js';
+import { merge } from 'obby';
 import { Store, StoreableData } from './store.js';
+import {
+  Csv,
+  Frontmatter,
+  Json,
+  Json5,
+  NdJson,
+  Tsv,
+  Yaml,
+  jsonDateParser
+} from '@eatonfyi/serializers';
+
+// Auto-serialize and deserilalize data for filenames with these suffixes
+jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
+jetpack.setSerializer('.ndjson', new NdJson(jsonDateParser));
+jetpack.setSerializer('.json5', new Json5(jsonDateParser, 2));
+jetpack.setSerializer('.csv', new Csv());
+jetpack.setSerializer('.tsv', new Tsv());
+jetpack.setSerializer('.yaml', new Yaml());
+jetpack.setSerializer('.md', new Frontmatter());
 
 export interface MigratorOptions {
+  /**
+   * The unique name of the migration task.
+   */
   name?: string;
+  
+  /**
+   * Human-readable name of the migrator, falls back to name if not populated.
+   */
   label?: string;
+
+  /**
+   * A longer human-readable description of the migrator, used only for notification messages ATM.
+   */
   description?: string;
 
+  /**
+   * The root directory for the migration script's file operations. By default, other standard
+   * directories (input, cache, output, etc) are relative to this one.
+   */
   root?: string;
+
+  /**
+   * The directory the migration should use when looking for input/source files. 
+   */
   input?: string;
+
+  /**
+   * The directory the migration should use when caching data (for example, the results of HTTP
+   * queries or complex parsing operations). 
+   */
   cache?: string;
+
+  /**
+   * The directory the migration's final output files should be saved to. 
+   */
   output?: string;
+
+  /**
+   * The directory any static assets found by the migration (image files, etc) should be copied to.
+   * This allows assets for posts, etc. to be stored in a central location rather than batched with
+   * their migration-specific output files.
+   */
   assets?: string;
 
+  /**
+   * The directory ad-hoc data files should be stored in. During the migration process, it can
+   * be accessed using a simple Storage wrapper via the `yourMigration.data` property.
+   */
   data?: string;
 
+  
+  /**
+   * An already-populated Pino logger instance, or a set of LoggerOptions for the migration to use.
+   */
   logger?: Logger | LoggerOptions;
 }
 
-const defaults = getDefaults();
 const loggerDefaults: LoggerOptions = {
   transport: {
     target: 'pino-pretty',
@@ -29,6 +90,16 @@ const loggerDefaults: LoggerOptions = {
     },
   },
 };
+
+const defaults: MigratorOptions = {
+  root: process.env.MIGRATION_ROOT ?? './',
+  input: process.env.MIGRATION_INPUT ?? 'input',
+  cache: process.env.MIGRATION_CACHE ?? 'cache',
+  output: process.env.MIGRATION_OUTPUT ?? 'output',
+  assets: process.env.MIGRATION_ASSETS ?? 'assets',
+  data: process.env.MIGRATION_DATA ?? 'data',
+  logger: loggerDefaults
+}
 
 /**
  * Base class for all Migrators, with helper functions for lazy instantiation
@@ -48,7 +119,7 @@ export class Migrator {
   log: Logger;
 
   constructor(options: MigratorOptions = {}) {
-    this.options = { ...defaults, ...options };
+    this.options = merge(defaults, options);
 
     if (isLogger(this.options.logger)) {
       // Parent logger
