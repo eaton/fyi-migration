@@ -125,3 +125,6 @@ export const variableSchema = z.object({
   name: z.coerce.string(),
   value: serializedPHP,
 });
+
+export type AltNode = z.infer<typeof nodeSchema>;
+export type AltComment = z.infer<typeof commentSchema>;

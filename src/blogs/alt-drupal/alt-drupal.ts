@@ -1,10 +1,11 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { z } from 'zod';
-import * as CommentOutput from '../../schemas/comment.js';
-import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import { Comment, CommentSchema } from '../../schemas/comment.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
-import * as schemas from './schema.js';
+import * as drupal from './schema.js';
+import { Thing } from '../../schemas/thing.js';
+import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -16,21 +17,21 @@ const defaults: BlogMigratorOptions = {
 };
 
 type drupalEntityData = {
-  nodes: Record<number, z.infer<typeof schemas.nodeSchema>>;
-  comments: Record<number, z.infer<typeof schemas.commentSchema>>;
+  nodes: Record<number, drupal.AltNode>;
+  comments: Record<number, drupal.AltComment>;
   variables: Record<string, unknown>;
-  files: z.infer<typeof schemas.fileSchema>[];
-  aliases: z.infer<typeof schemas.aliasSchema>[];
+  files: z.infer<typeof drupal.fileSchema>[];
+  aliases: z.infer<typeof drupal.aliasSchema>[];
 };
 
-export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
+export class AltDrupalMigrator extends BlogMigrator {
   constructor(options: BlogMigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
 
-  entries: MarkdownPost[] = [];
-  comments: CommentOutput.Comment[] = [];
-  site?: MarkdownPost;
+  entries: CreativeWork[] = [];
+  comments: Comment[] = [];
+  site?: Thing;
 
   entityData: drupalEntityData = {
     nodes: {},
@@ -46,19 +47,19 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
 
   override async fillCache(): Promise<unknown> {
     const map = {
-      nodes: { file: 'node.csv', schema: schemas.nodeSchema },
-      nodeBodies: { file: 'field_data_body.csv', schema: schemas.bodySchema },
-      comments: { file: 'comment.csv', schema: schemas.commentSchema },
+      nodes: { file: 'node.csv', schema: drupal.nodeSchema },
+      nodeBodies: { file: 'field_data_body.csv', schema: drupal.bodySchema },
+      comments: { file: 'comment.csv', schema: drupal.commentSchema },
       commentBodies: {
         file: 'field_data_comment_body.csv',
-        schema: schemas.commentBodySchema,
+        schema: drupal.commentBodySchema,
       },
       attachments: {
         file: 'field_data_field_attachments.csv',
-        schema: schemas.attachmentSchema,
+        schema: drupal.attachmentSchema,
       },
-      files: { file: 'file_managed.csv', schema: schemas.fileSchema },
-      variables: { file: 'variable.csv', schema: schemas.variableSchema },
+      files: { file: 'file_managed.csv', schema: drupal.fileSchema },
+      variables: { file: 'variable.csv', schema: drupal.variableSchema },
     };
 
     const parsed: Record<string, Record<string, unknown>[]> = {};
@@ -81,37 +82,35 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
   }
 
   override async readCache(): Promise<drupalEntityData> {
-    const nodes = this.cache.read('nodes.json', 'jsonWithDates') as z.infer<
-      typeof schemas.nodeSchema
-    >[];
+    const nodes = this.cache.read('nodes.json', 'jsonWithDates') as drupal.AltNode[];
     const nodeBodies = this.cache.read(
       'nodeBodies.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.bodySchema>[];
+    ) as z.infer<typeof drupal.bodySchema>[];
     const attachments = this.cache.read(
       'attachments.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.attachmentSchema>[];
+    ) as z.infer<typeof drupal.attachmentSchema>[];
     this.entityData.files = this.cache.read(
       'files.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.fileSchema>[];
+    ) as z.infer<typeof drupal.fileSchema>[];
     const comments = this.cache.read(
       'comments.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.commentSchema>[];
+    ) as z.infer<typeof drupal.commentSchema>[];
     const commentBodies = this.cache.read(
       'commentBodies.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.commentBodySchema>[];
+    ) as z.infer<typeof drupal.commentBodySchema>[];
     this.entityData.aliases = this.cache.read(
       'aliases.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.aliasSchema>[];
+    ) as z.infer<typeof drupal.aliasSchema>[];
     const variables = this.cache.read(
       'variables.json',
       'jsonWithDates',
-    ) as z.infer<typeof schemas.variableSchema>[];
+    ) as z.infer<typeof drupal.variableSchema>[];
 
     this.log.debug(`Processing nodes`);
     for (const n of nodes) {
@@ -153,47 +152,19 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
       this.entityData.variables[v.name] = v.value;
     }
 
-    return Promise.resolve(this.entityData);
+    return this.entityData;
   }
 
   override async process() {
     await this.readCache();
 
     for (const n of Object.values(this.entityData.nodes)) {
-      const md: MarkdownPost = {
-        content: n.body ? toMarkdown(autop(n.body)) : '',
-        data: {
-          id: `alt-${n.nid}`,
-          title: n.title,
-          date: n.created,
-          summary: n.summary ? toMarkdown(n.summary) : undefined,
-          slug: toSlug(n.title),
-          source: 'alt-drupal',
-          attachments: n.attachments?.map(a => ({
-            filename: a.file?.filename,
-            description: a.field_attachments_description,
-          })),
-        },
-      };
+      const md = CreativeWorkSchema.parse(n);
       this.entries.push(md);
     }
 
     for (const c of Object.values(this.entityData.comments)) {
-      const comment: CommentOutput.Comment = {
-        id: `alt-c${c.cid}`,
-        parent: c.pid ? `altd-c${c.pid}` : undefined,
-        sort: c.thread,
-        about: `alt-${c.nid}`,
-        date: c.created,
-        author: {
-          name: c.name,
-          mail: c.mail,
-          url: c.homepage,
-        },
-        subject: c.subject,
-        body: toMarkdown(autop(c.body ?? '')),
-      };
-      this.comments.push(comment);
+      this.comments.push(this.prepComment(c));
     }
   }
 
@@ -201,21 +172,18 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
     // Currently ignoring comments, whoop whoop
     const commentStore = this.data.bucket('comments');
 
-    for (const entry of this.entries) {
-      const filename = this.toFilename(
-        entry.data.date,
-        entry.data.slug ?? entry.data.title,
-      );
-      this.log.debug(`Outputting ${filename}`);
-      this.output.write(filename, entry);
+    for (const { text, ...frontmatter} of this.entries) {
+      const filename = this.toFilename(frontmatter);
+      this.output.write(filename, { content: text, data: frontmatter });
+      this.log.debug(`Wrote ${filename}`);
 
       const entryComments = this.comments.filter(
-        c => c.about === entry.data.id,
+        c => c.about === frontmatter.id,
       );
       if (entryComments.length) {
-        commentStore.set(entry.data.id!, entryComments);
+        commentStore.set(frontmatter.id, entryComments);
         this.log.debug(
-          `Saved ${entryComments.length} comments for ${entry.data.id}`,
+          `Saved ${entryComments.length} comments for ${frontmatter.id}`,
         );
       }
     }
@@ -231,5 +199,37 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
     });
 
     await this.copyAssets('files', 'alt');
+  }
+
+  protected prepEntry(input: drupal.AltNode): CreativeWork {
+    return CreativeWorkSchema.parse({
+      id: `alt-${input.nid}`,
+      date: input.created,
+      slug: toSlug(input.title),
+      name: input.title,
+      description: input.summary ? toMarkdown(input.summary) : undefined,
+      text: input.body ? toMarkdown(autop(input.body)) : '',
+      attachments: input.attachments?.map(a => ({
+        filename: a.file?.filename,
+        description: a.field_attachments_description,
+      }))
+    });
+  }
+
+  protected prepComment(input: drupal.AltComment): Comment {
+    return CommentSchema.parse({
+      id: `alt-c${input.cid}`,
+      parent: input.pid ? `alt-c${input.pid}` : undefined,
+      sort: input.thread,
+      about: `alt-${input.nid}`,
+      date: input.created,
+      author: {
+        name: input.name,
+        mail: input.mail,
+        url: input.homepage,
+      },
+      name: input.subject,
+      text: toMarkdown(autop(input.body ?? '')),
+    })
   }
 }
