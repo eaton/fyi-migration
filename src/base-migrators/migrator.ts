@@ -1,7 +1,7 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { Logger, LoggerOptions, pino } from 'pino';
-import { getDefaults } from '../util/get-defaults.js';
 import { Store, StoreableData } from '../shared/store.js';
+import { getDefaults } from '../util/get-defaults.js';
 
 export interface MigratorOptions {
   name?: string;

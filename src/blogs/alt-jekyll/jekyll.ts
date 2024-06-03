@@ -79,7 +79,8 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     md.data.source = 'alt-jekyll';
 
     // If a filename doesn't already exist, construct one from the date and the slug.
-    md.data.originalFile = input.file ?? this.toFilename(md.data.date, md.data.title) + '.md';
+    md.data.originalFile =
+      input.file ?? this.toFilename(md.data.date, md.data.title) + '.md';
     md.content = input.content;
 
     return md;
@@ -92,7 +93,10 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     for (const e of data.entries) {
       const md = this.prepMarkdownFile(e);
 
-      const fileName = this.toFilename(md.data.date, md.data.slug ?? md.data.title);
+      const fileName = this.toFilename(
+        md.data.date,
+        md.data.slug ?? md.data.title,
+      );
       this.output.write(fileName, data);
       this.log.debug(`Wrote ${fileName}`);
 
@@ -113,9 +117,7 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
       });
       if (mapped.length) {
         commentStore.set(md.data.id!, mapped);
-        this.log.debug(
-          `Saved ${mapped.length} comments for ${md.data.id}`,
-        );
+        this.log.debug(`Saved ${mapped.length} comments for ${md.data.id}`);
       }
     }
 

@@ -20,7 +20,8 @@ export const EleventyNavigationSchema = z
   })
   .describe("Metadata to control Eleventy's nav + breadcrumb plugin.");
 
-export const FrontmatterSchema = z.object({
+export const FrontmatterSchema = z
+  .object({
     id: z.string().optional(), // IDs should follow a format like: `type/unique-key`
     date: z.coerce.date().optional(),
     slug: z.string().optional(),
@@ -33,7 +34,9 @@ export const FrontmatterSchema = z.object({
       .string()
       .url()
       .optional()
-      .describe("The internal ID of the site the content was originally published on."),
+      .describe(
+        'The internal ID of the site the content was originally published on.',
+      ),
 
     // Actual content-like metadata
     title: z.string().optional(),
@@ -56,4 +59,3 @@ export const MarkdownPostSchema = z.object({
 });
 
 export type MarkdownPost = z.infer<typeof MarkdownPostSchema>;
- 

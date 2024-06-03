@@ -1,13 +1,13 @@
-import wretch from "wretch";
+import wretch from 'wretch';
 
 export type ExpandLinkResults = {
-  url: string,
-  redirected: boolean,
-  status: number,
-  statusText?: number,
-  resolved?: string,
-  error?: string
-}
+  url: string;
+  redirected: boolean;
+  status: number;
+  statusText?: number;
+  resolved?: string;
+  error?: string;
+};
 
 export async function expandLink(input: string | URL) {
   const url = new URL(input);
@@ -19,7 +19,7 @@ export async function expandLink(input: string | URL) {
       status: cb.status,
       statusText: cb.name,
       resolved: cb.response.url,
-      error: cb.text
+      error: cb.text,
     }))
     .internalError(cb => ({
       url: url.toString(),
@@ -27,7 +27,7 @@ export async function expandLink(input: string | URL) {
       status: cb.status,
       statusText: cb.name,
       resolved: cb.response.url,
-      error: cb.text
+      error: cb.text,
     }))
     .res(response => ({
       url: url.toString(),
@@ -35,5 +35,5 @@ export async function expandLink(input: string | URL) {
       status: response.status,
       statusText: response.redirected,
       resolved: response.url,
-    }))
+    }));
 }

@@ -1,7 +1,11 @@
-import { Logger } from "pino";
+import { Logger } from 'pino';
 
 export function isDate(input: unknown): input is Date {
-  return (!!input && Object.prototype.toString.call(input) === "[object Date]" && !isNaN(Number(input)));
+  return (
+    !!input &&
+    Object.prototype.toString.call(input) === '[object Date]' &&
+    !isNaN(Number(input))
+  );
 }
 
 export function isString(input: unknown): input is string {

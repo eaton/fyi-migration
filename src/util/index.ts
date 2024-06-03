@@ -9,5 +9,5 @@ export * from './type-guards.js';
 export * from './get-rotator.js';
 
 export * from './clean-link.js';
-export * from './link-is-shortened.js';
 export * from './expand-link.js';
+export * from './link-is-shortened.js';

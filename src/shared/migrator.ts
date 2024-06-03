@@ -1,13 +1,13 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { Logger, LoggerOptions, pino } from 'pino';
+import { getDefaults, isLogger } from '../util/index.js';
 import { Store, StoreableData } from './store.js';
-import { isLogger, getDefaults } from '../util/index.js';
 
 export interface MigratorOptions {
   name?: string;
   label?: string;
   description?: string;
-  
+
   root?: string;
   input?: string;
   cache?: string;
@@ -42,7 +42,7 @@ export class Migrator {
   protected _cache?: typeof jetpack;
   protected _output?: typeof jetpack;
   protected _assets?: typeof jetpack;
-  
+
   protected _data?: Store<StoreableData>;
 
   log: Logger;

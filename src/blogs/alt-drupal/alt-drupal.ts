@@ -172,8 +172,8 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
           attachments: n.attachments?.map(a => ({
             filename: a.file?.filename,
             description: a.field_attachments_description,
-          }))
-        }
+          })),
+        },
       };
       this.entries.push(md);
     }

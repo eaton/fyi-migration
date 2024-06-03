@@ -30,14 +30,14 @@ export const TweetSchema = z.object({
 
 export type Tweet = z.infer<typeof TweetSchema>;
 export type TweetThread = {
-  id: string,
-  user: string,
-  about?: string,
-  aboutId?: string,
-  start: Date,
-  end: Date,
-  favorites: number,
-  retweets: number,
-  length: number,
-  tweets: Tweet[]
-}
+  id: string;
+  user: string;
+  about?: string;
+  aboutId?: string;
+  start: Date;
+  end: Date;
+  favorites: number;
+  retweets: number;
+  length: number;
+  tweets: Tweet[];
+};
