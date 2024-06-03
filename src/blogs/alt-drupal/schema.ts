@@ -36,7 +36,7 @@ export const commentSchema = z.object({
   changed: epochString,
   status: z.number(),
   thread: z.string(),
-  name: z.string().optional(),
+  name: z.coerce.string().optional(),
   mail: z.string().optional(),
   homepage: z.string().optional(),
   body: z.string().optional(),
@@ -109,7 +109,7 @@ export const aliasSchema = z.object({
 
 export const userSchema = z.object({
   uid: intString,
-  name: z.string(),
+  name: z.coerce.string(),
   mail: z.string().email(),
   theme: z.string(),
   signature: z.string(),
@@ -122,6 +122,6 @@ export const userSchema = z.object({
 });
 
 export const variableSchema = z.object({
-  name: z.string(),
+  name: z.coerce.string(),
   value: serializedPHP,
 });
