@@ -1,10 +1,10 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
-import * as CommentOutput from '../../schemas/comment.js';
-import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import { CommentSchema } from '../../schemas/comment.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
-import * as schemas from './schema.js';
+import * as drupal from './schema.js';
+import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -24,7 +24,7 @@ const defaults: DrupalMigratorOptions = {
   uids: [2],
 };
 
-export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
+export class GoddyMigrator extends BlogMigrator {
   declare options: DrupalMigratorOptions;
 
   constructor(options: DrupalMigratorOptions = {}) {
@@ -39,30 +39,30 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
     // Start with the tables proper
 
     this.log.debug('Assembling Node data');
-    const nodes = this.readTableCsv('node.csv', schemas.goddyNodeSchema);
+    const nodes = this.readTableCsv('node.csv', drupal.goddyNodeSchema);
     const nodeBodies = this.readTableCsv(
       'field_data_body.csv',
-      schemas.bodySchema,
+      drupal.bodySchema,
     );
     const fields = {
-      links: this.readTableCsv('field_data_field_link.csv', schemas.linkSchema),
+      links: this.readTableCsv('field_data_field_link.csv', drupal.linkSchema),
       products: this.readTableCsv(
         'field_data_field_product.csv',
-        schemas.productSchema,
+        drupal.productSchema,
       ),
       moneyQuotes: this.readTableCsv(
         'field_data_field_money_quote.csv',
-        schemas.moneyQuoteSchema,
+        drupal.moneyQuoteSchema,
       ),
-      uploads: this.readTableCsv('field_data_upload.csv', schemas.uploadSchema),
+      uploads: this.readTableCsv('field_data_upload.csv', drupal.uploadSchema),
     };
 
-    const asins = this.readTableCsv('amazon_item.csv', schemas.asinItemSchema);
+    const asins = this.readTableCsv('amazon_item.csv', drupal.asinItemSchema);
     const participants = this.readTableCsv(
       'amazon_item_participant.csv',
-      schemas.asinParticipantSchema,
+      drupal.asinParticipantSchema,
     );
-    const books = this.readTableCsv('amazon_book.csv', schemas.asinBookSchema);
+    const books = this.readTableCsv('amazon_book.csv', drupal.asinBookSchema);
 
     for (const asin of fields.products) {
       asin.participants = participants.filter(
@@ -99,10 +99,10 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
     }
 
     this.log.debug('Assembling Comment data');
-    const comments = this.readTableCsv('comment.csv', schemas.commentSchema);
+    const comments = this.readTableCsv('comment.csv', drupal.commentSchema);
     const commentBodies = this.readTableCsv(
       'field_data_comment_body.csv',
-      schemas.commentBodySchema,
+      drupal.commentBodySchema,
     );
     for (const c of comments) {
       if (!c.status) continue;
@@ -113,17 +113,17 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
       this.cache.write(`comment-${c.cid}.json`, c);
     }
 
-    const users = this.readTableCsv('users.csv', schemas.userSchema);
+    const users = this.readTableCsv('users.csv', drupal.userSchema);
     for (const u of users) {
       if (this.options.uids && !this.options.uids.includes(u.uid)) continue;
       this.cache.write(`user-${u.uid}.json`, u);
     }
 
-    const paths = this.readTableCsv('url_alias.csv', schemas.aliasSchema);
+    const paths = this.readTableCsv('url_alias.csv', drupal.aliasSchema);
     this.cache.write(`paths.json`, paths);
 
     const vars = Object.fromEntries(
-      this.readTableCsv('variable.csv', schemas.variableSchema).map(e => [
+      this.readTableCsv('variable.csv', drupal.variableSchema).map(e => [
         e.name,
         e.value,
       ]),
@@ -132,18 +132,13 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
     return Promise.resolve();
   }
 
-  protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {
-    const raw = (this.input.read('tables/' + file, 'auto') as unknown[]) ?? [];
-    return raw.map(u => schema.parse(u) as z.infer<T>);
-  }
-
   override async readCache() {
     const nodes = this.cache
       .find({ matching: 'node-*.json' })
-      .map(f => this.cache.read(f, 'jsonWithDates') as schemas.GoddyNode);
+      .map(f => this.cache.read(f, 'jsonWithDates') as drupal.GoddyNode);
     const comments = this.cache
       .find({ matching: 'comment-*.json' })
-      .map(f => this.cache.read(f, 'jsonWithDates') as schemas.GoddyComment);
+      .map(f => this.cache.read(f, 'jsonWithDates') as drupal.GoddyComment);
     const vars = this.cache.read('variables.json', 'jsonWithDates') as Record<
       string,
       unknown
@@ -165,61 +160,26 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
     const commentStore = this.data.bucket('comments');
 
     // Prep the comments first, so they're easier to attach to the nodes.
-    const comments = cache.comments.map(c => {
-      const comment: CommentOutput.Comment = {
-        id: `goddy-c${c.cid}`,
-        about: `goddy-${c.nid}`,
-        parent: c.pid ? `goddy-c${c.pid}` : undefined,
-        sort: c.thread,
-        date: c.created,
-        author: {
-          name: c.name,
-          mail: c.mail,
-          url: c.homepage,
-        },
-        subject: c.subject,
-        body: toMarkdown(autop(c.body ?? '')),
-      };
-      return comment;
-    });
+    const comments = cache.comments.map(c => this.prepComment(c));
+    const nodes = cache.nodes.map(n => this.prepEntry(n));
 
-    const nodes = cache.nodes.map(n => ({
-      data: {
-        id: `goddy-${n.nid}`,
-        type: n.type,
-        date: n.created,
-        title: n.title,
-        path: cache.slugs[`node/${n.nid}`] ?? `node/${n.nid}`,
-        slug: toSlug(n.title),
-        summary: n.summary,
-        quote: n.money_quote
-          ? toMarkdown(autop(n.money_quote.field_money_quote_value))
-          : undefined,
-        about:
-          (n.product ? 'book/' + n.product.field_product_asin : undefined) ??
-          n.link?.field_link_url ??
-          undefined,
-      },
-      content: toMarkdown(autop(n.body ?? '')),
-    }));
-
-    for (const n of nodes) {
-      const file = this.toFilename(n.data.date, n.data.title);
-      this.output.write(this.toFilename(n.data.date, n.data.title), n);
+    for (const { text, ...frontmatter} of nodes) {
+      const file = this.toFilename(frontmatter);
+      this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${file}`);
 
-      const nodeComments = comments.filter(c => c.about === n.data.id);
+      const nodeComments = comments.filter(c => c.about === frontmatter.id);
       if (nodeComments.length) {
-        commentStore.set(n.data.id, nodeComments);
+        commentStore.set(frontmatter.id, nodeComments);
         this.log.debug(
-          `Saved ${nodeComments.length} comments for ${n.data.id}`,
+          `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
         );
       }
     }
 
     this.data.bucket('sources').set('goddy', {
       id: 'goddy',
-      title: 'Growing Up Goddy',
+      name: 'Growing Up Goddy',
       url: 'https://growingupgoddy.com',
       slogan: cache.vars['site_slogan'] || undefined,
       software: 'Drupal 6',
@@ -228,5 +188,46 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
 
     this.copyAssets('files', 'goddy');
     return Promise.resolve();
+  }
+
+  protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {
+    const raw = (this.input.read('tables/' + file, 'auto') as unknown[]) ?? [];
+    return raw.map(u => schema.parse(u) as z.infer<T>);
+  }
+
+  protected prepEntry(input: drupal.GoddyNode): CreativeWork {
+    return CreativeWorkSchema.parse({
+      id: `goddy-${input.nid}`,
+      date: input.created,
+      name: input.title,
+      slug: toSlug(input.title),
+      description: input.summary,
+      quote: input.money_quote
+        ? toMarkdown(autop(input.money_quote.field_money_quote_value))
+        : undefined,
+      about:
+        (input.product ? 'book/' + input.product.field_product_asin : undefined) ??
+        input.link?.field_link_url ??
+        undefined,
+      text: toMarkdown(autop(input.body ?? '')),
+      nodeType: input.type,
+    })
+  }
+
+  protected prepComment(input: drupal.GoddyComment): CreativeWork {
+    return CommentSchema.parse({
+      id: `goddy-c${input.cid}`,
+      about: `goddy-${input.nid}`,
+      parent: input.pid ? `goddy-c${input.pid}` : undefined,
+      sort: input.thread,
+      date: input.created,
+      author: {
+        name: input.name,
+        mail: input.mail,
+        url: input.homepage,
+      },
+      name: input.subject,
+      text: toMarkdown(autop(input.body ?? '')),
+    });
   }
 }
