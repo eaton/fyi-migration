@@ -4,7 +4,7 @@ import {
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
-import { Migrator, MigratorOptions } from '../util/migrator.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { toText } from '@eatonfyi/html';
 import { Tweet, TweetThread, TweetSchema } from '../schemas/tweet.js';
 import { toCase, toSlug } from '@eatonfyi/text';

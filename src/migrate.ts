@@ -1,6 +1,6 @@
 import { BlogMigrator } from './blogs/blog-migrator.js';
 import * as blogs from './blogs/index.js';
-// import { ArticleReprintMigrator } from "./misc/article-reprints.js";
+import { ArticleReprintMigrator } from "./misc/article-reprints.js";
 import { TwitterMigrator } from './twitter/twitter.js';
 
 export class AllBlogs extends BlogMigrator {
@@ -20,6 +20,5 @@ export class AllBlogs extends BlogMigrator {
 }
 
 await new TwitterMigrator({ logger: { level: 'debug' } }).run();
-
-// await new AllBlogs().run();
-// await new ArticleReprintMigrator({ logger: { level: 'debug' }}).run();
+await new ArticleReprintMigrator({ logger: { level: 'debug' }}).run();
+await new AllBlogs().run();

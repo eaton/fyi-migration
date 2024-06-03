@@ -1,4 +1,4 @@
-import { Migrator, MigratorOptions } from '../util/migrator.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {
   name: 'articles',

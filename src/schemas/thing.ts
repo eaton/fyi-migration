@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const ThingSchema = z.object({
   id: z.string(),
   type: z.string().default('Thing'),
-  name: z.string().optional(),
+  title: z.string().optional(),
   description: z.string(),
   url: z.string().optional(),
   image: z.string().optional(),
