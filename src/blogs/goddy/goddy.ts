@@ -217,7 +217,7 @@ export class GoddyMigrator extends BlogMigrator<MarkdownPost> {
       }
     }
 
-    this.data.bucket('sites').set('goddy', {
+    this.data.bucket('sources').set('goddy', {
       id: 'goddy',
       title: 'Growing Up Goddy',
       url: 'https://growingupgoddy.com',

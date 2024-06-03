@@ -124,7 +124,7 @@ export class MovableTypeMigrator extends BlogMigrator<MarkdownPost> {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const siteStore = this.data.bucket('sites');
+    const siteStore = this.data.bucket('sources');
     const commentStore = this.data.bucket('comments');
 
     for (const b of cache.blogs) {

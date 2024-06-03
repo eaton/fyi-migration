@@ -185,7 +185,7 @@ export class PositivaDrupalMigrator extends BlogMigrator<MarkdownPost> {
       }
     }
 
-    this.data.bucket('sites').set('positiva-drupal', {
+    this.data.bucket('sources').set('positiva-drupal', {
       id: 'positiva-drupal',
       title: 'Via Positiva (Drupal)',
       url: 'https://jeff.viapositiva.net',

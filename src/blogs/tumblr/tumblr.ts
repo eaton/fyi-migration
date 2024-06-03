@@ -181,7 +181,7 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
   protected writeBlogInfo() {
     if (this.blogs) {
       for (const blog of this.blogs) {
-        this.data.bucket('sites').set(blog.name!, {
+        this.data.bucket('sources').set(blog.name!, {
           id: blog.name,
           title: blog.title,
           summary: blog.description,

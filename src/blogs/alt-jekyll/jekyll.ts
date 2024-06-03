@@ -58,11 +58,10 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
   protected override prepMarkdownFile(input: JekyllPost) {
     const md: MarkdownPost = { data: {} };
 
-    md.data.title = input.data.title;
     md.data.date = input.data.date;
+    md.data.title = input.data.title;
+    md.data.slug = input.data.slug;
     md.data.summary = input.data.summary;
-    md.data.excerpt = input.data.excerpt;
-    md.data.layout = input.data.layout;
     md.data.published = input.data.published;
 
     if (input?.file) {
@@ -75,16 +74,13 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     // If a slug doesn't exist, construct one by slugifying the title.
     md.data.slug ??= toSlug(md.data.title);
 
-    md.data.commentUrl = `http://angrylittletree.com/${md.data.date?.getFullYear()}/${md.data.date?.getUTCMonth()}/${md.data.slug}.html`;
-    md.data.commentGuid = nanohash(md.data.commentUrl);
+    md.data.url = `http://angrylittletree.com/${md.data.date?.getFullYear()}/${md.data.date?.getUTCMonth()}/${input.data.slug}.html`;
+    md.data.id = nanohash(md.data.commentUrl);
+    md.data.source = 'alt-jekyll';
 
     // If a filename doesn't already exist, construct one from the date and the slug.
-    md.file =
-      input.file ??
-      [this.dateToDate(md.data.date), md.data.slug].join('-') + '.md';
+    md.data.originalFile = input.file ?? this.toFilename(md.data.date, md.data.title) + '.md';
     md.content = input.content;
-
-    md.data.migration = { site: 'alt-jekyll' };
 
     return md;
   }
@@ -94,40 +90,36 @@ export class AltJekyllMigrator extends BlogMigrator<MarkdownPost> {
     const commentStore = this.data.bucket('comments');
 
     for (const e of data.entries) {
-      const { file, ...contents } = this.prepMarkdownFile(e);
+      const md = this.prepMarkdownFile(e);
 
-      if (file) {
-        const outFile = file.replace('_posts/', '');
-        this.output.write(outFile, contents);
-        this.log.debug(`Wrote ${outFile}`);
+      const fileName = this.toFilename(md.data.date, md.data.slug ?? md.data.title);
+      this.output.write(fileName, data);
+      this.log.debug(`Wrote ${fileName}`);
 
-        // Find a thread that matches this file.
-        const comments =
-          data.comments.find(t => t.id === contents.data.id)?.posts ?? [];
-        const mapped = comments.map(c => {
-          const comment: CommentOutput.Comment = {
-            id: `altj-c${c.dsqId}`,
-            parent: c.parent ? `altj-c${c.parent}` : undefined,
-            sort: c.sort,
-            about: contents.data.id!,
-            date: c.createdAt,
-            author: { name: c.author.name },
-            body: toMarkdown(autop(c.message)),
-          };
-          return comment;
-        });
-        if (mapped.length) {
-          commentStore.set(contents.data.id!, mapped);
-          this.log.debug(
-            `Saved ${mapped.length} comments for ${contents.data.id}`,
-          );
-        }
-      } else {
-        this.log.error(e);
+      // Find a thread that matches this file.
+      const comments =
+        data.comments.find(t => t.id === md.data.id)?.posts ?? [];
+      const mapped = comments.map(c => {
+        const comment: CommentOutput.Comment = {
+          id: `altj-c${c.dsqId}`,
+          parent: c.parent ? `altj-c${c.parent}` : undefined,
+          sort: c.sort,
+          about: md.data.id!,
+          date: c.createdAt,
+          author: { name: c.author.name },
+          body: toMarkdown(autop(c.message)),
+        };
+        return comment;
+      });
+      if (mapped.length) {
+        commentStore.set(md.data.id!, mapped);
+        this.log.debug(
+          `Saved ${mapped.length} comments for ${md.data.id}`,
+        );
       }
     }
 
-    this.data.bucket('sites').set('alt-jekyll', {
+    this.data.bucket('sources').set('alt-jekyll', {
       id: 'alt-jekyll',
       url: 'https://angrylittletree.com',
       title: 'Angry Little Tree',

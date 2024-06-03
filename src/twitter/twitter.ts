@@ -6,8 +6,7 @@ import {
 } from 'twitter-archive-reader';
 import { Migrator, MigratorOptions } from '../util/migrator.js';
 import { toText } from '@eatonfyi/html';
-import { Tweet, TweetThread, tweetSchema } from '../schemas/tweet.js';
-import humanizeUrl from 'humanize-url';
+import { Tweet, TweetThread, TweetSchema } from '../schemas/tweet.js';
 import { toCase, toSlug } from '@eatonfyi/text';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
@@ -92,7 +91,7 @@ export class TwitterMigrator extends Migrator {
     if (this.tweets.size === 0) {
       const tweets = this.cache.read('tweets.ndjson', 'auto') as Tweet[] | undefined;
       if (tweets) {
-        for (const t of tweets) this.tweets.set(t.id, tweetSchema.parse(t));
+        for (const t of tweets) this.tweets.set(t.id, TweetSchema.parse(t));
       }
     }
 
@@ -151,6 +150,8 @@ export class TwitterMigrator extends Migrator {
       };
     }
 
+    // save a 'source' blob for each twitter account
+
     this.cache.copy('media', this.output.path('../_static/twitter'));
   }
 
@@ -180,7 +181,7 @@ export class TwitterMigrator extends Migrator {
   }
 
   protected parseTweet(tweet: PartialTweet) {
-    return tweetSchema.parse({
+    return TweetSchema.parse({
       id: tweet.id_str,
       date: tweet.created_at_d,
       handle: tweet.user.screen_name,
@@ -264,7 +265,7 @@ export class TwitterMigrator extends Migrator {
 
     // Humanize URLs; deal with expanding link shorteners later.
     for (const [short, long] of Object.entries(tweet.links ?? {})) {
-      output = output.replaceAll(short, `[${humanizeUrl(long)}](${long})`);
+      output = output.replaceAll(short, `[${long}](${long})`);
     }
 
     if (output.startsWith(`@${tweet.handle} `)) {

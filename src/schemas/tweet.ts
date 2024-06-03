@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const tweetSchema = z.object({
+export const TweetSchema = z.object({
   id: z.coerce.string(),
   date: z.coerce.date(),
   handle: z.string(),
@@ -28,7 +28,7 @@ export const tweetSchema = z.object({
   retweets: z.number().default(0),
 });
 
-export type Tweet = z.infer<typeof tweetSchema>;
+export type Tweet = z.infer<typeof TweetSchema>;
 export type TweetThread = {
   id: string,
   user: string,

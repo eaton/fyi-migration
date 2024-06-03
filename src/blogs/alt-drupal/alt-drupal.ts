@@ -168,25 +168,22 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
           date: n.created,
           summary: n.summary ? toMarkdown(n.summary) : undefined,
           slug: toSlug(n.title),
-          migration: {
-            site: 'alt-drupal',
-            nid: n.nid,
-            attachments: n.attachments?.map(a => ({
-              filename: a.file?.filename,
-              description: a.field_attachments_description,
-            })),
-          },
-        },
+          source: 'alt-drupal',
+          attachments: n.attachments?.map(a => ({
+            filename: a.file?.filename,
+            description: a.field_attachments_description,
+          }))
+        }
       };
       this.entries.push(md);
     }
 
     for (const c of Object.values(this.entityData.comments)) {
       const comment: CommentOutput.Comment = {
-        id: `altd-c${c.cid}`,
+        id: `alt-c${c.cid}`,
         parent: c.pid ? `altd-c${c.pid}` : undefined,
         sort: c.thread,
-        about: `altd-${c.nid}`,
+        about: `alt-${c.nid}`,
         date: c.created,
         author: {
           name: c.name,
@@ -223,7 +220,7 @@ export class AltDrupalMigrator extends BlogMigrator<MarkdownPost> {
       }
     }
 
-    this.data.bucket('sites').set('alt-drupal', {
+    this.data.bucket('sources').set('alt-drupal', {
       id: 'alt-drupal',
       url: 'https://angrylittletree.com',
       title: this.entityData.variables['site_name']?.toString() ?? undefined,

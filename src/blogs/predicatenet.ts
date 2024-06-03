@@ -72,7 +72,7 @@ export class PredicateNetMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    this.data.bucket('sites').set('predicatenet', {
+    this.data.bucket('sources').set('predicatenet', {
       id: 'predicate-net',
       url: 'https://predicate.net',
       title: 'Predicate.net',

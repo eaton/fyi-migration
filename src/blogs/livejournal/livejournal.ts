@@ -157,7 +157,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
       }
     }
 
-    this.data.bucket('sites').set('livejournal', {
+    this.data.bucket('sources').set('livejournal', {
       id: 'livejournal',
       url: 'https://predicate.livejournal.com',
       title: 'Livejournal',
