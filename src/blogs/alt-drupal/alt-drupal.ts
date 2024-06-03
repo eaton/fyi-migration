@@ -191,8 +191,8 @@ export class AltDrupalMigrator extends BlogMigrator {
     this.data.bucket('sources').set('alt-drupal', {
       id: 'alt-drupal',
       url: 'https://angrylittletree.com',
-      title: this.entityData.variables['site_name']?.toString() ?? undefined,
-      summary:
+      name: this.entityData.variables['site_name']?.toString() ?? undefined,
+      description:
         this.entityData.variables['site-slogan']?.toString() ?? undefined,
       hosting: 'Linode',
       software: 'Drupal 7',

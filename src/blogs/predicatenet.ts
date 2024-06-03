@@ -3,6 +3,8 @@ import { nanohash } from '@eatonfyi/ids';
 import { normalize } from '@eatonfyi/urls';
 import { z } from 'zod';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { cleanLink } from '../util/clean-link.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'predicate-net',
@@ -39,13 +41,13 @@ export class PredicateNetMigrator extends BlogMigrator {
 
     const linkStore = this.data.bucket('links');
     for (const l of links ?? []) {
-      const link = {
-        url: normalize(l.url),
+      const link = CreativeWorkSchema.parse({
+        ...cleanLink(l.url),
         date: '2001-01-01',
-        title: l.title,
+        name: l.title,
         description: l.description,
-        source: 'predicate-net',
-      };
+        isPartOf: 'predicate-net',
+      });
       linkStore.set(nanohash(link.url), link);
     }
   }
@@ -75,7 +77,7 @@ export class PredicateNetMigrator extends BlogMigrator {
     this.data.bucket('sources').set('predicatenet', {
       id: 'predicate-net',
       url: 'https://predicate.net',
-      title: 'Predicate.net',
+      name: 'Predicate.net',
       hosting: 'Site5 (IIS)',
       software: 'BBEdit',
     });

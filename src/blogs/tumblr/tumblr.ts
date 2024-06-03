@@ -15,6 +15,7 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
+import { cleanLink } from '../../util/clean-link.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
@@ -161,9 +162,9 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       id: `entry/tumblr-${input.id}`,
-      title: input.title ?? undefined,
+      name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
-      summary: input.summary,
+      description: input.summary,
       excerpt: input.excerpt ?? undefined,
       date: input.date ? new Date(input.date) : undefined,
       published: !!input.date,
@@ -194,10 +195,9 @@ export class TumblrMigrator extends BlogMigrator {
 
   protected prepLink(input: TumblrPost) {
     const link = CreativeWorkSchema.parse({
-      id: nanohash(input.url),
-      url: normalize(input.url!).toString(),
+      ...cleanLink(input.url),
       date: input.date || undefined,
-      title: input.title || input.source_title || undefined,
+      name: input.title || input.source_title || undefined,
       description: input.body || input.description || input.summary || undefined,
       isPartOf: input.blog_name
     });

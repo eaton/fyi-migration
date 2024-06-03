@@ -149,12 +149,11 @@ export class TwitterMigrator extends Migrator {
           .pop()!;
 
         const content = this.threadToMarkdown(thread);
-        let title = content.replaceAll('\n', ' ').slice(0, 48);
-        title = toCase.title(title);
+        const name = content.replaceAll('\n', ' ').slice(0, 48);
         const data = {
           id: `${thread.id}`,
-          title: title,
-          slug: toSlug(title),
+          name: toCase.title(name),
+          slug: toSlug(name),
           date: thread.start,
           endDate: thread.end,
           account: thread.user,

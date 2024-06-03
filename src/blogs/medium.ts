@@ -1,4 +1,6 @@
+import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { get } from 'obby';
 
 const defaults: BlogMigratorOptions = {
   name: 'medium',
@@ -13,11 +15,35 @@ export class MediumMigrator extends BlogMigrator {
     super({ ...defaults, ...options });
   }
 
-  override async finalize(): Promise<void> {
-    this.input.copy(this.input.path('posts'), this.output.path(), {
-      overwrite: true,
-    });
+  override async finalize() {
+
+    this.data.bucket('sites').set('medium', CreativeWorkSchema.parse({
+      id: 'medium',
+      name: 'Medium',
+      url: 'https://medium.com/@eaton',
+      hosting: 'Medium'
+    }));
+
+    for (const f of this.input.find({ matching: 'posts/*.md' })) {
+      const markdown = this.input.read(f, 'auto');
+      const { text, ...frontmatter } = CreativeWorkSchema.parse({
+        id: get(markdown, 'data.id') || undefined,
+        name: get(markdown, 'data.title') || undefined,
+        description: get(markdown, 'data.summary') || undefined,
+        slug: get(markdown, 'data.slug') || undefined,
+        image: get(markdown, 'data.image') || undefined,
+        url: get(markdown, 'data.url') || undefined,
+        date: get(markdown, 'data.date') || undefined,
+        text: get(markdown, 'content') || undefined,
+        isPartOf: 'medium',
+      });
+
+      const file = this.toFilename(frontmatter);
+      this.output.write(file, { content: text, data: frontmatter });
+    }
+    
     await this.copyAssets('images', 'medium');
-    return Promise.resolve();
+    
+    return;
   }
 }

@@ -7,6 +7,7 @@ import { Comment, CommentSchema } from '../../schemas/comment.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
+import { cleanLink } from '../../util/clean-link.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -169,12 +170,10 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepLink(input: drupal.Node): CreativeWork {
     return CreativeWorkSchema.parse({
-      id: nanohash(input.link!.url!),
-      type: 'CreativeWork/Bookmark',
-      url: normalize(input.link!.url!),
+      ...cleanLink(input.link!.url),
       date: input.created,
       name: input.title,
-      text: this.buildNodeBody(input),
+      description: this.buildNodeBody(input),
       isPartOf: this.options.name,
     });
   }
