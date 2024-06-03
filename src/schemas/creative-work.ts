@@ -18,6 +18,8 @@ export const CreativeWorkSchema = ThingSchema.extend({
   isPartOf: partSchema.or(z.array(partSchema)).optional(), // none, one, or more string or string/order objects
   hasPart: partSchema.or(z.array(partSchema)).optional(), // none, one, or more string or string/order objects
   archivedAt: z.string().optional(),
+  text: z.string().optional(),
 });
 
 export type CreativeWork = z.infer<typeof CreativeWorkSchema>;
+export type CreativeWorkInput = typeof CreativeWorkSchema._input;

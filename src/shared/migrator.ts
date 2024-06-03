@@ -1,8 +1,4 @@
 import jetpack from '@eatonfyi/fs-jetpack';
-import { Logger, LoggerOptions, pino } from 'pino';
-import { isLogger } from '../util/index.js';
-import { merge } from 'obby';
-import { Store, StoreableData } from './store.js';
 import {
   Csv,
   Frontmatter,
@@ -11,8 +7,12 @@ import {
   NdJson,
   Tsv,
   Yaml,
-  jsonDateParser
+  jsonDateParser,
 } from '@eatonfyi/serializers';
+import { merge } from 'obby';
+import { Logger, LoggerOptions, pino } from 'pino';
+import { isLogger } from '../util/index.js';
+import { Store, StoreableData } from './store.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -28,7 +28,7 @@ export interface MigratorOptions {
    * The unique name of the migration task.
    */
   name?: string;
-  
+
   /**
    * Human-readable name of the migrator, falls back to name if not populated.
    */
@@ -46,18 +46,18 @@ export interface MigratorOptions {
   root?: string;
 
   /**
-   * The directory the migration should use when looking for input/source files. 
+   * The directory the migration should use when looking for input/source files.
    */
   input?: string;
 
   /**
    * The directory the migration should use when caching data (for example, the results of HTTP
-   * queries or complex parsing operations). 
+   * queries or complex parsing operations).
    */
   cache?: string;
 
   /**
-   * The directory the migration's final output files should be saved to. 
+   * The directory the migration's final output files should be saved to.
    */
   output?: string;
 
@@ -74,7 +74,6 @@ export interface MigratorOptions {
    */
   data?: string;
 
-  
   /**
    * An already-populated Pino logger instance, or a set of LoggerOptions for the migration to use.
    */
@@ -98,8 +97,8 @@ const defaults: MigratorOptions = {
   output: process.env.MIGRATION_OUTPUT ?? 'output',
   assets: process.env.MIGRATION_ASSETS ?? 'assets',
   data: process.env.MIGRATION_DATA ?? 'data',
-  logger: loggerDefaults
-}
+  logger: loggerDefaults,
+};
 
 /**
  * Base class for all Migrators, with helper functions for lazy instantiation

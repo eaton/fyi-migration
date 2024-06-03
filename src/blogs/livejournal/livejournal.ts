@@ -1,10 +1,17 @@
 import { isAfter, isBefore } from '@eatonfyi/dates';
 import { autop, extract, fromLivejournal, toMarkdown } from '@eatonfyi/html';
-import * as CommentOutput from '../../schemas/comment.js';
+import { Comment, CommentSchema } from '../../schemas/comment.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
-
-import { MarkdownPost } from '../../schemas/markdown-post.js';
-import { xmlSchema, xmlTemplate, type LivejournalEntry } from './schema.js';
+import {
+  LivejournalComment,
+  xmlSchema,
+  xmlTemplate,
+  type LivejournalEntry,
+} from './schema.js';
 import { parseSemagicFile } from './semagic.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
@@ -23,8 +30,10 @@ const defaults: LivejournalMigrateOptions = {
   output: 'src/entries/lj',
 };
 
-export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
+export class LivejournaMigrator extends BlogMigrator {
   declare options: LivejournalMigrateOptions;
+  entries: CreativeWork[] = [];
+  comments: Record<string, Comment[]> = {};
 
   constructor(options: LivejournalMigrateOptions = {}) {
     super({ ...defaults, ...options });
@@ -45,8 +54,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
           if (entry) {
             this.cache.write(
               this.toFilename(
-                entry.date,
-                entry.subject || entry.id.toString(),
+                { name: entry.subject ?? entry.id, date: entry.date },
                 '.json',
               ),
               entry,
@@ -68,8 +76,7 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
         });
         for (const entry of extracted) {
           const filename = this.toFilename(
-            entry.date,
-            entry.subject || entry.id.toString(),
+            { name: entry.subject ?? entry.id, date: entry.date },
             '.json',
           );
           this.cache.write(filename, entry);
@@ -84,120 +91,110 @@ export class LivejournaMigrator extends BlogMigrator<LivejournalEntry> {
     const entries: LivejournalEntry[] = [];
     const files = this.cache.find({ matching: '*.json', recursive: false });
     for (const file of files) {
-      entries.push(this.cache.read(file, 'jsonWithDates') as LivejournalEntry);
+      entries.push(this.cache.read(file, 'auto') as LivejournalEntry);
     }
     return Promise.resolve(entries);
   }
 
   override async process() {
-    this.queue = [];
     const data = await this.readCache();
 
-    for (const e of data) {
+    for (const entry of data) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
       if (
         this.options.ignoreBefore &&
-        isBefore(e.date, this.options.ignoreBefore)
-      )
+        isBefore(entry.date, this.options.ignoreBefore)
+      ) {
         continue;
-      if (this.options.ignoreAfter && isAfter(e.date, this.options.ignoreAfter))
+      }
+      if (
+        this.options.ignoreAfter &&
+        isAfter(entry.date, this.options.ignoreAfter)
+      ) {
         continue;
+      }
+      this.entries.push(this.prepEntry(entry));
 
-      const formattedEntry = {
-        ...e,
-        body: fromLivejournal(e.body ?? '', { breaks: true, usernames: true }),
-        teaser: fromLivejournal(e.body ?? '', {
-          breaks: true,
-          usernames: true,
-          teaser: true,
-        }),
-      };
-
-      this.queue.push(formattedEntry);
+      if (entry.comments && entry.comments.length) {
+        this.comments[entry.id] ??= [];
+        for (const comment of entry.comments) {
+          this.comments[entry.id].push(this.prepComment(comment));
+        }
+      }
     }
-    return Promise.resolve();
+    return { entries: this.entries, comments: this.comments };
+  }
+
+  protected prepEntry(entry: LivejournalEntry): CreativeWork {
+    return CreativeWorkSchema.parse({
+      id: `lj-${entry.id}`,
+      date: entry.date,
+      name: entry.subject,
+      text: this.ljMarkupToMarkdown(entry.body),
+
+      avatar: entry.avatar,
+      mood: entry.mood,
+      music: entry.music,
+    });
+  }
+
+  protected prepComment(comment: LivejournalComment): Comment {
+    return CommentSchema.parse({
+      id: `lj-c${comment.id}`,
+      parent: comment.parent ? `lj-c${comment.parent}` : undefined,
+      about: comment.entry ? `lj-${comment.entry}` : undefined,
+      author:
+        comment.name || comment.email
+          ? {
+              name: comment.name,
+              mail: comment.email,
+            }
+          : undefined,
+      date: comment.date,
+      text: this.ljMarkupToMarkdown(comment.body),
+    });
+  }
+
+  // TODO: This is also where we should fix table photo layouts, and probably borked links as well.
+  protected ljMarkupToMarkdown(text?: string) {
+    if (text) {
+      return toMarkdown(
+        autop(fromLivejournal(text, { breaks: true, usernames: true })),
+      );
+    }
+    return undefined;
   }
 
   override async finalize() {
     const commentStore = this.data.bucket('comments');
 
-    for (const e of this.queue) {
-      const { file, ...entry } = this.prepMarkdownFile(e);
-
-      // process comments
-      const comments = (e.comments ?? []).map(c => {
-        const comment: CommentOutput.Comment = {
-          id: `lj-c${c.id}`,
-          parent: c.parent ? `vpd-c${c.parent}` : undefined,
-          about: entry.data.id!,
-          date: c.date,
-          author: {
-            name: c.name,
-            mail: c.email,
-          },
-          subject: c.subject,
-          body: toMarkdown(autop(c.body ?? '')),
-        };
-        return comment;
-      });
-
+    for (const { text, ...frontmatter } of this.entries) {
+      const file = this.toFilename(frontmatter);
       if (file) {
         this.log.debug(`Wrote ${file}`);
-        this.output.write(file, entry);
+        this.output.write(file, { content: text, data: frontmatter });
 
         // write entry comments
-        if (comments.length) {
-          commentStore.set(entry.data.id!, comments);
+        if (
+          this.comments[frontmatter.id] &&
+          this.comments[frontmatter.id].length
+        ) {
+          commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
           this.log.debug(
-            `Saved ${comments.length} comments for ${entry.data.id}`,
+            `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
           );
         }
-      } else {
-        this.log.error(e);
       }
+
+      this.data.bucket('sources').set('livejournal', {
+        id: 'livejournal',
+        url: 'https://predicate.livejournal.com',
+        name: 'Livejournal',
+        hosting: 'Livejournal',
+      });
+
+      await this.copyAssets('media/lj-photos', 'lj');
+      return Promise.resolve();
     }
-
-    this.data.bucket('sources').set('livejournal', {
-      id: 'livejournal',
-      url: 'https://predicate.livejournal.com',
-      title: 'Livejournal',
-      hosting: 'Livejournal',
-    });
-
-    await this.copyAssets('media/lj-photos', 'lj');
-    return Promise.resolve();
-  }
-
-  protected override prepMarkdownFile(input: LivejournalEntry) {
-    const md: MarkdownPost = { data: {} };
-
-    md.file = this.toFilename(input.date, input.subject || input.id.toString());
-
-    md.data.title = input.subject;
-    md.data.date = input.date;
-    md.data.id = `lj-${input.id}`;
-
-    md.content = input.body ? toMarkdown(autop(input.body, false)) : '';
-
-    md.data.migration = {
-      site: 'livejournal',
-      entryId: input.id,
-    };
-    if (input.mood) md.data.migration.mood = input.mood;
-    if (input.music) md.data.migration.music = input.music;
-    if (input.avatar) md.data.migration.avatar = input.avatar;
-
-    if (input.comments?.length)
-      md.data.engagement = { comments: input.comments.length };
-
-    // If there's a table full of photos in the markup, we also want to set the layout
-    // to 'photo post' or something like that; that comes later, though.
-    // if (hasPhotoTable) md.data.layout = 'photos';
-
-    return md;
-  }
-
-  protected processPhotoTable(input: LivejournalEntry) {
-    return input;
   }
 }

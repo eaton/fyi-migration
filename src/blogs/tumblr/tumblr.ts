@@ -3,7 +3,10 @@ import { nanohash } from '@eatonfyi/ids';
 import { toSlug } from '@eatonfyi/text';
 import { normalize } from '@eatonfyi/urls';
 import { Client } from '@serguun42/tumblr.js';
-import { type MarkdownPost } from '../../schemas/markdown-post.js';
+import {
+  CreativeWorkInput,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
   BlogSchema,
@@ -120,11 +123,12 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
 
   override async finalize() {
     for (const e of this.queue) {
-      const md = this.prepMarkdownFile(e);
-      const { file, ...post } = md;
+      const md = this.prepEntry(e);
+      const file = this.toFilename(md);
+      const { text, ...frontmatter } = md;
       if (file) {
         this.log.debug(`Outputting ${file}`);
-        this.output.write(file, post);
+        this.output.write(file, { content: text, data: frontmatter });
       } else {
         this.log.error(e);
       }
@@ -136,46 +140,38 @@ export class TumblrMigrator extends BlogMigrator<TumblrPost> {
     return Promise.resolve();
   }
 
-  protected override prepMarkdownFile(input: TumblrPost): MarkdownPost {
-    const md: MarkdownPost = {
-      data: {
-        id: `entry/tumblr-${input.id}`,
-        title: input.title ?? undefined,
-        slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
-        summary: input.summary,
-        excerpt: input.excerpt ?? undefined,
-        date: input.date ? new Date(input.date) : undefined,
-        published: !!input.date,
-        keywords: input.tags,
-        url: input.url,
-      },
+  protected prepEntry(input: TumblrPost) {
+    const md: CreativeWorkInput = {
+      id: `entry/tumblr-${input.id}`,
+      title: input.title ?? undefined,
+      slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
+      summary: input.summary,
+      excerpt: input.excerpt ?? undefined,
+      date: input.date ? new Date(input.date) : undefined,
+      published: !!input.date,
+      keywords: input.tags,
+      url: input.url,
+      isPartOf: `${input.blog_name}`,
+      tumblrType: input.type,
     };
-
-    md.data.migration = {
-      site: `${input.blog_name}`,
-      tumblrId: input.id,
-      type: input.type,
-    };
-
-    md.file = `${this.dateToDate(md.data.date)}-${md.data.slug}.md`;
 
     if (input.type === 'photo') {
-      md.data.image =
+      md.image =
         input.photos?.pop()?.original_size?.url?.toString() ?? undefined;
-      md.content ||= input.caption ? toMarkdown(input.caption) : '';
+      md.text ||= input.caption ? toMarkdown(input.caption) : '';
     } else if (input.type === 'video') {
-      md.content ||=
+      md.text ||=
         input.permalink_url +
         (input.caption ? '\n\n' + toMarkdown(input.caption) : '');
     } else {
-      md.content = input.body ? toMarkdown(input.body) : '';
+      md.text = input.body ? toMarkdown(input.body) : '';
     }
 
     if (input.publisher) {
       // TODO: 'via X' links
     }
 
-    return md;
+    return CreativeWorkSchema.parse(md);
   }
 
   protected writeBlogInfo() {

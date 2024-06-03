@@ -1,3 +1,5 @@
+import { LivejournalEntry } from './schema';
+
 /**
  * Semagic was an early-aughts LJ client for windows. Among other things it saved local
  * copies of posts after you'd sent them; this made it handy for recovering lost journal
@@ -42,13 +44,12 @@
  * One of the 'always empty/unknown' fields probably contains things like post visibility settings,
  * but without te docs it's a bit of a shot in the dark.
  */
-export function parseSemagicFile(data: Buffer) {
+export function parseSemagicFile(data: Buffer): LivejournalEntry {
   // This is a really crude way of ding it, and frankly we shouldn't.
   const chunks = splitBuffer(data, Buffer.from([255, 254, 255]));
   return {
     id: chunks[11].slice(0, 2).readUInt16LE(),
     subject: chunks[15].slice(0, -24).toString('utf16le') || undefined,
-    flags: chunks[15].slice(-24, -16),
     date: new Date(1000 * chunks[15].slice(-16, -12).readUInt32LE()),
     body: chunks[14].toString('utf16le').slice(1) || undefined,
     music: chunks[16].toString('utf16le') || undefined,

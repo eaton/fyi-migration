@@ -5,7 +5,7 @@ export const ThingSchema = z
     id: z.string(),
     type: z.string().default('Thing'),
     title: z.string().optional(),
-    description: z.string(),
+    description: z.string().optional(),
     url: z.string().optional(),
     image: z.string().optional(),
     content: z.string().optional(),
@@ -14,3 +14,4 @@ export const ThingSchema = z
   .passthrough();
 
 export type Thing = z.infer<typeof ThingSchema>;
+export type ThingInput = typeof ThingSchema._input;

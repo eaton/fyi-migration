@@ -1,21 +1,21 @@
-import wretch from 'wretch';
-import QueryStringAddon from "wretch/addons/queryString"
 import { canParse } from '@eatonfyi/urls';
+import wretch from 'wretch';
+import QueryStringAddon from 'wretch/addons/queryString';
 import { z } from 'zod';
 
 export async function getTwitterOembed(input: string) {
   const url = canParse(input) ? input : `https://x.com/twitter/status/${input}`;
 
-  return wretch("https://publish.twitter.com/oembed")
+  return wretch('https://publish.twitter.com/oembed')
     .addon(QueryStringAddon)
     .query({ url, omit_script: true, dnt: true, hide_thread: false })
     .get()
     .unauthorized(cb => ({
       url,
       author_name: cb.name,
-      error: cb.text ?? true
+      error: cb.text ?? true,
     }))
-    .json(json => oembedSchema.parse(json))
+    .json(json => oembedSchema.parse(json));
 }
 
 const oembedSchema = z.object({
@@ -24,7 +24,6 @@ const oembedSchema = z.object({
   html: z.string().optional(),
   error: z.string().optional(),
 });
-
 
 /*
 {
