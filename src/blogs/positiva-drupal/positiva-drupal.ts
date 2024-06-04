@@ -1,7 +1,6 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
-import { normalize } from '@eatonfyi/urls';
 import { ZodTypeAny, z } from 'zod';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
@@ -146,10 +145,11 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepSite(vars?: Record<string, unknown>) {
     return CreativeWorkSchema.parse({
+      type: 'Blog',
       id: this.name,
       url: 'https://jeff.viapositiva.net',
-      name: vars?.['site_slogan'] || this.label,
-      description: vars?.['site_slogan'] || undefined,
+      name: vars?.['site_name'] || this.label,
+      subtitle: vars?.['site_slogan'] || undefined,
       software: 'Drupal 5',
       hosting: 'Site5 Hosting',
     });
@@ -162,7 +162,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
-      isPartOf: this.options.name,
+      isPartOf: this.name,
       text: this.buildNodeBody(input),
       about: (input.amazon?.asin) ? input.amazon.asin : undefined
     });
@@ -174,7 +174,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input),
-      isPartOf: this.options.name,
+      isPartOf: this.name,
     });
   }
 
@@ -188,7 +188,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       spokenBy: input.quote?.author ?? undefined,
       isBasedOn: undefined,
       recordedIn: undefined,
-      isPartOf: this.options.name,
+      isPartOf: this.name,
     });
   }
 

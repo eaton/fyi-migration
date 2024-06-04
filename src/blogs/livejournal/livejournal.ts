@@ -125,13 +125,13 @@ export class LivejournaMigrator extends BlogMigrator {
     return { entries: this.entries, comments: this.comments };
   }
 
-  protected prepEntry(entry: LivejournalEntry): CreativeWork {
+  protected prepEntry(entry: LivejournalEntry) {
     return CreativeWorkSchema.parse({
       id: `lj-${entry.id}`,
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
-
+      isPartOf: this.name,
       avatar: entry.avatar,
       mood: entry.mood,
       music: entry.music,
@@ -183,12 +183,13 @@ export class LivejournaMigrator extends BlogMigrator {
         }
       }
 
-      this.data.bucket('sources').set('livejournal', {
+      this.data.bucket('things').set('livejournal', CreativeWorkSchema.parse({
+        type: 'Blog',
         id: 'livejournal',
-        url: 'https://predicate.livejournal.com',
         name: 'Livejournal',
+        url: 'https://predicate.livejournal.com',
         hosting: 'Livejournal',
-      });
+      }));
 
       await this.copyAssets('media/lj-photos', 'lj');
       return Promise.resolve();

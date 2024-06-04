@@ -188,15 +188,16 @@ export class AltDrupalMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('sources').set('alt-drupal', {
+    this.data.bucket('things').set('alt-drupal', CreativeWorkSchema.parse({
       id: 'alt-drupal',
+      type: 'Blog',
       url: 'https://angrylittletree.com',
       name: this.entityData.variables['site_name']?.toString() ?? undefined,
-      description:
-        this.entityData.variables['site-slogan']?.toString() ?? undefined,
+      subtitle:
+        this.entityData.variables['site_slogan']?.toString() ?? undefined,
       hosting: 'Linode',
       software: 'Drupal 7',
-    });
+    }));
 
     await this.copyAssets('files', 'alt');
   }

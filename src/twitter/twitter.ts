@@ -288,7 +288,7 @@ export class TwitterMigrator extends Migrator {
         id: 'twt-@' + info.user.screen_name,
         id_str: info.user.id,
         name: info.user.screen_name,
-        displayName: info.user.name,
+        subtitle: info.user.name,
         date: info.user.created_at,
         image: info.user.profile_img_url,
         description: info.user.bio,

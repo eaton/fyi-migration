@@ -123,12 +123,12 @@ export class MovableTypeMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const siteStore = this.data.bucket('sources');
+    const thingStore = this.data.bucket('things');
     const commentStore = this.data.bucket('comments');
 
     for (const blog of cache.blogs) {
       const site = this.prepSite(blog);
-      siteStore.set(site.id, site);
+      thingStore.set(site.id, site);
 
       for (const entry of blog.entries ?? []) {
         const category = blog.categories?.find(c => c.category_id === entry.entry_category_id);
@@ -154,13 +154,13 @@ export class MovableTypeMigrator extends BlogMigrator {
     return Promise.resolve();
   }
 
-  protected prepSite(input: schemas.Blog): CreativeWork {
+  protected prepSite(input: schemas.Blog) {
     return CreativeWorkSchema.parse({
+      type: 'Blog',
       id: input.blog_shortname ?? this.options.name,
-      type: 'WebSite',
-      name: input.blog_name,
       url: input.blog_site_url,
-      description: input.blog_description,
+      name: input.blog_name,
+      subtitle: input.blog_description,
       software: 'Movable Type',
       hosting: 'Site5 Hosting',
     });

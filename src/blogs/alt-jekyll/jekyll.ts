@@ -87,13 +87,14 @@ export class AltJekyllMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('sources').set('alt-jekyll', {
+    this.data.bucket('things').set('alt-jekyll', CreativeWorkSchema.parse({
+      type: 'Blog',
       id: 'alt-jekyll',
       url: 'https://angrylittletree.com',
       name: 'Angry Little Tree',
       hosting: 'Github Pages',
       software: 'Jekyll',
-    });
+    }));
 
     await this.copyAssets('files', 'alt');
     return Promise.resolve();

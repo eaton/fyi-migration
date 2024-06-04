@@ -16,8 +16,9 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-
-    this.data.bucket('sites').set('medium', CreativeWorkSchema.parse({
+    
+    this.data.bucket('things').set('medium', CreativeWorkSchema.parse({
+      type: 'Blog',
       id: 'medium',
       name: 'Medium',
       url: 'https://medium.com/@eaton',

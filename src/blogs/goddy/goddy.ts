@@ -177,11 +177,12 @@ export class GoddyMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('sources').set('goddy', {
-      id: 'goddy',
-      name: 'Growing Up Goddy',
+    this.data.bucket('things').set('goddy', {
+      type: 'Blog',
+      id: this.name,
       url: 'https://growingupgoddy.com',
-      slogan: cache.vars['site_slogan'] || undefined,
+      name: cache.vars['site_name'] || this.label,
+      subtitle: cache.vars['site_slogan'] || undefined,
       software: 'Drupal 6',
       hosting: 'Linode',
     });
@@ -202,6 +203,7 @@ export class GoddyMigrator extends BlogMigrator {
       name: input.title,
       slug: toSlug(input.title),
       description: input.summary,
+      isPartOf: this.name,
       quote: input.money_quote
         ? toMarkdown(autop(input.money_quote.field_money_quote_value))
         : undefined,

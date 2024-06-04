@@ -121,7 +121,7 @@ export class TumblrMigrator extends BlogMigrator {
 
   override async finalize() {
     const linkStore = this.data.bucket('links');
-    const siteStore = this.data.bucket('sites');
+    const thingStore = this.data.bucket('things');
 
 
     for (const e of this.posts) {
@@ -140,7 +140,7 @@ export class TumblrMigrator extends BlogMigrator {
 
     if (this.blogs && this.blogs.length) {
       for (const b of this.blogs.map(b => this.prepSite(b))) {
-        siteStore.set(b.id, b);
+        thingStore.set(b.id, b);
       }
     }
 
@@ -150,8 +150,8 @@ export class TumblrMigrator extends BlogMigrator {
 
   protected prepSite(input: TumblrBlog) {
     return CreativeWorkSchema.parse({
+      type: 'Blog',
       id: input.name,
-      type: 'WebSite',
       name: input.title,
       description: input.description,
       url: input.url,
