@@ -51,7 +51,7 @@ function mangleTweet(input: z.infer<typeof fileTweet>, handle: string) {
     favorites: input.favorite_count,
     retweets: input.retweet_count,
     links: Object.fromEntries(
-      input.entities.urls.map(u => [u.url, u.expanded_url]),
+      input.entities?.urls.map(u => [u.url, u.expanded_url]) ?? [],
     ),
     media: mangleMedia(input),
   });
@@ -112,7 +112,7 @@ const fileTweet = z.object({
         }),
       )
       .default([]),
-  }),
+  }).optional(),
   favorite_count: z.coerce.number(),
   id_str: z.coerce.string(),
   in_reply_to_status_id_str: z.coerce.string().optional(),
@@ -147,7 +147,7 @@ const fileTweet = z.object({
         }),
       )
       .default([]),
-  }),
+  }).optional(),
 });
 
 const tweetsFile = z.array(z.object({ tweet: fileTweet }));

@@ -28,7 +28,6 @@ const defaults: TwitterMigratorOptions = {
   output: 'src/threads',
   makeThreads: true,
   saveMedia: true,
-  saveFavorites: false,
   saveRetweets: false,
 };
 
@@ -67,10 +66,15 @@ export class TwitterMigrator extends Migrator {
       await archive.ready();
       this.log.debug(`Processing tweets for ${archive.info.user.screen_name}`);
       for (const pt of archive.tweets.sortedIterator('asc')) {
+        if (!this.options.saveRetweets && this.isRetweet(pt)) {
+          continue;
+        }
+
         const tweet = this.parseTweet(pt);
         if (this.options.saveMedia) {
           tweet.media = await this.saveTweetMedia(archive, pt);
         }
+
         this.tweets.set(tweet.id, tweet);
       }
 
@@ -99,23 +103,24 @@ export class TwitterMigrator extends Migrator {
       this.log.debug(`Processed raw tweets and media for ${raw}`);
     }
 
-    // Build threads
-    for (const t of this.tweets.values()) {
-      t.thread = this.findAncestor(t)?.id;
-      if (t.thread) {
-        if (!this.threads.has(t.thread))
-          this.threads.set(t.thread, new Set<string>());
-        this.threads.get(t.thread)?.add(t.id);
-      }
-    }
-
-    // Dump the raw user accounts, tweets, and threads to the cache
     this.cache.write('users.ndjson', [...this.users.values()]);
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
-    this.cache.write(
-      'threadids.ndjson',
-      [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
-    );
+
+    // Build threads
+    if (this.options.makeThreads) {
+      for (const t of this.tweets.values()) {
+        t.thread = this.findAncestor(t)?.id;
+        if (t.thread) {
+          if (!this.threads.has(t.thread))
+            this.threads.set(t.thread, new Set<string>());
+          this.threads.get(t.thread)?.add(t.id);
+        }
+      }
+      this.cache.write(
+        'threadids.ndjson',
+        [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
+      );  
+    }
 
     return;
   }
@@ -266,19 +271,19 @@ export class TwitterMigrator extends Migrator {
   }
 
   protected isRetweet(tweet: PartialTweet) {
-    return tweet.retweeted_status || tweet.retweeted;
+    return !!tweet.retweeted_status || !!tweet.retweeted;
   }
 
   protected isOtherReply(tweet: PartialTweet) {
     return (
-      tweet.in_reply_to_status_id_str &&
+      !!tweet.in_reply_to_status_id_str &&
       tweet.in_reply_to_user_id_str !== tweet.user.id_str
     );
   }
 
   protected isOwnReply(tweet: PartialTweet) {
     return (
-      tweet.in_reply_to_status_id_str &&
+      !!tweet.in_reply_to_status_id_str &&
       tweet.in_reply_to_user_id_str === tweet.user.id_str
     );
   }
