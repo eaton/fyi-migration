@@ -1,5 +1,4 @@
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toFilename } from '../util/to-filename.js';
 import { toShortDate } from '../util/to-short-date.js';
 export interface BlogMigratorOptions extends MigratorOptions {
   commentOutput?: string;
@@ -11,8 +10,6 @@ export interface BlogMigratorOptions extends MigratorOptions {
  */
 export class BlogMigrator extends Migrator {
   declare options: BlogMigratorOptions;
-
-  toFilename = toFilename;
 
   toShortDate = toShortDate;
 

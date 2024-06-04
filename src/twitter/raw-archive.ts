@@ -103,16 +103,18 @@ const profileFile = z.array(
 
 const fileTweet = z.object({
   source: z.string().optional(),
-  entities: z.object({
-    urls: z
-      .array(
-        z.object({
-          url: z.string(),
-          expanded_url: z.string(),
-        }),
-      )
-      .default([]),
-  }).optional(),
+  entities: z
+    .object({
+      urls: z
+        .array(
+          z.object({
+            url: z.string(),
+            expanded_url: z.string(),
+          }),
+        )
+        .default([]),
+    })
+    .optional(),
   favorite_count: z.coerce.number(),
   id_str: z.coerce.string(),
   in_reply_to_status_id_str: z.coerce.string().optional(),
@@ -122,32 +124,34 @@ const fileTweet = z.object({
   retweet_count: z.coerce.number(),
   created_at: z.coerce.date(),
   full_text: z.string(),
-  extended_entities: z.object({
-    media: z
-      .array(
-        z.object({
-          id_str: z.string(),
-          url: z.string(),
-          expanded_url: z.string(),
-          media_url_https: z.string(),
-          type: z.string(),
-          display_url: z.string(),
-          video_info: z
-            .object({
-              variants: z
-                .array(
-                  z.object({
-                    content_type: z.string(),
-                    url: z.string(),
-                  }),
-                )
-                .default([]),
-            })
-            .optional(),
-        }),
-      )
-      .default([]),
-  }).optional(),
+  extended_entities: z
+    .object({
+      media: z
+        .array(
+          z.object({
+            id_str: z.string(),
+            url: z.string(),
+            expanded_url: z.string(),
+            media_url_https: z.string(),
+            type: z.string(),
+            display_url: z.string(),
+            video_info: z
+              .object({
+                variants: z
+                  .array(
+                    z.object({
+                      content_type: z.string(),
+                      url: z.string(),
+                    }),
+                  )
+                  .default([]),
+              })
+              .optional(),
+          }),
+        )
+        .default([]),
+    })
+    .optional(),
 });
 
 const tweetsFile = z.array(z.object({ tweet: fileTweet }));

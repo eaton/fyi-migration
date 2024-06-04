@@ -32,7 +32,7 @@ export class TextJournalsMigrator extends Migrator {
         id: txtId,
         type: 'DigitalDocument',
         name: txt.data.textfile,
-        software: 'BBEdit'
+        software: 'BBEdit',
       })[0];
 
       const cw = CreativeWorkSchema.parse({

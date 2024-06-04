@@ -10,7 +10,6 @@ import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Tweet, TweetSchema } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { parseRawArchive } from './raw-archive.js';
-import { toFilename } from '../util/to-filename.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   raw?: string[];
@@ -125,7 +124,7 @@ export class TwitterMigrator extends Migrator {
       this.cache.write(
         'threadids.ndjson',
         [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
-      );  
+      );
     }
 
     return;
@@ -162,7 +161,9 @@ export class TwitterMigrator extends Migrator {
     const allTweets = [...this.tweets.values()];
     // Filter this based on the output rules; retweets, replies, non-threaded stuff, etc.
 
-    const byYear = Object.groupBy(allTweets, t => t.date.getFullYear().toString());
+    const byYear = Object.groupBy(allTweets, t =>
+      t.date.getFullYear().toString(),
+    );
     for (const [year, tweets] of Object.entries(byYear)) {
       if (tweets) {
         this.output.write(year + '.ndjson', tweets);
@@ -175,11 +176,11 @@ export class TwitterMigrator extends Migrator {
         const children = [...th[1].values()]
           .map(id => this.tweets.get(id))
           .filter(t => t !== undefined) as Tweet[];
-  
+
         if (first !== undefined) {
           children.unshift(first);
-          const { text, ...frontmatter } = this.prepThread(children) ;
-          const file = toFilename(frontmatter)
+          const { text, ...frontmatter } = this.prepThread(children);
+          const file = this.makeFilename(frontmatter);
           this.output.write(file, { content: text, data: frontmatter });
         }
       }
@@ -313,7 +314,7 @@ export class TwitterMigrator extends Migrator {
     const first = tweets[0];
     const text = this.threadToMarkdown(tweets);
     const name = text.replaceAll('\n', ' ').slice(0, 48);
-    
+
     const cw = CreativeWorkSchema.parse({
       type: 'SocialMediaPosting',
       id: `twt-${first.id}`,
@@ -322,20 +323,25 @@ export class TwitterMigrator extends Migrator {
       handle: first.handle,
       isPartOf: `twt-@${first.handle}`,
       about: first.aboutId
-      ? `https://x.com/${first.aboutHandle}/status/${first.aboutHandle}`
-      : undefined,
+        ? `https://x.com/${first.aboutHandle}/status/${first.aboutHandle}`
+        : undefined,
       dates: {
         start: first.date,
-        end: tweets.map(t => t.date).sort().pop()!
+        end: tweets
+          .map(t => t.date)
+          .sort()
+          .pop()!,
       },
       text,
       tweets: tweets.map(t => t.id),
-      favorites: tweets.map(t => t.favorites).reduce((partialSum, a) => partialSum + a, 0),
-      retweets: tweets.map(t => t.retweets).reduce((partialSum, a) => partialSum + a, 0),
-      sharedContent: tweets.flatMap(t =>
-        Object.values(t.media ?? {}).flat(),
-      )
-    })
+      favorites: tweets
+        .map(t => t.favorites)
+        .reduce((partialSum, a) => partialSum + a, 0),
+      retweets: tweets
+        .map(t => t.retweets)
+        .reduce((partialSum, a) => partialSum + a, 0),
+      sharedContent: tweets.flatMap(t => Object.values(t.media ?? {}).flat()),
+    });
     return cw;
   }
 

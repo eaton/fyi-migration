@@ -75,7 +75,7 @@ export class AltJekyllMigrator extends BlogMigrator {
 
     for (const e of this.entries) {
       const { text, ...frontmatter } = e;
-      const fileName = this.toFilename(frontmatter);
+      const fileName = this.makeFilename(frontmatter);
       this.output.write(fileName, { data: frontmatter, content: text });
       this.log.debug(`Wrote ${fileName}`);
 

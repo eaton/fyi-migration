@@ -71,20 +71,23 @@ export class PredicateNetMigrator extends BlogMigrator {
         isPartOf: this.name,
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
-      })
+      });
       quoteStore.set(cw.id, cw);
     }
   }
 
   override async finalize() {
-    this.data.bucket('things').set('predicate-net', CreativeWorkSchema.parse({
-      id: 'predicate-net',
-      type: 'Blog',
-      url: 'http://predicate.net',
-      name: 'Predicate.net',
-      hosting: 'Site5 (IIS)',
-      software: 'BBEdit',
-    }));
+    this.data.bucket('things').set(
+      'predicate-net',
+      CreativeWorkSchema.parse({
+        id: 'predicate-net',
+        type: 'Blog',
+        url: 'http://predicate.net',
+        name: 'Predicate.net',
+        hosting: 'Site5 (IIS)',
+        software: 'BBEdit',
+      }),
+    );
 
     await this.writeLinks();
     await this.writeQuotes();

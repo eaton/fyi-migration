@@ -2,7 +2,6 @@ import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { Article, ArticleSchema } from '../schemas/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toFilename } from '../util/to-filename.js';
 
 const defaults: MigratorOptions = {
   name: 'articles',
@@ -58,7 +57,7 @@ export class ArticleReprintMigrator extends Migrator {
 
   override async finalize(): Promise<void> {
     for (const { text, ...frontmatter } of this.articles) {
-      const file = toFilename(frontmatter);
+      const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${file}`);
     }

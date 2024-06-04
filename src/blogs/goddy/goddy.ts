@@ -167,7 +167,7 @@ export class GoddyMigrator extends BlogMigrator {
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
     for (const { text, ...frontmatter } of nodes) {
-      const file = this.toFilename(frontmatter);
+      const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${file}`);
 

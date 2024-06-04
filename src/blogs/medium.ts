@@ -42,7 +42,7 @@ export class MediumMigrator extends BlogMigrator {
         isPartOf: this.name,
       });
 
-      const file = this.toFilename(frontmatter);
+      const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
     }
 

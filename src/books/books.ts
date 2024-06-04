@@ -33,13 +33,17 @@ export class BookMigrator extends Migrator {
     // First, read any '*.tsv' input files and attempt to parse them as pseudo-books.
     this.log.info(this.input.path());
     for (const f of this.input.find({ matching: '*.tsv' })) {
-      const booklist = (this.input.read(f, 'auto') ?? {}) as Record<string, unknown>[];
+      const booklist = (this.input.read(f, 'auto') ?? {}) as Record<
+        string,
+        unknown
+      >[];
       if (booklist === undefined) continue;
 
-      partialBooks.push(...booklist
-        .map(b => this.populatePartialBook(b))
-        .filter(b => b !== undefined));
-      
+      partialBooks.push(
+        ...booklist
+          .map(b => this.populatePartialBook(b))
+          .filter(b => b !== undefined),
+      );
     }
 
     return;

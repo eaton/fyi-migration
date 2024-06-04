@@ -1,5 +1,4 @@
 import { Migrator } from './shared/migrator.js';
-import * as blogs from './blogs/index.js';
 import * as textfiles from './textfiles/index.js';
 
 //import { ArticleReprintMigrator } from './misc/article-reprints.js';

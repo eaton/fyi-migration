@@ -179,7 +179,7 @@ export class AltDrupalMigrator extends BlogMigrator {
     const commentStore = this.data.bucket('comments');
 
     for (const { text, ...frontmatter } of this.entries) {
-      const filename = this.toFilename(frontmatter);
+      const filename = this.makeFilename(frontmatter);
       this.output.write(filename, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${filename}`);
 

@@ -1,10 +1,9 @@
 import { min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
+import { toCase, toSlug } from '@eatonfyi/text';
+import { parse as parsePath } from 'path';
 import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { parse as parsePath } from 'path';
-import { toFilename } from '../util/to-filename.js';
-import { toCase, toSlug } from '@eatonfyi/text';
 
 const defaults: MigratorOptions = {
   name: 'txt-fiction',
@@ -25,8 +24,10 @@ export class TextFictionMigrator extends Migrator {
       const filePath = parsePath(f);
 
       if (filePath.ext.toLocaleLowerCase() === '.txt') {
-        let storyDate =  this.input.inspect(f, { times: true })?.modifyTime ?? new Date();
-        const [,pathDateStr,pathSlug] = filePath.name.match(/^(\d{4}-\d{2}-\d{2})?-?([^.]+)/) || [];
+        let storyDate =
+          this.input.inspect(f, { times: true })?.modifyTime ?? new Date();
+        const [, pathDateStr, pathSlug] =
+          filePath.name.match(/^(\d{4}-\d{2}-\d{2})?-?([^.]+)/) || [];
         if (pathDateStr) {
           const pathDate = new Date(pathDateStr.replace('-', '/'));
           storyDate = min([storyDate, pathDate]);
@@ -44,7 +45,7 @@ export class TextFictionMigrator extends Migrator {
           this.stories.push(story);
         }
       } else {
-        this.log.debug(`Skipped ${f}`)
+        this.log.debug(`Skipped ${f}`);
       }
     }
   }
@@ -52,7 +53,7 @@ export class TextFictionMigrator extends Migrator {
   override async finalize() {
     for (const s of this.stories) {
       const { text, ...frontmatter } = s;
-      const file = toFilename(frontmatter);
+      const file = this.makeFilename(frontmatter);
       if (file) {
         this.output.write(file, { content: text, data: frontmatter });
         this.log.debug(`Wrote ${file}`);
@@ -66,7 +67,7 @@ export class TextFictionMigrator extends Migrator {
     const parsed = CreativeWorkSchema.safeParse({
       type: 'ShortStory',
       id: nanohash(input),
-      ...input
+      ...input,
     });
     if (parsed.success) {
       return parsed.data;

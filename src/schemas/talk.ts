@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
 
-// Use isPartOf 
+// Use isPartOf
 export const TalkSchema = CreativeWorkSchema.extend({
   type: z.string().default('Talk'),
   keySlide: z.number().optional(),

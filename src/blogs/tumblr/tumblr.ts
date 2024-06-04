@@ -123,7 +123,7 @@ export class TumblrMigrator extends BlogMigrator {
 
     for (const e of this.posts) {
       const md = this.prepEntry(e);
-      const file = this.toFilename(md);
+      const file = this.makeFilename(md);
       const { text, ...frontmatter } = md;
       this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${file}`);

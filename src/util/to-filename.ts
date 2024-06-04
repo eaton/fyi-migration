@@ -1,8 +1,8 @@
+import { nanohash } from '@eatonfyi/ids';
 import { toSlug } from '@eatonfyi/text';
 import { get } from 'obby';
 import { toShortDate } from './to-short-date.js';
 import { isDate, isString } from './type-guards.js';
-import { nanohash } from '@eatonfyi/ids';
 
 type baseInput = Record<string, unknown>;
 

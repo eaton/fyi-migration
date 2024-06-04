@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import jetpack from '@eatonfyi/fs-jetpack';
 import {
   Csv,
@@ -10,11 +9,13 @@ import {
   Yaml,
   jsonDateParser,
 } from '@eatonfyi/serializers';
+import 'dotenv/config';
 import { merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
+import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
 import { Store, StoreableData } from './store.js';
-import { Thing, ThingSchema } from '../schemas/thing.js';
+import { toFilename } from '../util/to-filename.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -177,7 +178,9 @@ export class Migrator {
   }
 
   get data() {
-    this._data ??= new Store({ root: this.root.dir(this.options.data ?? 'data') });
+    this._data ??= new Store({
+      root: this.root.dir(this.options.data ?? 'data'),
+    });
     return this._data;
   }
 
@@ -275,4 +278,15 @@ export class Migrator {
     return output;
   }
 
+  /**
+   * Constructs a two-part safe filename from a date identifier (input.date,
+   * input.dates.published, and input.dates.start will be checked in sequence),
+   * and a document identifier (input.name, input.slug, and input.id will be
+   * used in that order). If both are found, `yyyy-MM-dd-slug-text.md` will be
+   * generated.
+   * 
+   * If both are missing, a nanohash of the input object will be used to generate
+   * the filename to avoid collisions. 
+   */
+  makeFilename = toFilename;
 }

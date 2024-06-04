@@ -1,6 +1,7 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
+import is from '@sindresorhus/is';
 import { ZodTypeAny, z } from 'zod';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
 import {
@@ -10,7 +11,6 @@ import {
 import { cleanLink } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import is from '@sindresorhus/is';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -123,7 +123,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       } else if (n.type === 'blog' || n.type === 'review') {
         // TODO: entries vs notes
         const { text, ...frontmatter } = this.prepEntry(n);
-        const file = this.toFilename(frontmatter);
+        const file = this.makeFilename(frontmatter);
         this.output.write(file, { content: text, data: frontmatter });
 
         // Handle comments
@@ -222,13 +222,12 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     return text;
   }
 
-  
   /**
    * This should catch three scenarios:
-   * 
+   *
    * 1. `[inline:1]` placeholders for attached images in node bodies; it should replace the digit
    *    with the nth image from the images array.
-   * 2. `[inline:foo.jpg]` paths for filename references. 
+   * 2. `[inline:foo.jpg]` paths for filename references.
    * 3. `<img src="sites/all/files/foo.jpg" />` style links to local images that have now moved.
    */
   protected fixInlineImages(
@@ -236,12 +235,12 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     images: z.infer<typeof drupal.fileSchema>[] = [],
   ) {
     if (body.indexOf('[inline') > 0) {
-      const inlines = [...body.matchAll(/\[inline:(.+)\]/g)]
+      const inlines = [...body.matchAll(/\[inline:(.+)\]/g)];
       for (const inline of inlines) {
         const img = inline[1];
         if (is.numericString(img)) {
           const idx = Number.parseInt(img) - 1;
-          body.replace(inline[0], `<img src="${images[idx].filepath}" />`)
+          body.replace(inline[0], `<img src="${images[idx].filepath}" />`);
         }
       }
       for (const img of images) {

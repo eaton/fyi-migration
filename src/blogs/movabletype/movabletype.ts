@@ -143,7 +143,7 @@ export class MovableTypeMigrator extends BlogMigrator {
           this.prepComment(c, frontmatter),
         );
 
-        const file = [site.id, this.toFilename(frontmatter)].join('/');
+        const file = [site.id, this.makeFilename(frontmatter)].join('/');
         this.output.write(file, { content: text, data: frontmatter });
         this.log.debug(`Wrote ${file}`);
 

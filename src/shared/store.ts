@@ -2,17 +2,17 @@ import jetpack from '@eatonfyi/fs-jetpack';
 
 export type StoreableData = string | object | Array<unknown> | Buffer;
 export type StoreKey = string | number | symbol;
-export type StorableDataWithKey = object & { id: StoreKey }
+export type StorableDataWithKey = object & { id: StoreKey };
 
 export interface StoreOptions {
-  root?: string | typeof jetpack,
-  format?: string,
+  root?: string | typeof jetpack;
+  format?: string;
 }
 
 const defaults: Required<StoreOptions> = {
   root: './storage',
-  format: 'json'
-}
+  format: 'json',
+};
 
 /**
  * The absolute most jank KVS that e'r were.
@@ -31,8 +31,8 @@ export class Store<T extends StoreableData = StoreableData> {
     return this.root.exists(this.asKey(key)) === 'file';
   }
 
-  set(value: StorableDataWithKey): this
-  set(key: StoreKey, value: T): this
+  set(value: StorableDataWithKey): this;
+  set(key: StoreKey, value: T): this;
   set(keyOrValue: StoreKey | StorableDataWithKey, value?: T): this {
     if (typeof keyOrValue === 'object') {
       this.root.write(this.asKey(keyOrValue.id), keyOrValue);
@@ -59,7 +59,10 @@ export class Store<T extends StoreableData = StoreableData> {
   }
 
   bucket<S extends T = T>(name: string, format?: string) {
-    return new Store<S>({ root: this.root.dir(name), format: format ?? this.format });
+    return new Store<S>({
+      root: this.root.dir(name),
+      format: format ?? this.format,
+    });
   }
 
   protected asKey(input: StoreKey | StoreableData) {
@@ -71,4 +74,3 @@ export class Store<T extends StoreableData = StoreableData> {
     return this.format.toLocaleLowerCase().replace(/^\.+/, '');
   }
 }
-

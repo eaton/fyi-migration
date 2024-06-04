@@ -5,3 +5,8 @@ export function toShortDate(input: string | Date | undefined) {
   if (typeof input === 'string') return input.split('T')[0];
   return input?.toISOString()?.split('T')[0];
 }
+
+export function toISODate(input?: string | Date) {
+  if (typeof input === 'string') return input;
+  return input?.toISOString();
+}

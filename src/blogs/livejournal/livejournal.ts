@@ -54,7 +54,7 @@ export class LivejournaMigrator extends BlogMigrator {
           const entry = parseSemagicFile(raw);
           if (entry) {
             this.cache.write(
-              this.toFilename(
+              this.makeFilename(
                 { name: entry.subject ?? entry.id, date: entry.date },
                 '.json',
               ),
@@ -76,7 +76,6 @@ export class LivejournaMigrator extends BlogMigrator {
           xml: true,
         });
         for (const entry of extracted) {
-
           if (
             this.options.ignoreBefore &&
             isBefore(entry.date, this.options.ignoreBefore)
@@ -89,8 +88,8 @@ export class LivejournaMigrator extends BlogMigrator {
           ) {
             continue;
           }
-    
-          const filename = this.toFilename(
+
+          const filename = this.makeFilename(
             { name: entry.subject ?? entry.id, date: entry.date },
             '.json',
           );
@@ -117,7 +116,7 @@ export class LivejournaMigrator extends BlogMigrator {
 
     for (const entry of raw) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      const cw = this.prepEntry(entry)
+      const cw = this.prepEntry(entry);
       this.entries.push(cw);
 
       if (entry.comments && entry.comments.length) {
@@ -134,7 +133,7 @@ export class LivejournaMigrator extends BlogMigrator {
     const commentStore = this.data.bucket('comments');
 
     for (const { text, ...frontmatter } of this.entries) {
-      const file = this.toFilename(frontmatter);
+      const file = this.makeFilename(frontmatter);
       if (file) {
         this.output.write(file, { content: text, data: frontmatter });
         this.log.debug(`Wrote ${file}`);
@@ -150,7 +149,7 @@ export class LivejournaMigrator extends BlogMigrator {
           );
         }
       } else {
-        this.log.debug(frontmatter, 'Could not create filename')
+        this.log.debug(frontmatter, 'Could not create filename');
       }
     }
     this.data.bucket('things').set(
@@ -163,7 +162,7 @@ export class LivejournaMigrator extends BlogMigrator {
         hosting: 'Livejournal',
       }),
     );
-    
+
     await this.copyAssets('media/lj-photos', 'lj');
     return Promise.resolve();
   }
