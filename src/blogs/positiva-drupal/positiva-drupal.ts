@@ -160,6 +160,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepEntry(input: drupal.Node): CreativeWork {
     return CreativeWorkSchema.parse({
+      type: 'BlogPosting',
       id: `vpd-${input.nid}`,
       date: input.created,
       name: input.title,

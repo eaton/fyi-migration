@@ -30,6 +30,7 @@ export class MediumMigrator extends BlogMigrator {
     for (const f of this.input.find({ matching: 'posts/*.md' })) {
       const markdown = this.input.read(f, 'auto');
       const { text, ...frontmatter } = CreativeWorkSchema.parse({
+        type: 'BlogPosting',
         id: get(markdown, 'data.id') || undefined,
         name: get(markdown, 'data.title') || undefined,
         description: get(markdown, 'data.summary') || undefined,
@@ -38,7 +39,7 @@ export class MediumMigrator extends BlogMigrator {
         url: get(markdown, 'data.url') || undefined,
         date: get(markdown, 'data.date') || undefined,
         text: get(markdown, 'content') || undefined,
-        isPartOf: 'medium',
+        isPartOf: this.name,
       });
 
       const file = this.toFilename(frontmatter);

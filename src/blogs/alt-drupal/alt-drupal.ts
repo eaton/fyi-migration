@@ -213,6 +213,7 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   protected prepEntry(input: drupal.AltNode) {
     return CreativeWorkSchema.parse({
+      type: 'BlogPosting',
       id: `alt-${input.nid}`,
       date: input.created,
       slug: toSlug(input.title),

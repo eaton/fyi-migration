@@ -184,6 +184,7 @@ export class MovableTypeMigrator extends BlogMigrator {
 
     const entry = CreativeWorkSchema.parse({
       id: `mt-${input.entry_id}`,
+      type: 'BlogPosting',
       date: input.entry_created_on.toISOString(),
       name: input.entry_title,
       slug: input.entry_basename,

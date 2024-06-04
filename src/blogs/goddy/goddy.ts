@@ -201,6 +201,7 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepEntry(input: drupal.GoddyNode): CreativeWork {
     return CreativeWorkSchema.parse({
+      type: 'BlogPosting',
       id: `goddy-${input.nid}`,
       date: input.created,
       name: input.title,

@@ -107,6 +107,7 @@ export class AltJekyllMigrator extends BlogMigrator {
 
   protected prepEntry(input: JekyllPost): CreativeWork {
     const cw: CreativeWorkInput = {
+      type: 'BlogPosting',
       id: 'tmp',
       date: input.data.date,
       name: input.data.title,
