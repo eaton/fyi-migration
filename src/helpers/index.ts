@@ -5,4 +5,4 @@
  * data returned by the parse function.
  */
 
-export * as Mdb from './mdb.js';
+export * from './parse-mdb.js';

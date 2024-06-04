@@ -4,13 +4,7 @@ import micromatch from 'micromatch';
 import { z } from 'zod';
 const isMatch = micromatch.isMatch;
 
-export interface Options {
-  ignore?: string | string[];
-  validate?: Record<string, z.ZodTypeAny>;
-  strict?: boolean;
-}
-
-export function parse(mdbFile: string, tables: string | string[] = '*') {
+export function parseMdbFile(mdbFile: string, tables: string | string[] = '*') {
   const reader = new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer);
   const tableNames = reader
     .getTableNames()
@@ -20,7 +14,7 @@ export function parse(mdbFile: string, tables: string | string[] = '*') {
   );
 }
 
-export function parseTable<T extends z.ZodTypeAny>(
+export function parseMdbTable<T extends z.ZodTypeAny>(
   mdbFile: string | MDBReader,
   table: string,
   schema?: T,
@@ -45,7 +39,7 @@ export function parseTable<T extends z.ZodTypeAny>(
   }
 }
 
-export function getMeta(mdbFile: string) {
+export function getMdbInfo(mdbFile: string) {
   const reader = new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer);
   return {
     dateCreated: reader.getCreationDate() ?? undefined,

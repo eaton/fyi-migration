@@ -9,8 +9,10 @@ import {
 import { Tweet, TweetSchema, TweetThread } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { parseRawArchive } from './raw-archive.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
+  raw?: string[];
   makeThreads?: boolean;
   saveMedia?: boolean;
   saveFavorites?: boolean;
@@ -21,6 +23,7 @@ const defaults: TwitterMigratorOptions = {
   name: 'twitter',
   description: 'Tweets from multiple accounts',
   input: '/Volumes/archives/Backup/Service Migration Downloads/twitter',
+  raw: ['schmeaton'],
   cache: 'cache/twitter',
   output: 'src/threads',
   makeThreads: true,
@@ -54,6 +57,8 @@ export class TwitterMigrator extends Migrator {
       'moment',
       'mute',
     ] as ArchiveReadPart[];
+
+    // Find zipped archives and process them. For now, we ignore retweets.
     const archiveFiles = this.input.find({ matching: 'twitter-*.zip' });
     for (const file of archiveFiles) {
       this.log.debug(`Loading ${file}`);
@@ -61,19 +66,34 @@ export class TwitterMigrator extends Migrator {
       await archive.ready();
       this.log.debug(`Processing tweets for ${archive.info.user.screen_name}`);
       for (const pt of archive.tweets.sortedIterator('asc')) {
-        if (this.isOwnTweet(pt, archive)) {
-          const tweet = this.parseTweet(pt);
-          if (this.options.saveMedia) {
-            tweet.media = await this.saveTweetMedia(archive, pt);
-          }
-          this.tweets.set(tweet.id, tweet);
+        const tweet = this.parseTweet(pt);
+        if (this.options.saveMedia) {
+          tweet.media = await this.saveTweetMedia(archive, pt);
         }
+        this.tweets.set(tweet.id, tweet);
       }
       await this.saveArchiveInfo(archive);
       this.log.debug(`Done with ${file}`);
       archive.releaseZip();
     }
 
+    // If there are any 'raw' archives unparsed by the twitter-archive app,
+    // handle them now.
+    for (const raw of this.options.raw ?? []) {
+      const rawDir = this.input.dir(raw);
+      const media = rawDir.dir('tweets_media');
+
+      const { user, tweets } = await parseRawArchive(rawDir.path());
+      for (const t of tweets) {
+        this.tweets.set(t.id, t);
+      }
+      for (const mf of media.find({ directories: false, files: true })) {
+        media.copy(mf, this.cache.path('media/' + mf), { overwrite: true });
+      }
+      this.log.debug(`Processed raw tweets and media for ${raw}`);
+    }
+  
+    // Build threads
     for (const t of this.tweets.values()) {
       t.thread = this.findAncestor(t)?.id;
       if (t.thread) {
@@ -83,6 +103,7 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
+    // Dump the raw tweets and threads to the cache
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
     this.cache.write(
       'threadids.ndjson',
@@ -251,7 +272,7 @@ export class TwitterMigrator extends Migrator {
       if (buffer && filename) {
         this.cache.write(`media/${filename}`, buffer);
         mediaMap[em.url] ??= [];
-        mediaMap[em.url].push(`media/${filename}`);
+        mediaMap[em.url].push(`media://twitter/${filename}`);
       }
     }
     return mediaMap;
