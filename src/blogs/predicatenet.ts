@@ -72,10 +72,7 @@ export class PredicateNetMigrator extends BlogMigrator {
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
       })
-      quoteStore.set(cw.id, {
-
-        isPartOf: 'predicate-net',
-      });
+      quoteStore.set(cw.id, cw);
     }
   }
 
