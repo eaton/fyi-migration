@@ -19,8 +19,6 @@ export const CommentSchema = CreativeWorkSchema.extend({
     .describe(
       "A sortable representation of the comment's position in the thread.",
     ),
-  upvotes: z.number().optional(),
-  downvotes: z.number().optional(),
   commenter: CommentAuthorSchema.optional(),
 });
 
