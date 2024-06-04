@@ -1,5 +1,5 @@
 import { nanohash } from '@eatonfyi/ids';
-import { get, unflatten } from 'obby';
+import { emptyDeep, get, unflatten } from 'obby';
 import { Book, BookSchema } from '../schemas/book.js';
 import { CreativeWork } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
@@ -18,7 +18,8 @@ const defaults: BookMigratorOptions = {
 
 export class BookMigrator extends Migrator {
   declare options: BookMigratorOptions;
-  books: Record<string, Book> = {};
+  partialBooks: Partial<Book>[] = [];
+  cachedBooks: Record<string, Book> = {};
   notes: Record<string, CreativeWork[]> = {};
   fetcher = new BookFetcher();
 
@@ -27,22 +28,24 @@ export class BookMigrator extends Migrator {
   }
 
   override async fillCache() {
+    const partialBooks: Partial<Book>[] = [];
+
     // First, read any '*.tsv' input files and attempt to parse them as pseudo-books.
+    this.log.info(this.input.path());
     for (const f of this.input.find({ matching: '*.tsv' })) {
-      const booklist = this.input.read(f, 'auto') as
-        | Record<string, unknown>[]
-        | undefined;
+      const booklist = (this.input.read(f, 'auto') ?? {}) as Record<string, unknown>[];
       if (booklist === undefined) continue;
 
-      this.log.debug(booklist.length);
-      const partialBooks = booklist
+      partialBooks.push(...booklist
         .map(b => this.populatePartialBook(b))
-        .filter(b => b !== undefined);
-      this.log.debug(partialBooks.length);
+        .filter(b => b !== undefined));
+      
     }
+
+    return;
   }
 
-  protected async populatePartialBook(input: Record<string, unknown>) {
+  protected populatePartialBook(input: Record<string, unknown>) {
     // 1. Get the first ID from the ids list.
     // 2. If there isn't an ID, check for a URL and check for its cached HTML.
     //    a. If there's cached HTML, parse it.
@@ -57,8 +60,8 @@ export class BookMigrator extends Migrator {
     // 4. If the retrieveImages option is TRUE, check whether a cached image exists for the id.
     //    a. If none exists, and an image property is populated, fetch and cache it.
     // 5. Return the Book JSON
-
-    const parsed = BookSchema.optional().safeParse(unflatten(input));
+    const unflattened = emptyDeep(unflatten(input));
+    const parsed = BookSchema.partial().safeParse(unflattened);
     if (parsed.error) {
       this.log.error(parsed.error.message);
       return;
@@ -73,7 +76,9 @@ export class BookMigrator extends Migrator {
   }
 
   protected getCanonicalId(input: Record<string, unknown>) {
-    if (isString(input.id)) return input.id;
+    if (isString(input.id)) {
+      return input.id;
+    }
     if (input.ids) {
       const id = get(input.ids, 'custom isbn10 isbn13 asin upc');
       if (isString(id)) {

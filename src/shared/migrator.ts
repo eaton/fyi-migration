@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import jetpack from '@eatonfyi/fs-jetpack';
 import {
   Csv,
