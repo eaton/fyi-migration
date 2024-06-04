@@ -150,7 +150,9 @@ export class TwitterMigrator extends Migrator {
 
     for (const th of [...this.threads.entries()]) {
       const first = this.tweets.get(th[0]);
-      const children = [...th[1].values()].map(id => this.tweets.get(id));
+      const children = [...th[1].values()]
+        .map(id => this.tweets.get(id))
+        .filter(t => t !== undefined) as Tweet[];
 
       if (first !== undefined) {
         children.unshift(first);
@@ -164,7 +166,7 @@ export class TwitterMigrator extends Migrator {
           aboutHandle: first.aboutHandle,
           favorites: 0,
           retweets: 0,
-          tweets: children.filter(c => c !== undefined) ?? [],
+          tweets: children,
         };
         thread.favorites = thread.tweets
           .map(t => t.favorites)
