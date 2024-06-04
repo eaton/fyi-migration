@@ -77,7 +77,7 @@ export class PredicateNetMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    this.data.bucket('things').set('predicatenet', CreativeWorkSchema.parse({
+    this.data.bucket('things').set('predicate-net', CreativeWorkSchema.parse({
       id: 'predicate-net',
       type: 'Blog',
       url: 'http://predicate.net',

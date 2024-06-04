@@ -6,10 +6,10 @@ import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {
-  name: 'textfiles',
-  label: 'Assorted text files',
-  input: 'input/blogs/textfiles',
-  output: 'src/entries/textfiles',
+  name: 'txt-journals',
+  label: 'Journal files',
+  input: 'input/textfiles/journals',
+  output: 'src/txt/journals',
 };
 
 export class TextJournalsMigrator extends Migrator {
@@ -20,7 +20,6 @@ export class TextJournalsMigrator extends Migrator {
   override async finalize() {
     const mds = new Frontmatter();
     const files = this.input.find({ matching: '**/*.txt' });
-    const textStore = this.data.bucket('txt');
     const textFiles: Record<string, CreativeWork> = {};
 
     for (const file of files) {
@@ -29,7 +28,12 @@ export class TextJournalsMigrator extends Migrator {
         this.log.error(file);
       }
       const txtId = toSlug(txt.data.textfile);
-      textFiles[txtId] ??= this.prepTextFile(txtId, txt.data.textfile);
+      textFiles[txtId] ??= this.prepThings({
+        id: txtId,
+        type: 'DigitalDocument',
+        name: txt.data.textfile,
+        software: 'BBEdit'
+      })[0];
 
       const cw = CreativeWorkSchema.parse({
         id: 'txt-' + nanohash(txt.data),
@@ -49,18 +53,12 @@ export class TextJournalsMigrator extends Migrator {
           };
         }
       }
+
       this.output.write(file.replace('.txt', '.md'), txt);
       this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
     }
 
-    for (const [id, cw] of Object.entries(textFiles)) {
-      textStore.set(id, cw);
-    }
-
-    return Promise.resolve();
-  }
-
-  protected prepTextFile(id: string, name: string) {
-    return CreativeWorkSchema.parse({ id, name, software: 'BBEdit' });
+    this.saveThings(Object.values(textFiles));
+    return;
   }
 }

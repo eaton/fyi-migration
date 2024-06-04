@@ -10,6 +10,7 @@ import {
 import { cleanLink } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import is from '@sindresorhus/is';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -221,16 +222,33 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     return text;
   }
 
+  
+  /**
+   * This should catch three scenarios:
+   * 
+   * 1. `[inline:1]` placeholders for attached images in node bodies; it should replace the digit
+   *    with the nth image from the images array.
+   * 2. `[inline:foo.jpg]` paths for filename references. 
+   * 3. `<img src="sites/all/files/foo.jpg" />` style links to local images that have now moved.
+   */
   protected fixInlineImages(
     body: string,
     images: z.infer<typeof drupal.fileSchema>[] = [],
   ) {
     if (body.indexOf('[inline') > 0) {
-      let tmp = body.replaceAll(/\[inline:(.+)\]/g, '<img src="$1" />');
-      for (const img of images) {
-        tmp = tmp.replaceAll(img.description ?? '', img.filepath);
+      const inlines = [...body.matchAll(/\[inline:(.+)\]/g)]
+      for (const inline of inlines) {
+        const img = inline[1];
+        if (is.numericString(img)) {
+          const idx = Number.parseInt(img) - 1;
+          body.replace(inline[0], `<img src="${images[idx].filepath}" />`)
+        }
       }
-      return tmp;
+      for (const img of images) {
+        if (img.description) {
+          body = body.replaceAll(img.description, img.filepath);
+        }
+      }
     }
     return body;
   }

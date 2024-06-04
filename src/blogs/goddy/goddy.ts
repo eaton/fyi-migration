@@ -213,7 +213,7 @@ export class GoddyMigrator extends BlogMigrator {
         : undefined,
       about:
         (input.product
-          ? 'book/' + input.product.field_product_asin
+          ? input.product.field_product_asin?.trim()
           : undefined) ??
         input.link?.field_link_url ??
         undefined,

@@ -6,5 +6,4 @@ export * from './medium.js';
 export * from './movabletype/movabletype.js';
 export * from './positiva-drupal/positiva-drupal.js';
 export * from './predicatenet.js';
-export * from './text-journals.js';
 export * from './tumblr/tumblr.js';

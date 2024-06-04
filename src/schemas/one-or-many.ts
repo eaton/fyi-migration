@@ -1,8 +1,14 @@
 import { z } from 'zod';
 
-export function oneOrMany(schema: z.ZodTypeAny, optional = true) {
+type Options = {
+  optional?: boolean,
+  expand?: boolean,
+}
+
+export function oneOrMany<T extends z.ZodTypeAny>(schema: T, options: Options = {}) {
+  const opt = { optional: true, expand: true, ...options }
   const multi = schema
     .or(z.array(schema))
-    .transform(i => (!!i && !Array.isArray(i) ? [i] : i));
-  return optional ? multi.optional() : multi;
+    .transform(i => opt.expand ? ((i !== undefined && Array.isArray(i)) ? i : [i]) : i);
+  return opt.optional ? multi.optional() : multi;
 }

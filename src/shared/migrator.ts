@@ -14,6 +14,7 @@ import { merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
 import { isLogger } from '../util/index.js';
 import { Store, StoreableData } from './store.js';
+import { Thing, ThingSchema } from '../schemas/thing.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -176,7 +177,7 @@ export class Migrator {
   }
 
   get data() {
-    this._data ??= new Store(this.root.dir(this.options.data ?? 'data'));
+    this._data ??= new Store({ root: this.root.dir(this.options.data ?? 'data') });
     return this._data;
   }
 
@@ -249,4 +250,29 @@ export class Migrator {
     this.log.debug(`Copying assets from ${inp} to ${outp}`);
     jetpack.copyAsync(inp, outp, { overwrite });
   }
+
+  // TODO: We probably want to start prefixing by type or something.
+  // There's bound to be collision once we really use this a lot.
+  protected saveThings(input: Thing | Thing[]) {
+    const things = Array.isArray(input) ? input : [input];
+    const thingStore = this.data.bucket('things');
+    for (const thing of things) {
+      thingStore.set(thing);
+    }
+  }
+
+  protected prepThings(input: unknown | unknown[]) {
+    const raw = Array.isArray(input) ? input : [input];
+    const output: Thing[] = [];
+    for (const item of raw) {
+      const parsed = ThingSchema.safeParse(item);
+      if (parsed.success) {
+        output.push(parsed.data);
+      } else {
+        this.log.error(item, 'Could not parse Thing');
+      }
+    }
+    return output;
+  }
+
 }

@@ -2,6 +2,7 @@ import { toSlug } from '@eatonfyi/text';
 import { get } from 'obby';
 import { toShortDate } from './to-short-date.js';
 import { isDate, isString } from './type-guards.js';
+import { nanohash } from '@eatonfyi/ids';
 
 type baseInput = Record<string, unknown>;
 
@@ -15,11 +16,15 @@ type baseInput = Record<string, unknown>;
  */
 export function toFilename(input: baseInput, suffix = '.md') {
   const parts: string[] = [];
-  const date = get(input, 'date dates.start dates.*');
+  const date = get(input, 'date dates.start date.published dates.*');
   if (isDate(date)) parts.push(toShortDate(date)!);
 
   const name = get(input, 'slug name id');
-  if (isString(name)) parts.push(toSlug(name));
+  if (isString(name)) {
+    const slug = toSlug(name);
+    if (slug.length) parts.push(slug);
+  }
 
+  if (parts.length === 0) return nanohash(input) + suffix;
   return parts.join('-') + suffix;
 }

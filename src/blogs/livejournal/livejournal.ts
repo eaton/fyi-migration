@@ -21,8 +21,8 @@ export interface LivejournalMigrateOptions extends BlogMigratorOptions {
 }
 
 const defaults: LivejournalMigrateOptions = {
-  name: 'lj',
-  label: 'Livejournal',
+  name: 'predicate-lj',
+  label: "Predicate's Livejournal",
   description: 'Posts, comments, and images from Livejournal',
   ignoreBefore: new Date('2001-06-01'),
   input: 'input/blogs/livejournal',
@@ -149,22 +149,23 @@ export class LivejournaMigrator extends BlogMigrator {
             `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
           );
         }
+      } else {
+        this.log.debug(frontmatter, 'Could not create filename')
       }
-
-      this.data.bucket('things').set(
-        'livejournal',
-        CreativeWorkSchema.parse({
-          type: 'Blog',
-          id: 'livejournal',
-          name: 'Livejournal',
-          url: 'http://predicate.livejournal.com',
-          hosting: 'Livejournal',
-        }),
-      );
-
-      await this.copyAssets('media/lj-photos', 'lj');
-      return Promise.resolve();
     }
+    this.data.bucket('things').set(
+      'livejournal',
+      CreativeWorkSchema.parse({
+        type: 'Blog',
+        id: this.name,
+        name: this.label,
+        url: 'http://predicate.livejournal.com',
+        hosting: 'Livejournal',
+      }),
+    );
+    
+    await this.copyAssets('media/lj-photos', 'lj');
+    return Promise.resolve();
   }
 
   protected prepEntry(entry: LivejournalEntry) {
