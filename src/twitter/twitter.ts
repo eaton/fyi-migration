@@ -284,6 +284,7 @@ export class TwitterMigrator extends Migrator {
   protected prepUser(info: Record<string, string> | TwitterArchive) {
     if (info instanceof TwitterArchive) {
       return CreativeWorkSchema.parse({
+        type: 'Blog',
         id: 'twt-@' + info.user.screen_name,
         id_str: info.user.id,
         name: info.user.screen_name,
@@ -305,8 +306,8 @@ export class TwitterMigrator extends Migrator {
 
   protected prepTweet(tweet: Tweet) {
     return CreativeWorkSchema.parse({
-      id: 'twt-' + tweet.id,
       type: 'SocialMediaPosting',
+      id: 'twt-' + tweet.id,
       about: tweet.aboutId ? `https://x.com/${tweet.aboutHandle}/status/${tweet.aboutHandle}` : undefined,
       date: tweet.date,
       text: this.tweetToMarkdown(tweet),
@@ -314,13 +315,14 @@ export class TwitterMigrator extends Migrator {
       favorites: tweet.favorites,
       retweets: tweet.retweets,
       software: tweet.source,
+      sharedContent: Object.values(tweet.media ?? {})
     })
   }
 
   protected prepThread(thread: TweetThread) {
     return CreativeWorkSchema.parse({
-      id: 'twt-' + thread.id + 't',
       type: 'SocialMediaPosting',
+      id: 'twt-' + thread.id + 't',
       about: thread.aboutId ? `https://x.com/${thread.aboutHandle}/status/${thread.aboutId}` : undefined,
       dates: {
         start: thread.start,
@@ -331,6 +333,7 @@ export class TwitterMigrator extends Migrator {
       hasPart: thread.tweets.map(t => `https://www.x.com/${t.handle}/status/${t.id}`),
       favorites: thread.favorites,
       retweets: thread.retweets,
+      sharedContent: thread.tweets.flatMap(t => Object.values(t.media ?? {}).flat())
     })
   }
 
