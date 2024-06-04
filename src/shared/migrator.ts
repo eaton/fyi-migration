@@ -14,8 +14,8 @@ import { merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
 import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
-import { Store, StoreableData } from './store.js';
 import { toFilename } from '../util/to-filename.js';
+import { Store, StoreableData } from './store.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -284,9 +284,9 @@ export class Migrator {
    * and a document identifier (input.name, input.slug, and input.id will be
    * used in that order). If both are found, `yyyy-MM-dd-slug-text.md` will be
    * generated.
-   * 
+   *
    * If both are missing, a nanohash of the input object will be used to generate
-   * the filename to avoid collisions. 
+   * the filename to avoid collisions.
    */
   makeFilename = toFilename;
 }

@@ -1,19 +1,19 @@
 import { nanohash } from '@eatonfyi/ids';
+import { MboxStreamer } from '@eatonfyi/mbox-streamer';
+import is from '@sindresorhus/is';
 import { AddressObject, ParsedMail, Source, simpleParser } from 'mailparser';
+import micromatch from 'micromatch';
 import { promisify } from 'util';
 import { Message, MessageSchema } from '../schemas/message.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import micromatch from 'micromatch';
-import is from '@sindresorhus/is';
-import { MboxStreamer } from '@eatonfyi/mbox-streamer';
 
 const parseMail = promisify<Source, ParsedMail>(simpleParser);
 
 type MailFilter = (p: ParsedMail) => boolean;
 export interface TextEmailMigratorOptions extends MigratorOptions {
-  matching?: MailFilter | string,
-  mbox?: boolean,
-  attachments?: boolean | MailFilter,
+  matching?: MailFilter | string;
+  mbox?: boolean;
+  attachments?: boolean | MailFilter;
 }
 
 const defaults: TextEmailMigratorOptions = {
@@ -50,14 +50,14 @@ export class TextEmailMigrator extends Migrator {
     if (this.options.mbox) {
       const mb = new MboxStreamer();
       for (const f of this.input.find({ matching: '*.mbox' }) ?? []) {
-        mb.parse(f)
+        mb.parse(f);
       }
     }
   }
 
   protected processMail(input: ParsedMail, raw?: string) {
     if (!this.messageMatches(input, raw)) {
-      this.log.debug(`Skipped message, did not match filter.`)
+      this.log.debug(`Skipped message, did not match filter.`);
       return;
     }
 
@@ -77,15 +77,21 @@ export class TextEmailMigrator extends Migrator {
       if (!micromatch.isMatch(raw, this.options.matching)) {
         return false;
       }
-    } else if (is.function(this.options.matching) && !this.options.matching(input)) {
+    } else if (
+      is.function(this.options.matching) &&
+      !this.options.matching(input)
+    ) {
       return false;
     }
     return true;
   }
 
   protected handleAttachments(input: ParsedMail) {
-    if (this.options.attachments === true || (is.function(this.options.attachments) && this.options.attachments(input))) {
-      for(const a of input.attachments) {
+    if (
+      this.options.attachments === true ||
+      (is.function(this.options.attachments) && this.options.attachments(input))
+    ) {
+      for (const a of input.attachments) {
         this.cache.write(`/attachments/${a.filename}`, a.content);
       }
     }
@@ -113,5 +119,4 @@ export class TextEmailMigrator extends Migrator {
     if (addresses.length === 1) return addresses[0].text;
     return addresses.flatMap(a => a.text).filter(a => a !== undefined);
   }
-
 }
