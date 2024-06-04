@@ -1,9 +1,10 @@
-import { BlogMigrator } from './blogs/blog-migrator.js';
 import * as blogs from './blogs/index.js';
+import { BookMigrator } from './books/books.js';
 import { ArticleReprintMigrator } from './misc/article-reprints.js';
+import { Migrator } from './shared/migrator.js';
 import { TwitterMigrator } from './twitter/twitter.js';
 
-export class AllBlogs extends BlogMigrator {
+export class AllMigrations extends Migrator {
   override async run() {
     this.log.level = 'debug';
     await new blogs.TextJournalsMigrator({ logger: this.log }).run();
@@ -16,9 +17,12 @@ export class AllBlogs extends BlogMigrator {
     await new blogs.AltDrupalMigrator({ logger: this.log }).run();
     await new blogs.AltJekyllMigrator({ logger: this.log }).run();
     await new blogs.MediumMigrator({ logger: this.log }).run();
+
+    await new TwitterMigrator({ logger: this.log }).run();
+    await new ArticleReprintMigrator({ logger: this.log }).run();
   }
 }
 
-await new TwitterMigrator({ logger: { level: 'debug' } }).run();
-await new ArticleReprintMigrator({ logger: { level: 'debug' } }).run();
-await new AllBlogs().run();
+await new BookMigrator({ logger: { level: 'debug' } }).run();
+
+// await new AllMigrations().run();

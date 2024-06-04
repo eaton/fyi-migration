@@ -87,14 +87,17 @@ export class AltJekyllMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('things').set('alt-jekyll', CreativeWorkSchema.parse({
-      type: 'Blog',
-      id: 'alt-jekyll',
-      url: 'https://angrylittletree.com',
-      name: 'Angry Little Tree',
-      hosting: 'Github Pages',
-      software: 'Jekyll',
-    }));
+    this.data.bucket('things').set(
+      'alt-jekyll',
+      CreativeWorkSchema.parse({
+        type: 'Blog',
+        id: 'alt-jekyll',
+        url: 'https://angrylittletree.com',
+        name: 'Angry Little Tree',
+        hosting: 'Github Pages',
+        software: 'Jekyll',
+      }),
+    );
 
     await this.copyAssets('files', 'alt');
     return Promise.resolve();
@@ -106,7 +109,9 @@ export class AltJekyllMigrator extends BlogMigrator {
       date: input.data.date,
       name: input.data.title,
       description: input.data.title,
-      headline: input.data.subtitle ? (input.data.title + ': ' + input.data.subtitle): undefined,
+      headline: input.data.subtitle
+        ? input.data.title + ': ' + input.data.subtitle
+        : undefined,
       slug: input.data.slug,
     };
 
@@ -116,7 +121,7 @@ export class AltJekyllMigrator extends BlogMigrator {
       cw.date ??= date ? new Date(date.replaceAll('-', '/')) : undefined;
       cw.slug ??= slug;
     }
-    
+
     cw.url = `http://angrylittletree.com/${input.data.date?.getFullYear()}/${input.data.date?.getUTCMonth()}/${input.data.slug}.html`;
     cw.id = 'alt-' + nanohash(cw.url);
     cw.isPartOf = 'alt-jekyll';

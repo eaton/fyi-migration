@@ -7,6 +7,6 @@ export function cleanLink(input?: string | URL) {
   return {
     type: 'Bookmark',
     id: nanohash(url),
-    url: url.toString()
+    url: url.toString(),
   };
 }

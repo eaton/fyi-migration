@@ -1,9 +1,9 @@
-import { Frontmatter } from '@eatonfyi/serializers';
-import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { nanohash } from '@eatonfyi/ids';
-import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
-import { toSlug } from '@eatonfyi/text';
 import { max, min } from '@eatonfyi/dates';
+import { nanohash } from '@eatonfyi/ids';
+import { Frontmatter } from '@eatonfyi/serializers';
+import { toSlug } from '@eatonfyi/text';
+import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {
   name: 'textfiles',
@@ -37,11 +37,14 @@ export class TextJournalsMigrator extends Migrator {
 
       // This... is exceptionally jank.
       if (cw.date && textFiles[txtId]) {
-        textFiles[txtId].dates ??= {};
-        textFiles[txtId].dates.start ??= cw.date;
-        textFiles[txtId].dates.end ??= cw.date;
-        textFiles[txtId].dates.start = min([textFiles[txtId].dates.start, cw.date]);
-        textFiles[txtId].dates.end = max([textFiles[txtId].dates.end, cw.date]);
+        if (cw.date !== undefined) {
+          const cStart = textFiles[txtId]?.dates?.start ?? cw.date;
+          const cEnd = textFiles[txtId]?.dates?.end ?? cw.date;
+          textFiles[txtId].dates = {
+            start: min([cStart, cw.date]),
+            end: max([cEnd, cw.date]),
+          };
+        }
       }
       this.output.write(file.replace('.txt', '.md'), txt);
     }
@@ -54,6 +57,6 @@ export class TextJournalsMigrator extends Migrator {
   }
 
   protected prepTextFile(id: string, name: string) {
-    return CreativeWorkSchema.parse({ id, name, software: 'BBEdit' })
+    return CreativeWorkSchema.parse({ id, name, software: 'BBEdit' });
   }
 }

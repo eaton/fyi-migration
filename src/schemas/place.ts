@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { ThingSchema } from './thing.js';
 import { oneOrMany } from './one-or-many.js';
+import { ThingSchema } from './thing.js';
 
 export const PlaceSchema = ThingSchema.extend({
   type: z.string().default('Place'),

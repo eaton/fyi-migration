@@ -38,6 +38,5 @@ export type TweetThread = {
   end: Date;
   favorites: number;
   retweets: number;
-  length: number;
   tweets: Tweet[];
 };

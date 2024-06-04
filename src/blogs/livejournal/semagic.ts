@@ -1,4 +1,4 @@
-import { LivejournalEntry } from './schema';
+import { LivejournalEntry } from './schema.js';
 
 /**
  * Semagic was an early-aughts LJ client for windows. Among other things it saved local

@@ -1,10 +1,9 @@
 import { extract, ExtractTemplateObject } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
-import { normalize } from '@eatonfyi/urls';
 import { z } from 'zod';
-import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { cleanLink } from '../util/clean-link.js';
+import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'predicate-net',

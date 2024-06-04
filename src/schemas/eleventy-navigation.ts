@@ -11,4 +11,4 @@ export const EleventyNavigationSchema = z
   })
   .describe("Metadata to control Eleventy's nav + breadcrumb plugin.");
 
-  export type EleventyNavigation = z.infer<typeof EleventyNavigationSchema>;
+export type EleventyNavigation = z.infer<typeof EleventyNavigationSchema>;

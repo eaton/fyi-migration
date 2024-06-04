@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
+import { DimensionsSchema } from './dimensions.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
@@ -16,5 +17,6 @@ export const BookSchema = CreativeWorkSchema.extend({
   // Personal properties
   owned: z.string().optional(),
   source: z.string().optional(),
+  dimensions: DimensionsSchema.optional(),
 });
 export type Book = z.infer<typeof BookSchema>;

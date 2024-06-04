@@ -6,9 +6,9 @@ import {
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
+import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Tweet, TweetSchema, TweetThread } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { parseRawArchive } from './raw-archive.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
@@ -98,7 +98,7 @@ export class TwitterMigrator extends Migrator {
       }
       this.log.debug(`Processed raw tweets and media for ${raw}`);
     }
-  
+
     // Build threads
     for (const t of this.tweets.values()) {
       t.thread = this.findAncestor(t)?.id;
@@ -110,7 +110,7 @@ export class TwitterMigrator extends Migrator {
     }
 
     // Dump the raw user accounts, tweets, and threads to the cache
-    this.cache.write('users.ndjson', [...this.users.values()]);  
+    this.cache.write('users.ndjson', [...this.users.values()]);
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
     this.cache.write(
       'threadids.ndjson',
@@ -150,10 +150,11 @@ export class TwitterMigrator extends Migrator {
 
     for (const th of [...this.threads.entries()]) {
       const first = this.tweets.get(th[0]);
-      const children = [...th[1].values()]
-        .map(id => this.tweets.get(id))
-        .filter(tw => tw !== undefined);
-      if (first && first.aboutId === undefined) {
+      const children = [...th[1].values()].map(id => this.tweets.get(id));
+
+      if (first !== undefined) {
+        children.unshift(first);
+
         const thread: TweetThread = {
           id: first.id,
           handle: first.handle,
@@ -163,8 +164,7 @@ export class TwitterMigrator extends Migrator {
           aboutHandle: first.aboutHandle,
           favorites: 0,
           retweets: 0,
-          length: children.length + 1,
-          tweets: [first, ...children],
+          tweets: children.filter(c => c !== undefined) ?? [],
         };
         thread.favorites = thread.tweets
           .map(t => t.favorites)
@@ -293,13 +293,13 @@ export class TwitterMigrator extends Migrator {
         image: info.user.profile_img_url,
         description: info.user.bio,
         url: `https://x.com/${info.user.screen_name}`,
-        hosting: 'Twitter'
+        hosting: 'Twitter',
       });
     } else {
       return CreativeWorkSchema.parse({
         ...info,
         url: `https://x.com/${info.handle}`,
-        hosting: 'Twitter'
+        hosting: 'Twitter',
       });
     }
   }
@@ -308,33 +308,41 @@ export class TwitterMigrator extends Migrator {
     return CreativeWorkSchema.parse({
       type: 'SocialMediaPosting',
       id: 'twt-' + tweet.id,
-      about: tweet.aboutId ? `https://x.com/${tweet.aboutHandle}/status/${tweet.aboutHandle}` : undefined,
+      about: tweet.aboutId
+        ? `https://x.com/${tweet.aboutHandle}/status/${tweet.aboutHandle}`
+        : undefined,
       date: tweet.date,
       text: this.tweetToMarkdown(tweet),
       isPartOf: `twt-@${tweet.handle}`,
       favorites: tweet.favorites,
       retweets: tweet.retweets,
       software: tweet.source,
-      sharedContent: Object.values(tweet.media ?? {})
-    })
+      sharedContent: Object.values(tweet.media ?? {}),
+    });
   }
 
   protected prepThread(thread: TweetThread) {
     return CreativeWorkSchema.parse({
       type: 'SocialMediaPosting',
       id: 'twt-' + thread.id + 't',
-      about: thread.aboutId ? `https://x.com/${thread.aboutHandle}/status/${thread.aboutId}` : undefined,
+      about: thread.aboutId
+        ? `https://x.com/${thread.aboutHandle}/status/${thread.aboutId}`
+        : undefined,
       dates: {
         start: thread.start,
         end: thread.end,
       },
       text: this.threadToMarkdown(thread),
       isPartOf: `twt-@${thread.handle}`,
-      hasPart: thread.tweets.map(t => `https://www.x.com/${t.handle}/status/${t.id}`),
+      hasPart: thread.tweets.map(
+        t => `https://www.x.com/${t.handle}/status/${t.id}`,
+      ),
       favorites: thread.favorites,
       retweets: thread.retweets,
-      sharedContent: thread.tweets.flatMap(t => Object.values(t.media ?? {}).flat())
-    })
+      sharedContent: thread.tweets.flatMap(t =>
+        Object.values(t.media ?? {}).flat(),
+      ),
+    });
   }
 
   protected threadToMarkdown(thread: TweetThread) {

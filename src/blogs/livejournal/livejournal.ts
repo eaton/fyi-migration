@@ -145,7 +145,7 @@ export class LivejournaMigrator extends BlogMigrator {
       about: comment.entry ? `lj-${comment.entry}` : undefined,
       commenter: {
         name: comment.name,
-        email: comment.email
+        email: comment.email,
       },
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
@@ -183,13 +183,16 @@ export class LivejournaMigrator extends BlogMigrator {
         }
       }
 
-      this.data.bucket('things').set('livejournal', CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: 'livejournal',
-        name: 'Livejournal',
-        url: 'https://predicate.livejournal.com',
-        hosting: 'Livejournal',
-      }));
+      this.data.bucket('things').set(
+        'livejournal',
+        CreativeWorkSchema.parse({
+          type: 'Blog',
+          id: 'livejournal',
+          name: 'Livejournal',
+          url: 'https://predicate.livejournal.com',
+          hosting: 'Livejournal',
+        }),
+      );
 
       await this.copyAssets('media/lj-photos', 'lj');
       return Promise.resolve();

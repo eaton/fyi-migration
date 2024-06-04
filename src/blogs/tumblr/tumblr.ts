@@ -1,12 +1,11 @@
 import { toMarkdown } from '@eatonfyi/html';
-import { nanohash } from '@eatonfyi/ids';
 import { toSlug } from '@eatonfyi/text';
-import { normalize } from '@eatonfyi/urls';
 import { Client } from '@serguun42/tumblr.js';
 import {
   CreativeWorkInput,
   CreativeWorkSchema,
 } from '../../schemas/creative-work.js';
+import { cleanLink } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
   BlogSchema,
@@ -15,7 +14,6 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
-import { cleanLink } from '../../util/clean-link.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
@@ -123,7 +121,6 @@ export class TumblrMigrator extends BlogMigrator {
     const linkStore = this.data.bucket('links');
     const thingStore = this.data.bucket('things');
 
-
     for (const e of this.posts) {
       const md = this.prepEntry(e);
       const file = this.toFilename(md);
@@ -198,8 +195,9 @@ export class TumblrMigrator extends BlogMigrator {
       ...cleanLink(input.url),
       date: input.date || undefined,
       name: input.title || input.source_title || undefined,
-      description: input.body || input.description || input.summary || undefined,
-      isPartOf: input.blog_name
+      description:
+        input.body || input.description || input.summary || undefined,
+      isPartOf: input.blog_name,
     });
 
     // Lotta wacky stuff happening, friends.

@@ -2,10 +2,13 @@ import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { z } from 'zod';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
+import { Thing } from '../../schemas/thing.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { Thing } from '../../schemas/thing.js';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -82,7 +85,10 @@ export class AltDrupalMigrator extends BlogMigrator {
   }
 
   override async readCache(): Promise<drupalEntityData> {
-    const nodes = this.cache.read('nodes.json', 'jsonWithDates') as drupal.AltNode[];
+    const nodes = this.cache.read(
+      'nodes.json',
+      'jsonWithDates',
+    ) as drupal.AltNode[];
     const nodeBodies = this.cache.read(
       'nodeBodies.json',
       'jsonWithDates',
@@ -172,7 +178,7 @@ export class AltDrupalMigrator extends BlogMigrator {
     // Currently ignoring comments, whoop whoop
     const commentStore = this.data.bucket('comments');
 
-    for (const { text, ...frontmatter} of this.entries) {
+    for (const { text, ...frontmatter } of this.entries) {
       const filename = this.toFilename(frontmatter);
       this.output.write(filename, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${filename}`);
@@ -188,16 +194,19 @@ export class AltDrupalMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('things').set('alt-drupal', CreativeWorkSchema.parse({
-      id: 'alt-drupal',
-      type: 'Blog',
-      url: 'https://angrylittletree.com',
-      name: this.entityData.variables['site_name']?.toString() ?? undefined,
-      subtitle:
-        this.entityData.variables['site_slogan']?.toString() ?? undefined,
-      hosting: 'Linode',
-      software: 'Drupal 7',
-    }));
+    this.data.bucket('things').set(
+      'alt-drupal',
+      CreativeWorkSchema.parse({
+        id: 'alt-drupal',
+        type: 'Blog',
+        url: 'https://angrylittletree.com',
+        name: this.entityData.variables['site_name']?.toString() ?? undefined,
+        subtitle:
+          this.entityData.variables['site_slogan']?.toString() ?? undefined,
+        hosting: 'Linode',
+        software: 'Drupal 7',
+      }),
+    );
 
     await this.copyAssets('files', 'alt');
   }
@@ -214,7 +223,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       attachments: input.attachments?.map(a => ({
         filename: a.file?.filename,
         description: a.field_attachments_description,
-      }))
+      })),
     });
   }
 
@@ -232,6 +241,6 @@ export class AltDrupalMigrator extends BlogMigrator {
       },
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
-    })
+    });
   }
 }

@@ -2,9 +2,12 @@ import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
 import { CommentSchema } from '../../schemas/comment.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -131,13 +134,17 @@ export class MovableTypeMigrator extends BlogMigrator {
       thingStore.set(site.id, site);
 
       for (const entry of blog.entries ?? []) {
-        const category = blog.categories?.find(c => c.category_id === entry.entry_category_id);
+        const category = blog.categories?.find(
+          c => c.category_id === entry.entry_category_id,
+        );
 
         const { text, ...frontmatter } = this.prepEntry(entry, blog, category);
-        const mappedComments = (entry.comments ?? []).map(c => this.prepComment(c, frontmatter));
+        const mappedComments = (entry.comments ?? []).map(c =>
+          this.prepComment(c, frontmatter),
+        );
 
         const file = [site.id, this.toFilename(frontmatter)].join('/');
-        this.output.write(file, { content: text, data: frontmatter});
+        this.output.write(file, { content: text, data: frontmatter });
         this.log.debug(`Wrote ${file}`);
 
         if (mappedComments.length) {
@@ -166,7 +173,11 @@ export class MovableTypeMigrator extends BlogMigrator {
     });
   }
 
-  protected prepEntry(input: schemas.Entry, blog?: schemas.Blog, category?: schemas.Category): CreativeWork {
+  protected prepEntry(
+    input: schemas.Entry,
+    blog?: schemas.Blog,
+    category?: schemas.Category,
+  ): CreativeWork {
     const text = [input.entry_text, input.entry_text_more]
       .filter(e => e.length > 0)
       .join('\n\n');
@@ -178,7 +189,7 @@ export class MovableTypeMigrator extends BlogMigrator {
       slug: input.entry_basename,
       isPartOf: blog?.blog_id,
       text: toMarkdown(fromTextile(text)),
-      keywords: category ? [category.category_label] : undefined
+      keywords: category ? [category.category_label] : undefined,
     });
 
     return entry;

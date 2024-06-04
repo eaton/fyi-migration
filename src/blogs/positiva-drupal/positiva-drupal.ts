@@ -3,10 +3,13 @@ import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
+import { cleanLink } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
-import { cleanLink } from '../../util/clean-link.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -118,7 +121,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
         this.log.debug(`Wrote quote by ${quote.spokenBy}`);
       } else if (n.type === 'blog' || n.type === 'review') {
         // TODO: entries vs notes
-        const { text, ...frontmatter} = this.prepEntry(n);
+        const { text, ...frontmatter } = this.prepEntry(n);
         const file = this.toFilename(frontmatter);
         this.output.write(file, { content: text, data: frontmatter });
 
@@ -164,7 +167,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       slug: toSlug(input.title),
       isPartOf: this.name,
       text: this.buildNodeBody(input),
-      about: (input.amazon?.asin) ? input.amazon.asin : undefined
+      about: input.amazon?.asin ? input.amazon.asin : undefined,
     });
   }
 

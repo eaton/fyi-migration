@@ -2,9 +2,12 @@ import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
 import { CommentSchema } from '../../schemas/comment.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -163,7 +166,7 @@ export class GoddyMigrator extends BlogMigrator {
     const comments = cache.comments.map(c => this.prepComment(c));
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
-    for (const { text, ...frontmatter} of nodes) {
+    for (const { text, ...frontmatter } of nodes) {
       const file = this.toFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`Wrote ${file}`);
@@ -208,12 +211,14 @@ export class GoddyMigrator extends BlogMigrator {
         ? toMarkdown(autop(input.money_quote.field_money_quote_value))
         : undefined,
       about:
-        (input.product ? 'book/' + input.product.field_product_asin : undefined) ??
+        (input.product
+          ? 'book/' + input.product.field_product_asin
+          : undefined) ??
         input.link?.field_link_url ??
         undefined,
       text: toMarkdown(autop(input.body ?? '')),
       nodeType: input.type,
-    })
+    });
   }
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {

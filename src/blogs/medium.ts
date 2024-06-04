@@ -1,6 +1,6 @@
+import { get } from 'obby';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
-import { get } from 'obby';
 
 const defaults: BlogMigratorOptions = {
   name: 'medium',
@@ -16,14 +16,16 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    
-    this.data.bucket('things').set('medium', CreativeWorkSchema.parse({
-      type: 'Blog',
-      id: 'medium',
-      name: 'Medium',
-      url: 'https://medium.com/@eaton',
-      hosting: 'Medium'
-    }));
+    this.data.bucket('things').set(
+      'medium',
+      CreativeWorkSchema.parse({
+        type: 'Blog',
+        id: 'medium',
+        name: 'Medium',
+        url: 'https://medium.com/@eaton',
+        hosting: 'Medium',
+      }),
+    );
 
     for (const f of this.input.find({ matching: 'posts/*.md' })) {
       const markdown = this.input.read(f, 'auto');
@@ -42,9 +44,9 @@ export class MediumMigrator extends BlogMigrator {
       const file = this.toFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
     }
-    
+
     await this.copyAssets('images', 'medium');
-    
+
     return;
   }
 }
