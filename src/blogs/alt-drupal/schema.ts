@@ -30,7 +30,7 @@ export const commentSchema = z.object({
   pid: intString.optional(),
   nid: intString,
   uid: intString,
-  subject: z.string().optional(),
+  subject: z.coerce.string().optional(),
   hostname: z.string().optional(),
   created: epochString,
   changed: epochString,

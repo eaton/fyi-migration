@@ -149,8 +149,8 @@ export class TumblrMigrator extends BlogMigrator {
     return CreativeWorkSchema.parse({
       type: 'Blog',
       id: input.name,
-      name: input.title,
-      description: input.description,
+      name: input.title || undefined,
+      description: input.description || undefined,
       url: input.url,
       hosting: 'Tumblr',
     });
@@ -161,8 +161,8 @@ export class TumblrMigrator extends BlogMigrator {
       id: `entry/tumblr-${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
-      description: input.summary,
-      excerpt: input.excerpt ?? undefined,
+      description: input.summary || undefined,
+      excerpt: input.excerpt || undefined,
       date: input.date ? new Date(input.date) : undefined,
       published: !!input.date,
       keywords: input.tags,

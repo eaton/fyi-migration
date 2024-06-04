@@ -64,14 +64,16 @@ export class AltJekyllMigrator extends BlogMigrator {
       }
     }
 
-    return Promise.resolve({ entries: this.entries, comments: this.comments });
+    return { entries: this.entries, comments: this.comments };
   }
 
   override async finalize() {
-    const data = await this.readCache();
+    if (this.entries.length === 0) {
+      await this.readCache();
+    }
     const commentStore = this.data.bucket('comments');
 
-    for (const e of data.entries) {
+    for (const e of this.entries) {
       const { text, ...frontmatter } = e;
       const fileName = this.toFilename(frontmatter);
       this.output.write(fileName, { data: frontmatter, content: text });
@@ -79,7 +81,7 @@ export class AltJekyllMigrator extends BlogMigrator {
 
       // Find a thread that matches this file.
       const comments = this.comments[e.id];
-      if (comments.length) {
+      if (comments?.length) {
         commentStore.set(frontmatter.id, comments);
         this.log.debug(
           `Saved ${comments.length} comments for ${frontmatter.url}`,

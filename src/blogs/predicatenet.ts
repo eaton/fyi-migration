@@ -45,7 +45,7 @@ export class PredicateNetMigrator extends BlogMigrator {
         date: '2001-01-01',
         name: l.title,
         description: l.description,
-        isPartOf: 'predicate-net',
+        isPartOf: this.name,
       });
       linkStore.set(nanohash(link.url), link);
     }
@@ -65,21 +65,29 @@ export class PredicateNetMigrator extends BlogMigrator {
 
     const quoteStore = this.data.bucket('quotes');
     for (const quote of quotes ?? []) {
-      quoteStore.set(nanohash(quote.content), {
-        ...quote,
-        site: 'predicate-net',
+      const cw = CreativeWorkSchema.parse({
+        id: nanohash(quote.content),
+        type: 'Quotation',
+        isPartOf: this.name,
+        text: quote.content,
+        spokenBy: quote.speaker ?? undefined,
+      })
+      quoteStore.set(cw.id, {
+
+        isPartOf: 'predicate-net',
       });
     }
   }
 
   override async finalize() {
-    this.data.bucket('sources').set('predicatenet', {
+    this.data.bucket('things').set('predicatenet', CreativeWorkSchema.parse({
       id: 'predicate-net',
+      type: 'Blog',
       url: 'https://predicate.net',
       name: 'Predicate.net',
       hosting: 'Site5 (IIS)',
       software: 'BBEdit',
-    });
+    }));
 
     await this.writeLinks();
     await this.writeQuotes();

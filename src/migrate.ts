@@ -1,8 +1,8 @@
 import * as blogs from './blogs/index.js';
-import { BookMigrator } from './books/books.js';
 import { ArticleReprintMigrator } from './misc/article-reprints.js';
 import { Migrator } from './shared/migrator.js';
 import { TwitterMigrator } from './twitter/twitter.js';
+// import { BookMigrator } from './books/books.js';
 
 export class AllMigrations extends Migrator {
   override async run() {
@@ -23,6 +23,6 @@ export class AllMigrations extends Migrator {
   }
 }
 
-await new BookMigrator({ logger: { level: 'debug' } }).run();
+// await new BookMigrator({ logger: { level: 'debug' } }).run();
 
-// await new AllMigrations().run();
+await new AllMigrations().run();

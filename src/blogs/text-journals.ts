@@ -25,6 +25,9 @@ export class TextJournalsMigrator extends Migrator {
 
     for (const file of files) {
       const txt = mds.parse(this.input.read(file, 'utf8') ?? '');
+      if (txt.data.textfile === undefined) {
+        this.log.error(file);
+      }
       const txtId = toSlug(txt.data.textfile);
       textFiles[txtId] ??= this.prepTextFile(txtId, txt.data.textfile);
 
@@ -47,6 +50,7 @@ export class TextJournalsMigrator extends Migrator {
         }
       }
       this.output.write(file.replace('.txt', '.md'), txt);
+      this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
     }
 
     for (const [id, cw] of Object.entries(textFiles)) {

@@ -165,7 +165,7 @@ export class AltDrupalMigrator extends BlogMigrator {
     await this.readCache();
 
     for (const n of Object.values(this.entityData.nodes)) {
-      const md = CreativeWorkSchema.parse(n);
+      const md = this.prepEntry(n);
       this.entries.push(md);
     }
 
@@ -211,7 +211,7 @@ export class AltDrupalMigrator extends BlogMigrator {
     await this.copyAssets('files', 'alt');
   }
 
-  protected prepEntry(input: drupal.AltNode): CreativeWork {
+  protected prepEntry(input: drupal.AltNode) {
     return CreativeWorkSchema.parse({
       id: `alt-${input.nid}`,
       date: input.created,

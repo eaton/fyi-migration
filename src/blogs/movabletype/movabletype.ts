@@ -175,7 +175,7 @@ export class MovableTypeMigrator extends BlogMigrator {
 
   protected prepEntry(
     input: schemas.Entry,
-    blog?: schemas.Blog,
+    blog: schemas.Blog,
     category?: schemas.Category,
   ): CreativeWork {
     const text = [input.entry_text, input.entry_text_more]
@@ -183,11 +183,11 @@ export class MovableTypeMigrator extends BlogMigrator {
       .join('\n\n');
 
     const entry = CreativeWorkSchema.parse({
-      id: `${blog?.blog_id ?? 'mt'}-${input.entry_id}`,
+      id: `mt-${input.entry_id}`,
       date: input.entry_created_on.toISOString(),
       name: input.entry_title,
       slug: input.entry_basename,
-      isPartOf: blog?.blog_id,
+      isPartOf: blog.blog_shortname ?? this.name,
       text: toMarkdown(fromTextile(text)),
       keywords: category ? [category.category_label] : undefined,
     });

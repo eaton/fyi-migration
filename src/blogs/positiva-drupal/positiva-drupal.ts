@@ -140,7 +140,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     }
 
     const site = this.prepSite(cache.vars);
-    this.data.bucket('sources').set(site.id, site);
+    this.data.bucket('things').set(site.id, site);
 
     this.copyAssets('files', 'positiva');
     return Promise.resolve();
@@ -185,6 +185,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     const text = toMarkdown(autop(input.body ?? ''));
     const id = nanohash(removeStopwords(text));
     return CreativeWorkSchema.parse({
+      type: 'Quotation',
       id,
       text,
       date: input.created,
