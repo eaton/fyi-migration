@@ -54,6 +54,7 @@
     "@eatonfyi/fs-jetpack": "github:eaton/fs-jetpack",
     "@eatonfyi/html": "github:eaton/html",
     "@eatonfyi/ids": "github:eaton/ids",
+    "@eatonfyi/keynote-extractor": "github:eaton/keynote-extractor",
     "@eatonfyi/serializers": "github:eaton/serializers",
     "@eatonfyi/text": "github:eaton/text",
     "@eatonfyi/urls": "github:eaton/urls",
