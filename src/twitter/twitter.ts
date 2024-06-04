@@ -8,7 +8,7 @@ import {
 } from 'twitter-archive-reader';
 import { Tweet, TweetSchema, TweetThread } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { parseRawArchive } from './raw-archive.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
@@ -36,6 +36,7 @@ export class TwitterMigrator extends Migrator {
   declare options: TwitterMigratorOptions;
   tweets = new Map<string, Tweet>();
   threads = new Map<string, Set<string>>();
+  users = new Map<string, CreativeWork>();
 
   constructor(options: TwitterMigratorOptions = {}) {
     super({ ...defaults, ...options });
@@ -72,7 +73,10 @@ export class TwitterMigrator extends Migrator {
         }
         this.tweets.set(tweet.id, tweet);
       }
-      await this.saveArchiveInfo(archive);
+
+      const user = this.prepUser(archive);
+      this.users.set(user.id, user);
+
       this.log.debug(`Done with ${file}`);
       archive.releaseZip();
     }
@@ -84,6 +88,8 @@ export class TwitterMigrator extends Migrator {
       const media = rawDir.dir('tweets_media');
 
       const { user, tweets } = await parseRawArchive(rawDir.path());
+      this.users.set(user.id, CreativeWorkSchema.parse(user));
+
       for (const t of tweets) {
         this.tweets.set(t.id, t);
       }
@@ -103,7 +109,8 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
-    // Dump the raw tweets and threads to the cache
+    // Dump the raw user accounts, tweets, and threads to the cache
+    this.cache.write('users.ndjson', [...this.users.values()]);  
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
     this.cache.write(
       'threadids.ndjson',
@@ -191,33 +198,7 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
-    // save a 'source' blob for each twitter account
-
     this.cache.copy('media', this.output.path('../_static/twitter'));
-  }
-
-  async saveArchiveInfo(archive: TwitterArchive) {
-    this.cache.write(
-      `${archive.user.screen_name}/${archive.hash}.json`,
-      archive.synthetic_info,
-    );
-    const avatar = await archive.medias.getProfilePictureOf(archive.user, true);
-    if (avatar) {
-      const baseName = parsePath(archive.user.profile_img_url).base;
-      this.cache.write(
-        `${archive.user.screen_name}/${baseName}`,
-        Buffer.from(avatar as ArrayBuffer),
-      );
-    }
-    const banner = await archive.medias.getProfileBannerOf(archive.user, true);
-    if (banner) {
-      const baseName = parsePath(archive.user.profile_banner_url).base;
-      this.cache.write(
-        `${archive.user.screen_name}/${baseName}.jpg`,
-        Buffer.from(banner as ArrayBuffer),
-      );
-    }
-    return;
   }
 
   protected findAncestor(tweet: Tweet): Tweet | undefined {
@@ -298,6 +279,28 @@ export class TwitterMigrator extends Migrator {
       tweet.in_reply_to_status_id_str &&
       tweet.in_reply_to_user_id_str === tweet.user.id_str
     );
+  }
+
+  protected prepUser(info: Record<string, string> | TwitterArchive) {
+    if (info instanceof TwitterArchive) {
+      return CreativeWorkSchema.parse({
+        id: 'twt-@' + info.user.screen_name,
+        id_str: info.user.id,
+        name: info.user.screen_name,
+        displayName: info.user.name,
+        date: info.user.created_at,
+        image: info.user.profile_img_url,
+        description: info.user.bio,
+        url: `https://x.com/${info.user.screen_name}`,
+        hosting: 'Twitter'
+      });
+    } else {
+      return CreativeWorkSchema.parse({
+        ...info,
+        url: `https://x.com/${info.handle}`,
+        hosting: 'Twitter'
+      });
+    }
   }
 
   protected prepTweet(tweet: Tweet) {
