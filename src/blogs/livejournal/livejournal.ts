@@ -75,6 +75,20 @@ export class LivejournaMigrator extends BlogMigrator {
           xml: true,
         });
         for (const entry of extracted) {
+
+          if (
+            this.options.ignoreBefore &&
+            isBefore(entry.date, this.options.ignoreBefore)
+          ) {
+            continue;
+          }
+          if (
+            this.options.ignoreAfter &&
+            isAfter(entry.date, this.options.ignoreAfter)
+          ) {
+            continue;
+          }
+    
           const filename = this.toFilename(
             { name: entry.subject ?? entry.id, date: entry.date },
             '.json',
@@ -101,18 +115,6 @@ export class LivejournaMigrator extends BlogMigrator {
 
     for (const entry of data) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      if (
-        this.options.ignoreBefore &&
-        isBefore(entry.date, this.options.ignoreBefore)
-      ) {
-        continue;
-      }
-      if (
-        this.options.ignoreAfter &&
-        isAfter(entry.date, this.options.ignoreAfter)
-      ) {
-        continue;
-      }
       this.entries.push(this.prepEntry(entry));
 
       if (entry.comments && entry.comments.length) {
@@ -123,6 +125,43 @@ export class LivejournaMigrator extends BlogMigrator {
       }
     }
     return { entries: this.entries, comments: this.comments };
+  }
+
+  override async finalize() {
+    const commentStore = this.data.bucket('comments');
+
+    for (const { text, ...frontmatter } of this.entries) {
+      const file = this.toFilename(frontmatter);
+      if (file) {
+        this.output.write(file, { content: text, data: frontmatter });
+        this.log.debug(`Wrote ${file}`);
+
+        // write entry comments
+        if (
+          this.comments[frontmatter.id] &&
+          this.comments[frontmatter.id].length
+        ) {
+          commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
+          this.log.debug(
+            `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
+          );
+        }
+      }
+
+      this.data.bucket('things').set(
+        'livejournal',
+        CreativeWorkSchema.parse({
+          type: 'Blog',
+          id: 'livejournal',
+          name: 'Livejournal',
+          url: 'http://predicate.livejournal.com',
+          hosting: 'Livejournal',
+        }),
+      );
+
+      await this.copyAssets('media/lj-photos', 'lj');
+      return Promise.resolve();
+    }
   }
 
   protected prepEntry(entry: LivejournalEntry) {
@@ -145,7 +184,7 @@ export class LivejournaMigrator extends BlogMigrator {
       about: comment.entry ? `lj-${comment.entry}` : undefined,
       commenter: {
         name: comment.name,
-        email: comment.email,
+        mail: comment.email,
       },
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
@@ -160,42 +199,5 @@ export class LivejournaMigrator extends BlogMigrator {
       );
     }
     return undefined;
-  }
-
-  override async finalize() {
-    const commentStore = this.data.bucket('comments');
-
-    for (const { text, ...frontmatter } of this.entries) {
-      const file = this.toFilename(frontmatter);
-      if (file) {
-        this.log.debug(`Wrote ${file}`);
-        this.output.write(file, { content: text, data: frontmatter });
-
-        // write entry comments
-        if (
-          this.comments[frontmatter.id] &&
-          this.comments[frontmatter.id].length
-        ) {
-          commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
-          this.log.debug(
-            `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
-          );
-        }
-      }
-
-      this.data.bucket('things').set(
-        'livejournal',
-        CreativeWorkSchema.parse({
-          type: 'Blog',
-          id: 'livejournal',
-          name: 'Livejournal',
-          url: 'https://predicate.livejournal.com',
-          hosting: 'Livejournal',
-        }),
-      );
-
-      await this.copyAssets('media/lj-photos', 'lj');
-      return Promise.resolve();
-    }
   }
 }

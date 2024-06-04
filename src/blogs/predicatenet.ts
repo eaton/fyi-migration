@@ -83,7 +83,7 @@ export class PredicateNetMigrator extends BlogMigrator {
     this.data.bucket('things').set('predicatenet', CreativeWorkSchema.parse({
       id: 'predicate-net',
       type: 'Blog',
-      url: 'https://predicate.net',
+      url: 'http://predicate.net',
       name: 'Predicate.net',
       hosting: 'Site5 (IIS)',
       software: 'BBEdit',

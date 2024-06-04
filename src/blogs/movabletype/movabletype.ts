@@ -200,7 +200,7 @@ export class MovableTypeMigrator extends BlogMigrator {
       id: `mt-c${input.comment_entry_id}`,
       date: input.comment_created_on,
       about: entry.id,
-      author: {
+      commenter: {
         name: input.comment_author || undefined,
         mail: input.comment_email || undefined,
         url: input.comment_url || undefined,

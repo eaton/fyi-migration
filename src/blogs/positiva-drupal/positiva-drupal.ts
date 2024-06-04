@@ -161,7 +161,6 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.Node): CreativeWork {
     return CreativeWorkSchema.parse({
       id: `vpd-${input.nid}`,
-      nodeType: input.type,
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
@@ -198,6 +197,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.Comment): Comment {
     return CommentSchema.parse({
+      type: 'Comment',
       id: `vpd-c${input.cid}`,
       parent: input.pid ? `vpd-c${input.pid}` : undefined,
       sort: input.thread,
