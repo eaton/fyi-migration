@@ -324,7 +324,7 @@ export class TwitterMigrator extends Migrator {
       favorites: tweet.favorites,
       retweets: tweet.retweets,
       software: tweet.source,
-      sharedContent: Object.values(tweet.media ?? {}),
+      sharedContent: Object.values(tweet.media ?? {}).flat(),
     });
   }
 
