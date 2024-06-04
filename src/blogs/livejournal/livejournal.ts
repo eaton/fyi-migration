@@ -32,6 +32,7 @@ const defaults: LivejournalMigrateOptions = {
 
 export class LivejournaMigrator extends BlogMigrator {
   declare options: LivejournalMigrateOptions;
+  rawEntries: LivejournalEntry[] = [];
   entries: CreativeWork[] = [];
   comments: Record<string, Comment[]> = {};
 
@@ -102,29 +103,31 @@ export class LivejournaMigrator extends BlogMigrator {
   }
 
   override async readCache(): Promise<LivejournalEntry[]> {
-    const entries: LivejournalEntry[] = [];
-    const files = this.cache.find({ matching: '*.json', recursive: false });
-    for (const file of files) {
-      entries.push(this.cache.read(file, 'auto') as LivejournalEntry);
+    if (this.rawEntries.length === 0) {
+      const files = this.cache.find({ matching: '*.json', recursive: false });
+      for (const file of files) {
+        this.rawEntries.push(this.cache.read(file, 'auto') as LivejournalEntry);
+      }
     }
-    return Promise.resolve(entries);
+    return this.rawEntries;
   }
 
   override async process() {
-    const data = await this.readCache();
+    const raw = await this.readCache();
 
-    for (const entry of data) {
+    for (const entry of raw) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      this.entries.push(this.prepEntry(entry));
+      const cw = this.prepEntry(entry)
+      this.entries.push(cw);
 
       if (entry.comments && entry.comments.length) {
-        this.comments[entry.id] ??= [];
+        this.comments[cw.id] ??= [];
         for (const comment of entry.comments) {
-          this.comments[entry.id].push(this.prepComment(comment));
+          this.comments[cw.id].push(this.prepComment(comment));
         }
       }
     }
-    return { entries: this.entries, comments: this.comments };
+    return;
   }
 
   override async finalize() {
@@ -167,6 +170,7 @@ export class LivejournaMigrator extends BlogMigrator {
   protected prepEntry(entry: LivejournalEntry) {
     return CreativeWorkSchema.parse({
       id: `lj-${entry.id}`,
+      type: 'BlogPosting',
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
