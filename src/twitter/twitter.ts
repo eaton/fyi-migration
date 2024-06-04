@@ -7,16 +7,19 @@ import {
   TwitterArchive,
 } from 'twitter-archive-reader';
 import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
-import { Tweet, TweetSchema, TweetThread } from '../schemas/tweet.js';
+import { Tweet, TweetSchema } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { parseRawArchive } from './raw-archive.js';
+import { toFilename } from '../util/to-filename.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   raw?: string[];
-  makeThreads?: boolean;
   saveMedia?: boolean;
   saveFavorites?: boolean;
   saveRetweets?: boolean;
+  saveReplies?: boolean;
+  saveSingles?: boolean;
+  saveThreads?: boolean;
 }
 
 const defaults: TwitterMigratorOptions = {
@@ -26,9 +29,12 @@ const defaults: TwitterMigratorOptions = {
   raw: ['schmeaton'],
   cache: 'cache/twitter',
   output: 'src/threads',
-  makeThreads: true,
+
   saveMedia: true,
-  saveRetweets: false,
+  saveRetweets: true,
+  saveReplies: true,
+  saveSingles: true,
+  saveThreads: true,
 };
 
 export class TwitterMigrator extends Migrator {
@@ -107,7 +113,7 @@ export class TwitterMigrator extends Migrator {
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
 
     // Build threads
-    if (this.options.makeThreads) {
+    if (this.options.saveThreads) {
       for (const t of this.tweets.values()) {
         t.thread = this.findAncestor(t)?.id;
         if (t.thread) {
@@ -153,55 +159,29 @@ export class TwitterMigrator extends Migrator {
     // Write a giant datafile with ndjson for each year of each tweet.
     // Build a thread for each thread.
 
-    for (const th of [...this.threads.entries()]) {
-      const first = this.tweets.get(th[0]);
-      const children = [...th[1].values()]
-        .map(id => this.tweets.get(id))
-        .filter(t => t !== undefined) as Tweet[];
+    const allTweets = [...this.tweets.values()];
+    // Filter this based on the output rules; retweets, replies, non-threaded stuff, etc.
 
-      if (first !== undefined) {
-        children.unshift(first);
+    const byYear = Object.groupBy(allTweets, t => t.date.getFullYear().toString());
+    for (const [year, tweets] of Object.entries(byYear)) {
+      if (tweets) {
+        this.output.write(year + '.ndjson', tweets);
+      }
+    }
 
-        const thread: TweetThread = {
-          id: first.id,
-          handle: first.handle,
-          start: first.date,
-          end: first.date,
-          aboutId: first.aboutId,
-          aboutHandle: first.aboutHandle,
-          favorites: 0,
-          retweets: 0,
-          tweets: children,
-        };
-        thread.favorites = thread.tweets
-          .map(t => t.favorites)
-          .reduce((partialSum, a) => partialSum + a, 0);
-        thread.retweets = thread.tweets
-          .map(t => t.retweets)
-          .reduce((partialSum, a) => partialSum + a, 0);
-        thread.end = thread.tweets
-          .map(t => t.date)
-          .sort()
-          .pop()!;
-
-        const content = this.threadToMarkdown(thread);
-        const name = content.replaceAll('\n', ' ').slice(0, 48);
-        const data = {
-          id: `${thread.id}`,
-          name: toCase.title(name),
-          slug: toSlug(name),
-          date: thread.start,
-          endDate: thread.end,
-          account: thread.handle,
-          tweets: thread.tweets.map(t => t.id),
-          favorites: thread.favorites,
-          retweets: thread.retweets,
-        };
-        const dateString = thread.start.toISOString().split('T')[0];
-        this.output.write(
-          `${thread.start.getFullYear()}/${dateString}-t${data.id}.md`,
-          { content, data },
-        );
+    if (this.options.saveThreads) {
+      for (const th of [...this.threads.entries()]) {
+        const first = this.tweets.get(th[0]);
+        const children = [...th[1].values()]
+          .map(id => this.tweets.get(id))
+          .filter(t => t !== undefined) as Tweet[];
+  
+        if (first !== undefined) {
+          children.unshift(first);
+          const { text, ...frontmatter } = this.prepThread(children) ;
+          const file = toFilename(frontmatter)
+          this.output.write(file, { content: text, data: frontmatter });
+        }
       }
     }
 
@@ -320,6 +300,7 @@ export class TwitterMigrator extends Migrator {
         : undefined,
       date: tweet.date,
       text: this.tweetToMarkdown(tweet),
+      handle: tweet.handle,
       isPartOf: `twt-@${tweet.handle}`,
       favorites: tweet.favorites,
       retweets: tweet.retweets,
@@ -328,32 +309,38 @@ export class TwitterMigrator extends Migrator {
     });
   }
 
-  protected prepThread(thread: TweetThread) {
-    return CreativeWorkSchema.parse({
+  protected prepThread(tweets: Tweet[]) {
+    const first = tweets[0];
+    const text = this.threadToMarkdown(tweets);
+    const name = text.replaceAll('\n', ' ').slice(0, 48);
+    
+    const cw = CreativeWorkSchema.parse({
       type: 'SocialMediaPosting',
-      id: 'twt-' + thread.id + 't',
-      about: thread.aboutId
-        ? `https://x.com/${thread.aboutHandle}/status/${thread.aboutId}`
-        : undefined,
+      id: `twt-${first.id}`,
+      name: toCase.title(name),
+      slug: toSlug(name),
+      handle: first.handle,
+      isPartOf: `twt-@${first.handle}`,
+      about: first.aboutId
+      ? `https://x.com/${first.aboutHandle}/status/${first.aboutHandle}`
+      : undefined,
       dates: {
-        start: thread.start,
-        end: thread.end,
+        start: first.date,
+        end: tweets.map(t => t.date).sort().pop()!
       },
-      text: this.threadToMarkdown(thread),
-      isPartOf: `twt-@${thread.handle}`,
-      hasPart: thread.tweets.map(
-        t => `https://www.x.com/${t.handle}/status/${t.id}`,
-      ),
-      favorites: thread.favorites,
-      retweets: thread.retweets,
-      sharedContent: thread.tweets.flatMap(t =>
+      text,
+      tweets: tweets.map(t => t.id),
+      favorites: tweets.map(t => t.favorites).reduce((partialSum, a) => partialSum + a, 0),
+      retweets: tweets.map(t => t.retweets).reduce((partialSum, a) => partialSum + a, 0),
+      sharedContent: tweets.flatMap(t =>
         Object.values(t.media ?? {}).flat(),
-      ),
-    });
+      )
+    })
+    return cw;
   }
 
-  protected threadToMarkdown(thread: TweetThread) {
-    return thread.tweets.map(t => this.tweetToMarkdown(t)).join('\n\n');
+  protected threadToMarkdown(thread: Tweet[]) {
+    return thread.map(t => this.tweetToMarkdown(t)).join('\n\n');
   }
 
   protected tweetToMarkdown(tweet: Tweet) {
