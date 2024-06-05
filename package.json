@@ -46,7 +46,7 @@
     "prettier-plugin-organize-imports": "^3.2.4",
     "shx": "^0.3.4",
     "tsimp": "^2.0.11",
-    "typescript": "^5.4.3",
+    "typescript": "^5.4.5",
     "typescript-eslint": "^7.9.0"
   },
   "dependencies": {

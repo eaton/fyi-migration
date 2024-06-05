@@ -43,8 +43,12 @@ export class TalkMigrator extends Migrator {
     this.log.debug(`Wrote talk index cache`);
 
     for (const talk of parsed.filter(t => t.keynoteFile !== undefined)) {
-      await this.exportKeynoteFile(talk.id, talk.keynoteFile!);
-      this.log.debug(`Cached Keynote slides for ${talk.id}`);
+      if (this.cache.exists(talk.id) === 'dir') {
+        this.log.debug(`Skipping export for ${talk.id}; already cached`);
+      } else {
+        await this.exportKeynoteFile(talk.id, talk.keynoteFile!);
+        this.log.debug(`Cached Keynote slides for ${talk.id}`);  
+      }
     }
 
     return;
@@ -167,6 +171,10 @@ export class TalkMigrator extends Migrator {
 
     const app = await KeynoteApp.open(path);
 
+    // Generate a JSON file with presentation metadata, and title/body/notes text
+    // for each slide
+    await app.export({ format: 'JSON with images', path: this.cache.path(id) });
+
     // Generate a standard Keynote PDF export
     await app.export({ 
       format: 'PDF',
@@ -194,9 +202,8 @@ export class TalkMigrator extends Migrator {
       path: this.cache.path(id)
     });
 
-    // Generate a JSON file with presentation metadata, and title/body/notes text
-    // for each slide
-    await app.export({ format: 'JSON with images', path: this.cache.path(id) });
+    await app.close();
+    return;
   }
 }
 
