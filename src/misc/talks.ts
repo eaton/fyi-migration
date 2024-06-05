@@ -93,7 +93,7 @@ export class TalkMigrator extends Migrator {
           const slideText = [
             `![Slide ${ slide.number }](${slide.image})`,
             `### ${slide.title?.replaceAll('\n', ' ')}`,
-            slide.notes,
+            slide.notes ?? slide.body,
           ].join('\n\n');
           deckText.push(slideText);
         }
