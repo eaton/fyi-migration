@@ -10,29 +10,34 @@ import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Tweet, TweetSchema } from '../schemas/tweet.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { parseRawArchive } from './raw-archive.js';
+import { groupBy } from 'remeda';
+
+type GroupByType = 'year' | 'user' | 'thread';
+type FilterableType = 'thread' | 'ancestor' | 'parent' | 'child' | 'orphan' | 'reply' | 'retweet' | 'media';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
-  raw?: string[];
-  saveMedia?: boolean;
-  saveFavorites?: boolean;
-  saveRetweets?: boolean;
-  saveReplies?: boolean;
-  saveSingles?: boolean;
-  saveThreads?: boolean;
+  scanArchives?: boolean;
+  scanJsonFiles?: boolean;
+  include?: FilterableType | FilterableType[];
+  ignore?: FilterableType | FilterableType[];
+  groupBy?: GroupByType
+  saveUsers?: boolean,
+  saveMedia?: boolean,
+  saveFavorites?: boolean,
+  saveThreads?: boolean,
 }
 
 const defaults: TwitterMigratorOptions = {
   name: 'twitter',
   description: 'Tweets from multiple accounts',
   input: '/Volumes/archives/Backup/Service Migration Downloads/twitter',
-  raw: ['schmeaton'],
   cache: 'cache/twitter',
   output: 'src/threads',
-
+  include: [],
+  ignore: [],
+  groupBy: 'thread',
   saveMedia: true,
-  saveRetweets: true,
-  saveReplies: true,
-  saveSingles: true,
+  saveUsers: true,
   saveThreads: true,
 };
 
@@ -161,7 +166,7 @@ export class TwitterMigrator extends Migrator {
     const allTweets = [...this.tweets.values()];
     // Filter this based on the output rules; retweets, replies, non-threaded stuff, etc.
 
-    const byYear = Object.groupBy(allTweets, t =>
+    const byYear = groupBy(allTweets, t =>
       t.date.getFullYear().toString(),
     );
     for (const [year, tweets] of Object.entries(byYear)) {
