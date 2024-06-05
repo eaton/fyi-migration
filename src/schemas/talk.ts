@@ -10,5 +10,6 @@ export const TalkSchema = CreativeWorkSchema.extend({
   slides: z.string().optional(),
   cuesheet: z.string().optional(),
   transcript: z.string().optional(),
+  featured: z.string().optional(),
 });
 export type Talk = z.infer<typeof TalkSchema>;

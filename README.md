@@ -6,7 +6,7 @@ What's in-scope? An awful lot of stuff. Long term this will likely be split out 
 
 Really, most of this just grew out of an earnest if compulsive desire to figure out how much written crap I've actually pushed out onto the internet over the years. If you want to count shit, well, you have to organize it. And if you want to organize it, you need *test harnesses*, and now you're debating the merits of different Typescript document storage abstractions. It's an ugly cycle, but progress is made.
 
-## Oldschool Stuff
+## Weird Oldschool Stuff
 
 - [x] Textfiles covering the mid-late 90s
 - [ ] The AOL.com era

@@ -7,3 +7,4 @@ export * from './movabletype/movabletype.js';
 export * from './positiva-drupal/positiva-drupal.js';
 export * from './predicatenet.js';
 export * from './tumblr/tumblr.js';
+export * from './futurism.js';

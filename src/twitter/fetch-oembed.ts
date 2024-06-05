@@ -1,3 +1,4 @@
+import { extract, ExtractTemplateObject } from '@eatonfyi/html';
 import { canParse } from '@eatonfyi/urls';
 import wretch from 'wretch';
 import QueryStringAddon from 'wretch/addons/queryString';
@@ -25,7 +26,27 @@ const oembedSchema = z.object({
   error: z.string().optional(),
 });
 
+export async function extractFromEmbed(input: string) {
+  const dataTemplate: ExtractTemplateObject = { text: 'blockquote > p', date: 'blockquote > a | text' };
+  const dataSchema = z.object({ text: z.string(), date: z.string() });
+  return await extract(input, dataTemplate, dataSchema);
+} 
+
 /*
+Example embed markup
+
+<blockquote class="twitter-tweet">
+  <p lang="en" dir="ltr">
+    If you have a large seat—which is the polite tailoring term for &quot;ass&quot;—you can use darts to make the pants follow your curves. I will demonstrate. 🧵 <a href="https://t.co/G7G7Fm55z8">pic.twitter.com/G7G7Fm55z8</a>
+  </p>&mdash; derek guy (@dieworkwear)
+  <a href="https://twitter.com/dieworkwear/status/1797170834429313181?ref_src=twsrc%5Etfw">June 2, 2024</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+*/
+
+/*
+Example JSON return
+
 {
   "url": "https:\/\/twitter.com\/dieworkwear\/status\/1797170834429313181",
   "author_name": "derek guy",
