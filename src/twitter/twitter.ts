@@ -1,5 +1,4 @@
 import { toText } from '@eatonfyi/html';
-import { toCase, toSlug } from '@eatonfyi/text';
 import { parse as parsePath } from 'path';
 import { groupBy } from 'remeda';
 import {
@@ -10,27 +9,26 @@ import {
 import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Tweet, TweetSchema } from './schema.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import * as prep from './prep.js';
 
 type GroupByType = 'year' | 'user' | 'thread';
-type FilterableType =
-  | 'thread'
-  | 'ancestor'
-  | 'parent'
-  | 'child'
-  | 'orphan'
-  | 'reply'
-  | 'retweet'
-  | 'media';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
-  archives?: string[],
-  include?: FilterableType | FilterableType[];
-  ignore?: FilterableType | FilterableType[];
+  archives?: string[];
+  
   groupBy?: GroupByType;
+  
   saveUsers?: boolean;
   saveMedia?: boolean;
   saveFavorites?: boolean;
+
+  saveSingles?: boolean;
+  ignoreSingleReplies?: boolean;
+  ignoreSingleChildren?: boolean;
+  ignoreSingleRetweets?: boolean;
+
   saveThreads?: boolean;
+  ignoreOrphanThreads?: boolean;
 }
 
 const defaults: TwitterMigratorOptions = {
@@ -39,12 +37,20 @@ const defaults: TwitterMigratorOptions = {
   input: '/Volumes/archives/Backup/Service Migration Downloads/twitter',
   cache: 'cache/twitter',
   output: 'src/threads',
-  include: [],
-  ignore: ['reply', 'retweet'],
-  groupBy: 'thread',
-  saveMedia: true,
+
+  groupBy: 'year',
+
   saveUsers: true,
+  saveMedia: true,
+  saveFavorites: false,
+
+  saveSingles: false,
+  // ignoreSingleReplies: true,
+  // ignoreSingleChildren: true,
+  // ignoreSingleRetweets: true,
+
   saveThreads: true,
+  ignoreOrphanThreads: true
 };
 
 export class TwitterMigrator extends Migrator {
@@ -162,7 +168,7 @@ export class TwitterMigrator extends Migrator {
 
         if (first !== undefined) {
           children.unshift(first);
-          const { text, ...frontmatter } = this.prepThread(children);
+          const { text, ...frontmatter } = prep.thread(children);
           const file = this.makeFilename(frontmatter);
           this.output.write(file, { content: text, data: frontmatter });
         }
@@ -187,22 +193,6 @@ export class TwitterMigrator extends Migrator {
       'mute'
     ] as ArchiveReadPart[];
 
-    const exists = this.input.exists(fileOrFolder);
-    if (exists === 'file') {
-      this.log.debug(`Loading zip archive ${fileOrFolder}`);
-    } else if (exists === 'dir') {
-      if (!this.input.dir(fileOrFolder).exists('Your archive.html')) {
-        this.log.debug(`Couldn't load ${fileOrFolder}`);
-        return;
-      } else {
-        this.log.debug(`Loading folder archive ${fileOrFolder}`);
-      }
-      this.log.debug(`Loading folder archive ${fileOrFolder}`);
-    } else {
-      this.log.error(`Couldn't load ${fileOrFolder}`);
-      return;
-    }
-
     let archive: TwitterArchive;
     try {
       archive = new TwitterArchive(this.input.path(fileOrFolder), { ignore });
@@ -222,7 +212,7 @@ export class TwitterMigrator extends Migrator {
       this.tweets.set(tweet.id, tweet);
     }
 
-    const user = this.prepUser(archive);
+    const user = prep.user(archive);
     if (user) {
       this.users.set(user.id, user);
     }
@@ -268,7 +258,7 @@ export class TwitterMigrator extends Migrator {
         .then(b => Buffer.from(b as ArrayBuffer))
         .catch(() => {
           this.log.debug(
-            `Missing media file for ${urlForTweet(tweet.id_str, tweet.user.screen_name)}`,
+            `Missing media file for ${prep.tweetUrl(tweet.id_str, tweet.user.screen_name)}`,
           );
           return undefined;
         });
@@ -280,107 +270,6 @@ export class TwitterMigrator extends Migrator {
       }
     }
     return mediaMap;
-  }
-
-  protected prepUser(info: Record<string, string> | TwitterArchive) {
-    if (info instanceof TwitterArchive) {
-      return CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: 'twt-@' + info.user.screen_name,
-        id_str: info.user.id,
-        name: info.user.screen_name,
-        subtitle: info.user.name,
-        date: info.user.created_at,
-        image: info.user.profile_img_url,
-        description: info.user.bio,
-        url: urlForHandle(info.user.screen_name),
-        hosting: 'Twitter',
-      });
-    } else {
-      return CreativeWorkSchema.parse({
-        ...info,
-        url: urlForHandle(info.handle),
-        hosting: 'Twitter',
-      });
-    }
-  }
-
-  protected prepTweet(tweet: Tweet) {
-    return CreativeWorkSchema.parse({
-      type: 'SocialMediaPosting',
-      id: 'twt-' + tweet.id,
-      about: tweet.aboutId
-        ? urlForTweet(tweet.aboutId, tweet.aboutHandle)
-        : undefined,
-      date: tweet.date,
-      text: this.tweetToMarkdown(tweet),
-      handle: tweet.handle,
-      isPartOf: `twt-@${tweet.handle}`,
-      favorites: tweet.favorites,
-      retweets: tweet.retweets,
-      software: tweet.source,
-      sharedContent: Object.values(tweet.media ?? {}).flat(),
-    });
-  }
-
-  protected prepThread(tweets: Tweet[]) {
-    const first = tweets[0];
-    const text = tweets.map(t => this.tweetToMarkdown(t)).join('\n\n');
-    const name = text.replaceAll('\n', ' ').slice(0, 48);
-
-    const cw = CreativeWorkSchema.parse({
-      type: 'SocialMediaPosting',
-      id: `twt-${first.id}`,
-      name: toCase.title(name),
-      slug: toSlug(name),
-      handle: first.handle,
-      isPartOf: `twt-@${first.handle}`,
-      about: first.aboutId
-        ? urlForTweet(first.aboutId, first.aboutHandle)
-        : undefined,
-      dates: {
-        start: first.date,
-        end: tweets
-          .map(t => t.date)
-          .sort()
-          .pop()!,
-      },
-      text,
-      tweets: tweets.map(t => t.id),
-      favorites: tweets
-        .map(t => t.favorites)
-        .reduce((partialSum, a) => partialSum + a, 0),
-      retweets: tweets
-        .map(t => t.retweets)
-        .reduce((partialSum, a) => partialSum + a, 0),
-      sharedContent: tweets.flatMap(t => Object.values(t.media ?? {}).flat()),
-    });
-    return cw;
-  }
-
-  protected tweetToMarkdown(tweet: Tweet) {
-    let output = tweet.text;
-    output = output.replaceAll(/\n+/g, '\n\n');
-
-    // Remove the single link to the twitpic URL, and put each media item on its own line.
-    // Later, we can wrap them in something.
-    for (const [short, mediaFiles] of Object.entries(tweet.media ?? {})) {
-      output = output.replaceAll(short, '');
-      output += mediaFiles.map(
-        m => `\n\n![](media://${m.replace('media', 'twitter')})`,
-      );
-    }
-
-    // Humanize URLs; deal with expanding link shorteners later.
-    for (const [short, long] of Object.entries(tweet.links ?? {})) {
-      output = output.replaceAll(short, `[${long}](${long})`);
-    }
-
-    if (output.startsWith(`@${tweet.handle} `)) {
-      output = output.replace(`@${tweet.handle} `, '');
-    }
-
-    return output;
   }
 
   /** Assorted Tweet Checks */
@@ -443,12 +332,4 @@ export class TwitterMigrator extends Migrator {
   hasLinks(tweet: Tweet) {
     return !!tweet.links && Object.keys(tweet.links).length > 0;
   }
-}
-
-export function urlForTweet(id: string, handle = 'twitter') {
-  return `https://www.x.com/${handle}/status/${id}`;
-}
-
-export function urlForHandle(id: string, handle = 'twitter') {
-  return `https://www.x.com/${handle}/status/${id}`;
 }
