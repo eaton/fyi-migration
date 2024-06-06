@@ -114,5 +114,5 @@ export function tweetUrl(id: string, handle = 'twitter') {
 }
 
 export function handleUrl(id: string, handle = 'twitter') {
-  return `https://www.x.com/${handle}/status/${id}`;
+  return `https://www.x.com/${handle}`;
 }

@@ -27,6 +27,7 @@ export interface TwitterMigratorOptions extends MigratorOptions {
   saveSingles?: boolean;
   ignoreSingleReplies?: boolean;
   ignoreThreadMembers?: boolean;
+  ignoreBots?: boolean;
 
   saveThreads?: boolean;
   ignoreReplyThreads?: boolean;
@@ -40,7 +41,7 @@ const defaults: TwitterMigratorOptions = {
   output: 'src/twitter',
 
   group: {
-    year: true,
+    kind: true,
     handle: true,
   },
 
@@ -56,7 +57,8 @@ const defaults: TwitterMigratorOptions = {
 
   ignoreSingleReplies: true,
   ignoreThreadMembers: true,
-  ignoreReplyThreads: true
+  ignoreReplyThreads: true,
+  ignoreBots: true,
 };
 
 export class TwitterMigrator extends Migrator {
@@ -321,6 +323,9 @@ export class TwitterMigrator extends Migrator {
   }
 
   protected includeSingleTweet(tweet: Tweet) {
+    if (this.options.ignoreBots) {
+      if (tweet.source?.startsWith('Cheap Bots,')) return false;
+    }
     if (this.options.ignoreThreadMembers) {
       if (this.isSelfReply(tweet)) return false;
     }

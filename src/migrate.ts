@@ -30,6 +30,7 @@ export class AllMigrations extends Migrator {
     await new textfiles.TextEmailMigrator({ logger: this.log }).run();
  */
     await new TwitterMigrator({ logger: this.log }).run();
+    await new TwitterMigrator({ logger: this.log }).run();
   }
 }
 
