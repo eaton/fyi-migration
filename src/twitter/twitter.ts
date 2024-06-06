@@ -1,6 +1,5 @@
 import { toText } from '@eatonfyi/html';
 import { parse as parsePath } from 'path';
-import { groupBy } from 'remeda';
 import {
   ArchiveReadPart,
   PartialTweet,
@@ -11,24 +10,26 @@ import { Tweet, TweetSchema } from './schema.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import * as prep from './prep.js';
 
-type GroupByType = 'year' | 'user' | 'thread';
-
 export interface TwitterMigratorOptions extends MigratorOptions {
-  archives?: string[];
-  
-  groupBy?: GroupByType;
-  
+  archiveGlob?: string;
+    
   saveUsers?: boolean;
   saveMedia?: boolean;
   saveFavorites?: boolean;
+  saveRetweets?: boolean;
+
+  group?: false | {
+    year?: boolean,
+    handle?: boolean,
+    kind?: boolean,
+  },
 
   saveSingles?: boolean;
   ignoreSingleReplies?: boolean;
-  ignoreSingleChildren?: boolean;
-  ignoreSingleRetweets?: boolean;
+  ignoreThreadMembers?: boolean;
 
   saveThreads?: boolean;
-  ignoreOrphanThreads?: boolean;
+  ignoreReplyThreads?: boolean;
 }
 
 const defaults: TwitterMigratorOptions = {
@@ -36,21 +37,26 @@ const defaults: TwitterMigratorOptions = {
   description: 'Tweets from multiple accounts',
   input: '/Volumes/archives/Backup/Service Migration Downloads/twitter',
   cache: 'cache/twitter',
-  output: 'src/threads',
+  output: 'src/twitter',
 
-  groupBy: 'year',
+  group: {
+    year: true,
+    handle: true,
+  },
+
+  archiveGlob: 'twitter-*.zip',
 
   saveUsers: true,
   saveMedia: true,
+  saveRetweets: false,
   saveFavorites: false,
 
-  saveSingles: false,
-  // ignoreSingleReplies: true,
-  // ignoreSingleChildren: true,
-  // ignoreSingleRetweets: true,
-
+  saveSingles: true,
   saveThreads: true,
-  ignoreOrphanThreads: true
+
+  ignoreSingleReplies: true,
+  ignoreThreadMembers: true,
+  ignoreReplyThreads: true
 };
 
 export class TwitterMigrator extends Migrator {
@@ -68,14 +74,10 @@ export class TwitterMigrator extends Migrator {
   }
 
   override async fillCache(): Promise<unknown> {
-    const archives = this.options.archives ?? [];
+    const archives: string[] = [];
 
     if (archives.length === 0) {
-      archives.push(...this.input.find({ matching: 'twitter-*.zip' }));
-      const probableArchiveFolders = this.input.find({ matching: '*/Your Archive.html' });
-      for (const f in probableArchiveFolders) {
-        archives.push(parsePath(f).dir);
-      }
+      archives.push(...this.input.find({ matching: this.options.archiveGlob }));
     }
 
     for (const a of archives) {
@@ -87,10 +89,12 @@ export class TwitterMigrator extends Migrator {
 
     // Build threads for later use
     this.buildThreads();
-    this.cache.write(
-      'threadids.ndjson',
-      [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
-    );
+    if (this.threads.size > 0) {
+      this.cache.write(
+        'threads.ndjson',
+        [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
+      );
+    }
 
     return;
   }
@@ -144,13 +148,67 @@ export class TwitterMigrator extends Migrator {
     // Build a thread for each thread.
 
     const allTweets = [...this.tweets.values()];
-    // Filter this based on the output rules; retweets, replies, non-threaded stuff, etc.
+    const filesToCopy = new Set<string>();
+    const toExport: CreativeWork[] = [];
 
-    const byYear = groupBy(allTweets, t => t.date.getFullYear().toString());
-    for (const [year, tweets] of Object.entries(byYear)) {
-      if (tweets) {
-        this.output.write(`tweets-${year}.ndjson`, tweets);
+    if (this.options.saveSingles) {
+      for (const tweet of allTweets.filter(t => !this.threads.has(t.id))) {
+        if (this.includeSingleTweet(tweet)) {
+          toExport.push(prep.tweet(tweet));
+          for (const m of Object.values(tweet.media ?? {}).flat()) {
+            filesToCopy.add(m.replace('media://twitter/', ''));
+          }
+        }
+      }      
+    }
+
+    if (this.options.saveThreads !== false) {
+      for (const [tid, cids] of [...this.threads.entries()]) {
+        const first = this.tweets.get(tid);
+        if (first === undefined) {continue};
+        if (first.aboutId && this.options.ignoreReplyThreads) {
+          continue
+        };
+
+        const children = [...cids.values()]
+          .map(id => this.tweets.get(id))
+          .filter(t => t !== undefined) as Tweet[];
+
+        if (first !== undefined) {
+          const mediaFiles = [first, ...children].map(t => Object.values(t.media ?? {}).flat()).flat().filter(m => m !== undefined);
+          for (const m of mediaFiles) {
+            filesToCopy.add(m.replace('media://twitter/', ''));
+          }
+          toExport.push(prep.thread([first, ...children]));
+        }
       }
+    }
+
+    for (const smp of toExport) {
+      const { text, ...frontmatter } = smp;
+      let file = this.makeFilename(frontmatter);
+      const segments: string[] = [];
+
+      if (this.options.group) {
+        if (this.options.group.handle && typeof frontmatter.handle === 'string') segments.push(frontmatter.handle.toLocaleLowerCase());
+        if (this.options.group.kind) {
+          if (frontmatter.hasPart) {
+            segments.push('threads');
+          } else if (frontmatter.isRetweet) {
+            segments.push('retweets');
+          } else if (frontmatter.about) {
+            segments.push('replies');
+          } else {
+            segments.push('singles');
+          }
+        }
+        if (this.options.group.year) segments.push(file.split('-')[0]);
+      }
+      segments.push(file);
+      file = segments.join('/');
+
+      this.output.write(file, { content: text, data: frontmatter });
+      this.log.debug(`Wrote ${file}`);
     }
 
     if (this.options.saveUsers) {
@@ -159,25 +217,14 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
-    if (this.options.saveThreads) {
-      for (const th of [...this.threads.entries()]) {
-        const first = this.tweets.get(th[0]);
-        const children = [...th[1].values()]
-          .map(id => this.tweets.get(id))
-          .filter(t => t !== undefined) as Tweet[];
-
-        if (first !== undefined) {
-          children.unshift(first);
-          const { text, ...frontmatter } = prep.thread(children);
-          const file = this.makeFilename(frontmatter);
-          this.output.write(file, { content: text, data: frontmatter });
-        }
-      }
-    }
-
     if (this.options.saveMedia) {
-      this.cache.copy('media', this.output.path('../_static/twitter'));
-    }
+      let ct = 0;
+      for (const f of [...filesToCopy.values()]) {
+        this.cache.copy('media/' + f, this.output.dir('../_static/twitter').path(f), { overwrite: true });
+        ct++;
+      }
+      this.log.debug(`Copied ${ct} files to ${this.output.path('../_static/twitter')}`);
+    } 
   }
 
   async processArchive(fileOrFolder: string) {
@@ -239,7 +286,8 @@ export class TwitterMigrator extends Migrator {
       favorites: tweet.favorite_count,
       retweets: tweet.retweet_count,
     });
-    output.isRetweet = !!tweet.retweeted_status;
+    output.hashtags = [...new Set(tweet.entities.hashtags.map(ht => ht.text)).values()];
+    output.isRetweet = (!!tweet.retweeted || !!tweet.retweeted_status);
     return output;
   }
 
@@ -249,7 +297,7 @@ export class TwitterMigrator extends Migrator {
       const variant = em.video_info?.variants
         ?.filter(v => v.content_type === 'video/mp4')
         .pop();
-      const filename = parsePath(variant?.url ?? em.media_url_https).base.split(
+      const filename = tweet.id_str + '-' + parsePath(variant?.url ?? em.media_url_https).base.split(
         '?',
       )[0];
 
@@ -272,6 +320,19 @@ export class TwitterMigrator extends Migrator {
     return mediaMap;
   }
 
+  protected includeSingleTweet(tweet: Tweet) {
+    if (this.options.ignoreThreadMembers) {
+      if (this.isSelfReply(tweet)) return false;
+    }
+    if (this.options.ignoreSingleReplies) {
+      if (this.isOtherReply(tweet)) return false;
+    }
+    if (this.options.saveRetweets !== true) {
+      if (tweet.isRetweet) return false;
+    }
+    return true;
+  }
+
   /** Assorted Tweet Checks */
   isReply(tweet: Tweet) {
     return !!tweet.aboutId;
@@ -283,7 +344,7 @@ export class TwitterMigrator extends Migrator {
 
   isOtherReply(tweet: Tweet) {
     return (
-      !!tweet.aboutHandle &&
+      !!tweet.aboutId &&
       tweet.aboutHandle !== tweet.handle
     );
   }
@@ -302,7 +363,7 @@ export class TwitterMigrator extends Migrator {
   getAncestor(tweet: Tweet): Tweet | undefined {
     if (tweet.aboutId) {
       const parent = this.tweets.get(tweet.aboutId);
-      if (parent) {
+      if (parent && parent.handle === tweet.handle) {
         return this.getAncestor(parent) ?? parent;
       }
     }
@@ -320,7 +381,7 @@ export class TwitterMigrator extends Migrator {
   }
 
   getChildren(tweet: Tweet) {
-    return this.getDescendents(tweet).filter(t => t.aboutId === tweet.id);
+    return this.getDescendents(tweet).filter(t => t?.aboutId === tweet.id);
   }
     
   // checks

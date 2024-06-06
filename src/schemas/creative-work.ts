@@ -11,9 +11,9 @@ export const CreativeWorkSchema = ThingSchema.extend({
     .string()
     .or(z.record(z.string().or(z.array(z.string()))))
     .optional(), // Either a single string, or a dictionary of strings or string arrays.
-  about: oneOrMany(z.string()),
-  isPartOf: oneOrMany(z.string()), // none, one, or more string or string/order objects
-  hasPart: oneOrMany(z.string()), // none, one, or more string or string/order objects
+  about: oneOrMany(z.string(), { optional: true, expand: false }),
+  isPartOf: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
+  hasPart: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
   archivedAt: z.string().optional(),
   text: z.string().optional(),
 });

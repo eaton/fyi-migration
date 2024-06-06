@@ -1,13 +1,13 @@
 import { Tweet } from "./schema.js";
 import { CreativeWorkSchema } from "../schemas/index.js";
 import { toCase, toSlug } from "@eatonfyi/text";
-import TwitterArchive from "twitter-archive-reader";
+import { TwitterArchive } from "twitter-archive-reader";
 
 export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'twt-@' + info.user.screen_name,
+      id: `@${info.user.screen_name.toLocaleLowerCase()}`,
       id_str: info.user.id,
       name: info.user.screen_name,
       subtitle: info.user.name,
@@ -26,21 +26,23 @@ export function user(info: Record<string, string> | TwitterArchive) {
   }
 }
 
-
 export function tweet(tweet: Tweet) {
   return CreativeWorkSchema.parse({
     type: 'SocialMediaPosting',
-    id: 'twt-' + tweet.id,
+    id: tweet.id,
     about: tweet.aboutId
       ? tweetUrl(tweet.aboutId, tweet.aboutHandle)
       : undefined,
     date: tweet.date,
     text: tweetToMarkdown(tweet),
     handle: tweet.handle,
-    isPartOf: `twt-@${tweet.handle}`,
+    url: tweetUrl(tweet.id, tweet.handle),
+    isPartOf: `@${tweet.handle.toLocaleLowerCase()}`,
     favorites: tweet.favorites,
     retweets: tweet.retweets,
     software: tweet.source,
+    keywords: tweet.hashtags,
+    isRetweet: tweet.isRetweet || undefined,
     sharedContent: Object.values(tweet.media ?? {}).flat(),
   });
 }
@@ -52,11 +54,11 @@ export function thread(tweets: Tweet[]) {
 
   const cw = CreativeWorkSchema.parse({
     type: 'SocialMediaPosting',
-    id: `twt-${first.id}`,
+    id: `tweet-${first.id}`,
     name: toCase.title(name),
     slug: toSlug(name),
     handle: first.handle,
-    isPartOf: `twt-@${first.handle}`,
+    isPartOf: `@${first.handle.toLocaleLowerCase()}`,
     about: first.aboutId
       ? tweetUrl(first.aboutId, first.aboutHandle)
       : undefined,
@@ -68,7 +70,9 @@ export function thread(tweets: Tweet[]) {
         .pop()!,
     },
     text,
-    tweets: tweets.map(t => t.id),
+    url: tweetUrl(first.id, first.handle),
+    hasPart: tweets.map(t => tweetUrl(t.id, t.handle)),
+    keywords: [...new Set(tweets.flatMap(t => t.hashtags ?? [])).values()],
     favorites: tweets
       .map(t => t.favorites)
       .reduce((partialSum, a) => partialSum + a, 0),

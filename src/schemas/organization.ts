@@ -6,7 +6,7 @@ export const OrganizationSchema = ThingSchema.extend({
   type: z.string().default('Organization'),
   dates: z.record(z.coerce.date()).optional(),
   places: z.record(z.string()).optional(),
-  memberOf: oneOrMany(z.string()), // none, one, or more string or string/order objects
+  memberOf: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
 });
 
 export type Organization = z.infer<typeof OrganizationSchema>;

@@ -6,7 +6,7 @@ export const ThingSchema = z
     id: z.string(),
     type: z.string().default('Thing'),
     name: z.string().optional(),
-    alternateName: oneOrMany(z.string()),
+    alternateName: oneOrMany(z.string(), { optional: true, expand: false }),
     description: z.string().optional(),
     url: z.string().optional(),
     image: z.string().optional(),

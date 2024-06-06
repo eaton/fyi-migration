@@ -12,6 +12,7 @@ export class AllMigrations extends Migrator {
   override async run() {
     this.log.level = 'debug';
 
+/*     
     await new blogs.PredicateNetMigrator({ logger: this.log }).run();
     await new blogs.LivejournaMigrator({ logger: this.log }).run();
     await new blogs.FuturismMigrator({ logger: this.log }).run();
@@ -27,7 +28,7 @@ export class AllMigrations extends Migrator {
     await new textfiles.TextJournalsMigrator({ logger: this.log }).run();
     await new textfiles.TextFictionMigrator({ logger: this.log }).run();
     await new textfiles.TextEmailMigrator({ logger: this.log }).run();
-
+ */
     await new TwitterMigrator({ logger: this.log }).run();
   }
 }

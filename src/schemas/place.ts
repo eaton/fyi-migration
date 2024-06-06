@@ -9,8 +9,8 @@ export const PlaceSchema = ThingSchema.extend({
   isVirtual: z.boolean().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  isPartOf: oneOrMany(z.string()), // none, one, or more string or string/order objects
-  hasPart: oneOrMany(z.string()), // none, one, or more string or string/order objects
+  isPartOf: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
+  hasPart: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
 });
 
 export type Place = z.infer<typeof PlaceSchema>;
