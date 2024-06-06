@@ -23,8 +23,7 @@ type FilterableType =
   | 'media';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
-  scanArchives?: boolean;
-  scanJsonFiles?: boolean;
+  archives?: string[],
   include?: FilterableType | FilterableType[];
   ignore?: FilterableType | FilterableType[];
   groupBy?: GroupByType;
@@ -63,29 +62,29 @@ export class TwitterMigrator extends Migrator {
   }
 
   override async fillCache(): Promise<unknown> {
-    const archives: string[] = [];
+    const archives = this.options.archives ?? [];
 
-    archives.push(...this.input.find({ matching: 'twitter-*.zip' }));
-    const probableArchiveFolders = this.input.find({ matching: '*/Your Archive.html' });
-    for (const f in probableArchiveFolders) {
-      archives.push(parsePath(f).dir);
+    if (archives.length === 0) {
+      archives.push(...this.input.find({ matching: 'twitter-*.zip' }));
+      const probableArchiveFolders = this.input.find({ matching: '*/Your Archive.html' });
+      for (const f in probableArchiveFolders) {
+        archives.push(parsePath(f).dir);
+      }
     }
 
     for (const a of archives) {
       await this.processArchive(a);
     }
 
-    this.cache.write('users.ndjson', [...this.users.values()]);
     this.cache.write('tweets.ndjson', [...this.tweets.values()]);
+    this.cache.write('users.ndjson', [...this.users.values()]);
 
-    // Build threads
-    if (this.options.saveThreads) {
-      this.buildThreads();
-      this.cache.write(
-        'threadids.ndjson',
-        [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
-      );
-    };
+    // Build threads for later use
+    this.buildThreads();
+    this.cache.write(
+      'threadids.ndjson',
+      [...this.threads.entries()].map(e => [e[0], [...e[1].values()]]),
+    );
 
     return;
   }
@@ -122,7 +121,16 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
-    return { tweets: this.tweets, threads: this.threads };
+    if (this.users.size === 0) {
+      const users = this.cache.read('users.ndjson', 'auto') as
+        | CreativeWork[]
+        | undefined;
+      if (users) {
+        for (const u of users) this.users.set(u.id, CreativeWorkSchema.parse(u));
+      }
+    }
+
+    return { tweets: this.tweets, threads: this.threads, users: this.users };
   }
 
   override async finalize() {
@@ -135,7 +143,13 @@ export class TwitterMigrator extends Migrator {
     const byYear = groupBy(allTweets, t => t.date.getFullYear().toString());
     for (const [year, tweets] of Object.entries(byYear)) {
       if (tweets) {
-        this.output.write(year + '.ndjson', tweets);
+        this.output.write(`tweets-${year}.ndjson`, tweets);
+      }
+    }
+
+    if (this.options.saveUsers) {
+      for (const user of [...this.users.values()]) {
+        this.data.bucket('things').set(user);
       }
     }
 
@@ -155,7 +169,9 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
-    this.cache.copy('media', this.output.path('../_static/twitter'));
+    if (this.options.saveMedia) {
+      this.cache.copy('media', this.output.path('../_static/twitter'));
+    }
   }
 
   async processArchive(fileOrFolder: string) {
