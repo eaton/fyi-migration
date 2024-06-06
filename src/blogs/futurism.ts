@@ -1,7 +1,7 @@
+import { ExtractTemplateObject, extract, toMarkdown } from '@eatonfyi/html';
+import { z } from 'zod';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
-import { extract, ExtractTemplateObject, toMarkdown } from '@eatonfyi/html';
-import { z } from 'zod';
 
 const defaults: BlogMigratorOptions = {
   name: 'futurism',
@@ -29,7 +29,7 @@ export class FuturismMigrator extends BlogMigrator {
         text: toMarkdown(parsed.text),
         isPartOf: 'futurism',
       });
-  
+
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
       this.log.debug(`'Wrote ${file}`);
@@ -56,11 +56,11 @@ const template: ExtractTemplateObject = {
   name: 'div.content > h3',
   text: 'div.content > :not(h3,p.posted) | html',
   date: 'div.content > p.posted',
-}
+};
 
 const schema = z.object({
   id: z.string(),
   name: z.string(),
   text: z.string(),
-  date: z.string().transform(s => s.split('|')[0].split(' on ').pop()?.trim())
-})
+  date: z.string().transform(s => s.split('|')[0].split(' on ').pop()?.trim()),
+});

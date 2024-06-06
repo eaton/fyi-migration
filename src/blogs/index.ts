@@ -1,5 +1,6 @@
 export * from './alt-drupal/alt-drupal.js';
 export * from './alt-jekyll/jekyll.js';
+export * from './futurism.js';
 export * from './goddy/goddy.js';
 export * from './livejournal/livejournal.js';
 export * from './medium.js';
@@ -7,4 +8,3 @@ export * from './movabletype/movabletype.js';
 export * from './positiva-drupal/positiva-drupal.js';
 export * from './predicatenet.js';
 export * from './tumblr/tumblr.js';
-export * from './futurism.js';

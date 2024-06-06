@@ -1,6 +1,6 @@
+import * as blogs from './blogs/index.js';
 import { Migrator } from './shared/migrator.js';
 import * as textfiles from './textfiles/index.js';
-import * as blogs from './blogs/index.js';
 
 import { ArticleReprintMigrator } from './misc/article-reprints.js';
 import { TwitterMigrator } from './twitter/twitter.js';
@@ -22,7 +22,7 @@ export class AllMigrations extends Migrator {
     await new blogs.AltDrupalMigrator({ logger: this.log }).run();
     await new blogs.AltJekyllMigrator({ logger: this.log }).run();
     await new blogs.MediumMigrator({ logger: this.log }).run();
-    
+
     await new ArticleReprintMigrator({ logger: this.log }).run();
     await new textfiles.TextJournalsMigrator({ logger: this.log }).run();
     await new textfiles.TextFictionMigrator({ logger: this.log }).run();

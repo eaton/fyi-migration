@@ -27,10 +27,13 @@ const oembedSchema = z.object({
 });
 
 export async function extractFromEmbed(input: string) {
-  const dataTemplate: ExtractTemplateObject = { text: 'blockquote > p', date: 'blockquote > a | text' };
+  const dataTemplate: ExtractTemplateObject = {
+    text: 'blockquote > p',
+    date: 'blockquote > a | text',
+  };
   const dataSchema = z.object({ text: z.string(), date: z.string() });
   return await extract(input, dataTemplate, dataSchema);
-} 
+}
 
 /*
 Example embed markup

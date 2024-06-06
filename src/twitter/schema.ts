@@ -23,6 +23,8 @@ export const TweetSchema = z.object({
   links: z.record(z.string().url()).optional(),
   media: z.record(z.array(z.string())).optional(),
 
+  isRetweet: z.boolean().optional(),
+
   source: z.string().optional(),
   favorites: z.number().default(0),
   retweets: z.number().default(0),
