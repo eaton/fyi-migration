@@ -9,6 +9,7 @@ Really, most of this just grew out of an earnest if compulsive desire to figure 
 ## Weird Oldschool Stuff
 
 - [x] Textfiles covering the mid-late 90s
+  - [x] Including a cluster of very bad fiction
 - [ ] The AOL.com era
   - [ ] The Kumquat Kuriosity's Home Page Of Fun
   - [ ] Mac Reviews Digest
@@ -52,7 +53,7 @@ Posts and entries from the assorted places I've written over the years. These ar
 
  The destination format for these varies. Twitter/Mastodon threads are turned into `post` content, as are LinkedIn posts. Usenet is kind of a weird beast, and MetaFilter is probably just there for accurate calculation of stats, though select posts and comments will likely be reprinted.
 
-- [ ] Twitter
+- [x] Twitter
 - [ ] Mastodon
 - [ ] Bluesky
 - [ ] Facebook
