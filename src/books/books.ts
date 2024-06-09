@@ -3,8 +3,8 @@ import { emptyDeep, get, unflatten } from 'obby';
 import { Book, BookSchema } from '../schemas/book.js';
 import { CreativeWork } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
-import { isString } from '../util/type-guards.js';
 import { BookFetcher } from './book-fetcher.js';
+import is from '@sindresorhus/is';
 
 export interface BookMigratorOptions extends MigratorOptions {
   customImages?: string;
@@ -80,12 +80,12 @@ export class BookMigrator extends Migrator {
   }
 
   protected getCanonicalId(input: Record<string, unknown>) {
-    if (isString(input.id)) {
+    if (is.string(input.id)) {
       return input.id;
     }
     if (input.ids) {
       const id = get(input.ids, 'custom isbn10 isbn13 asin upc');
-      if (isString(id)) {
+      if (is.string(id)) {
         return id;
       }
     }

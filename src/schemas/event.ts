@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { oneOrMany } from './one-or-many.js';
+import { oneOrMany, recordWithHints } from './helpers.js';
 import { ThingSchema } from './thing.js';
 
 export const EventSchema = ThingSchema.extend({
   type: z.string().default('Event'),
-  dates: z.record(z.coerce.date()).optional(),
+  dates: recordWithHints(z.coerce.date(), ['start', 'end']).optional(),
   places: z.record(z.string()).optional(),
-  isPartOf: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
-  hasPart: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
+  isPartOf: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
+  hasPart: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
 });
 
 export type Event = z.infer<typeof EventSchema>;

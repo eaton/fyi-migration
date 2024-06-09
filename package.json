@@ -27,6 +27,7 @@
     "lint-and-fix": "eslint . --fix",
     "prepare": "npm run build",
     "migrate": "node --import=tsimp ./src/migrate.ts",
+    "scratchpad": "node --import=tsimp ./src/scratchpad.ts",
     "test": "ava"
   },
   "author": "eaton",
@@ -67,6 +68,7 @@
     "dotenv": "^16.4.5",
     "emptier": "^1.0.0",
     "empty-deep": "^1.0.0",
+    "google-spreadsheet": "^4.1.2",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
     "humanize-url": "^3.0.0",
@@ -76,6 +78,7 @@
     "obby": "^1.2.0",
     "pino": "^9.1.0",
     "pino-pretty": "^11.1.0",
+    "public-google-sheets-parser": "github:eaton/public-google-sheets-parser",
     "remeda": "^1.61.0",
     "tasuku": "^2.0.1",
     "twitter-archive-reader": "^7.2.0",

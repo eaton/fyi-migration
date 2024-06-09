@@ -1,8 +1,5 @@
-import * as blogs from './blogs/index.js';
 import { Migrator } from './shared/migrator.js';
-import * as textfiles from './textfiles/index.js';
 
-import { ArticleReprintMigrator } from './misc/article-reprints.js';
 import { TwitterMigrator } from './twitter/twitter.js';
 // import { BookMigrator } from './books/books.js';
 
@@ -12,7 +9,7 @@ export class AllMigrations extends Migrator {
   override async run() {
     this.log.level = 'debug';
 
-/*     
+    /*     
     await new blogs.PredicateNetMigrator({ logger: this.log }).run();
     await new blogs.LivejournaMigrator({ logger: this.log }).run();
     await new blogs.FuturismMigrator({ logger: this.log }).run();

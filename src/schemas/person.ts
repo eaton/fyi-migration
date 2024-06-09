@@ -1,17 +1,19 @@
 import { z } from 'zod';
-import { oneOrMany } from './one-or-many.js';
+import { oneOrMany, recordWithHints } from './helpers.js';
 import { ThingSchema } from './thing.js';
 
 export const PersonSchema = ThingSchema.extend({
   type: z.string().default('Person'),
-  dates: z.record(z.coerce.date()).optional(),
+  dates: recordWithHints(z.coerce.date(), ['birth', 'death']).optional(),
   places: z.record(z.string()).optional(),
-  knows: oneOrMany(z.string(), { optional: true, expand: false }),
-  knowsAbout: oneOrMany(z.string(), { optional: true, expand: false }),
+  knows: oneOrMany(z.string()).optional(),
+  knowsAbout: oneOrMany(z.string()).optional(),
   isFictional: z.boolean().optional(),
-  isPartOf: oneOrMany(z.string(), { optional: true, expand: false }).describe(
-    'For People, this includes organization membership, employment, etc.',
-  ),
+  isPartOf: oneOrMany(z.string())
+    .optional()
+    .describe(
+      'For People, this includes organization membership, employment, etc.',
+    ),
   relation: z.record(z.string().or(z.array(z.string()))).optional(), // Either a single string, or a dictionary of strings or string arrays.
 });
 

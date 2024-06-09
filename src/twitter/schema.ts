@@ -28,7 +28,7 @@ export const TweetSchema = z.object({
   source: z.string().optional(),
   favorites: z.number().default(0),
   retweets: z.number().default(0),
-  hashtags: z.array(z.string()).optional()
+  hashtags: z.array(z.string()).optional(),
 });
 
 export type Tweet = z.infer<typeof TweetSchema>;

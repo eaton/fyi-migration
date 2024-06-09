@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { oneOrMany } from './one-or-many.js';
+import { oneOrMany } from './helpers.js';
 import { ThingSchema } from './thing.js';
 
 export const PlaceSchema = ThingSchema.extend({
@@ -9,8 +9,8 @@ export const PlaceSchema = ThingSchema.extend({
   isVirtual: z.boolean().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  isPartOf: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
-  hasPart: oneOrMany(z.string(), { optional: true, expand: false }), // none, one, or more string or string/order objects
+  isPartOf: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
+  hasPart: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
 });
 
 export type Place = z.infer<typeof PlaceSchema>;

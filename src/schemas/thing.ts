@@ -1,12 +1,15 @@
 import { z } from 'zod';
-import { oneOrMany } from './one-or-many.js';
+import { oneOrMany } from './helpers.js';
 
 export const ThingSchema = z
   .object({
     id: z.string(),
+    ids: z.record(z.string()).optional(),
     type: z.string().default('Thing'),
     name: z.string().optional(),
-    alternateName: oneOrMany(z.string(), { optional: true, expand: false }),
+    category: z.string().optional(),
+    importance: z.number().min(1).max(5).optional(),
+    alternateName: oneOrMany(z.string()).optional(),
     description: z.string().optional(),
     url: z.string().optional(),
     image: z.string().optional(),

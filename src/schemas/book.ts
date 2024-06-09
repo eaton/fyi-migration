@@ -1,10 +1,24 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
 import { DimensionsSchema } from './dimensions.js';
+import { recordWithHints } from './helpers.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
-  ids: z.record(z.string()).optional(),
+  ids: recordWithHints(z.coerce.string(), [
+    'isbn',
+    'ean',
+    'upc',
+    'isbn10',
+    'isbn13',
+    'asin',
+    'loc',
+    'dds',
+  ]),
+  dates: recordWithHints(z.coerce.date(), [
+    'publication',
+    'copyright',
+  ]).optional(),
   subtitle: z.string().optional(),
   edition: z.string().optional(),
   publisher: z.string().optional(),

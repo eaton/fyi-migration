@@ -7,7 +7,7 @@ import { z } from 'zod';
 export async function getTwitterOembed(input: string) {
   const url = canParse(input) ? input : `https://x.com/twitter/status/${input}`;
 
-  return wretch('https://publish.twitter.com/oembed')
+  const output = await wretch('https://publish.twitter.com/oembed')
     .addon(QueryStringAddon)
     .query({ url, omit_script: true, dnt: true, hide_thread: false })
     .get()
@@ -17,6 +17,12 @@ export async function getTwitterOembed(input: string) {
       error: cb.text ?? true,
     }))
     .json(json => oembedSchema.parse(json));
+
+  if (output.html) {
+    const parsed = await extractFromEmbed(output.html);
+    return { ...output, ...parsed };
+  }
+  return { ...output, date: undefined, text: undefined };
 }
 
 const oembedSchema = z.object({

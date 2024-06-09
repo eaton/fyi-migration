@@ -20,7 +20,7 @@ export class Fetcher extends Migrator {
 
   constructor(options: FetcherOptions = {}) {
     const opt = { ...defaults, ...options };
-    super(options);
+    super(opt);
 
     this.fetcher = opt.fetch ?? wretch();
     if (opt.proxies.length) {
