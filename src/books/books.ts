@@ -77,17 +77,12 @@ export class BookMigrator extends Fetcher {
       if (!url) {
         this.log.error(`No parsable URL for ${book.id}`);
       } else if (this.cache.exists(cacheFile) && !this.options.reFetch) {
-        const html = this.cache.read(cacheFile);
-        if (html) {
-          htmlToParse.set(book, html);
-        } else {
-          this.log.error(`Empty cache file for ${book.id}; removing file.`);
-          this.cache.remove(cacheFile);
-        }
+        htmlToParse.set(book, cacheFile);
+        this.log.debug(`Loaded cached HTML for ${url}`)
       } else {
         const html = await this.fetchBookPage(url);
         if (html) {
-          htmlToParse.set(book, html);
+          htmlToParse.set(book, cacheFile);
           this.cache.write(cacheFile, html);
           this.log.debug(`Fetched HTML for ${book.id}`)
         } else {
