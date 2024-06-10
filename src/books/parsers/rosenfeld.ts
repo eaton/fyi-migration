@@ -12,6 +12,46 @@ export async function rosenfeldmedia(html: string) {
   });
 }
 
+/**
+      const isbn = isbnOverride || parsed.data.features?.['Paperback ISBN'];
+      if (typeof isbn === 'string') {
+        parsed.data.id ??= {};
+        if (audit(isbn).validIsbn) {
+          parsed.data.id.isbn10 = asIsbn10(isbn);
+          parsed.data.id.isbn13 = asIsbn13(isbn);
+        }
+      }
+
+      parsed.data.pages = parsed.data.features?.Paperback ? Number.parseInt(parsed.data.features?.Paperback?.replace(' pages', '')) : undefined;
+
+      if (parsed.data.features.Published) {
+        parsed.data.date = Dates.reformat('1 ' + parsed.data.features.Published, 'dd MMMM yyyy', 'yyyy-MM-dd');
+        parsed.data.features.Published = undefined;
+      }
+
+      let book = BookSchema.parse({
+        _key: parsed.data.id?.isbn10 ?? parsed.data.id?.isbn13,
+        id: parsed.data.id,
+
+        title: parsed.data.title,
+        subtitle: parsed.data.subtitle,
+        date: { published: parsed.data.date },
+        creator: parsed.data.bylines,
+
+        pages: parsed.data.pages,
+        image: parsed.data.image,
+        url: parsed.data.url,
+
+        publisher: 'Rosenfeld Media',
+        series: series ? { name: 'Digital Reality Checks' } : undefined,
+        imprint: imprint ? 'Two Waves Books' : undefined,
+        format: 'Paperback',
+        dimensions: { width: 6, height: 9 },
+
+        meta: { owned }
+      });
+ */
+
 const template: ExtractTemplateObject = {
   $: 'div.u_tpl-single-product',
   title: 'h1[itemprop=name]',

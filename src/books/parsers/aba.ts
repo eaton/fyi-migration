@@ -19,6 +19,55 @@ export async function abookapart(html: string) {
   return BookSchema.parse(book);
 }
 
+/**
+      if (parsed.data.features.Published) {
+        let dateString = parsed.data.features.Published.replace('First Ed. ', '');
+        dateString = dateString.split(';')[0]?.replace(/\s+/, ' ');
+        parsed.data.date = Dates.reformat(dateString, 'MMM d, yyyy', 'yyyy-MM-dd');
+      }
+
+      for (const byline of parsed.data.bylines ?? []) {
+        byline.name ??= byline.boldName;
+        byline.boldName = undefined;
+        byline.contribution = 'author';
+      }
+
+      const isbn = isbnOverride || parsed.data.features?.['ISBN'];
+      if (typeof isbn === 'string') {
+        parsed.data.id ??= {};
+        if (audit(isbn).validIsbn) {
+          parsed.data.id.isbn10 = asIsbn10(isbn);
+          parsed.data.id.isbn13 = asIsbn13(isbn);
+        }
+      }
+
+      parsed.data.pages = parsed.data.features?.Paperback ? Number.parseInt(parsed.data.features?.Paperback?.replace(' pages', '')) : undefined;
+
+      const book = BookSchema.parse({
+        _key: parsed.data.id?.isbn10 ?? parsed.data.id?.isbn13,
+        id: parsed.data.id,
+
+        title: parsed.data.title,
+        subtitle: parsed.data.subtitle,
+        pages: parsed.data.pages,
+        date: parsed.data.date ? { published: parsed.data.date } : undefined,
+        creator: parsed.data.bylines,
+
+        image: imgPath + imageSlug,
+        url: parsed.data.url,
+
+        publisher: 'A Book Apart',
+        series: {
+          name: 'aba' ? 'A Book Apart' : 'A Book Apart Briefs',
+          order: seriesOrder
+        },
+        format: 'Paperback',
+        dimensions: { width: 5.5, height: 8.5 },
+
+        meta: { owned }
+      });
+ */
+
 const template: ExtractTemplateObject = {
   title: 'h1.product-header__header span.product-header__title | trim',
   subtitle: 'div.product-header__description > p',
