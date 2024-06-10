@@ -16,8 +16,9 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
 ): Promise<z.infer<T>[]> {
   const target = `https://docs.google.com/spreadsheets/d/${documentId}/gviz/tq`;
   
-  const query: Record<string, string> = {};
+  const query: Record<string, string | number> = {};
   query['tqx'] = 'out:csv';
+  query['headers'] = 1;
 
   if (is.number(sheet) || is.numericString(sheet)) {
     query['gid'] = sheet.toString();
@@ -25,11 +26,13 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
     query['sheet'] = sheet;
   }
 
-  const csv = await wretch(target)
+  const raw = await wretch(target)
     .addon(QueryStringAddon)
     .query(query)
     .get()
-    .text(csv => new Csv().parse(csv));
+    .text();
+
+  const csv = new Csv().parse(raw);
 
   const emptied = emptyDeep(csv) as Record<string, unknown>[]
   const unflattened = emptied.map(row => unflatten(row));  

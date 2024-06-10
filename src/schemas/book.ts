@@ -5,8 +5,7 @@ import { recordWithHints } from './helpers.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
-  ids: recordWithHints(z.coerce.string(), [
-    'isbn',
+  ids: recordWithHints(z.coerce.string().optional(), [
     'ean',
     'upc',
     'isbn10',
@@ -18,6 +17,8 @@ export const BookSchema = CreativeWorkSchema.extend({
   dates: recordWithHints(z.coerce.date(), [
     'publication',
     'copyright',
+    'obtained',
+    'read',
   ]).optional(),
   subtitle: z.string().optional(),
   edition: z.string().optional(),

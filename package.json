@@ -76,6 +76,7 @@
     "mdb-reader": "^3.0.0",
     "micromatch": "^4.0.7",
     "obby": "^1.2.0",
+    "p-queue": "^8.0.1",
     "pino": "^9.1.0",
     "pino-pretty": "^11.1.0",
     "public-google-sheets-parser": "github:eaton/public-google-sheets-parser",

@@ -1,15 +1,15 @@
 import { Migrator } from './shared/migrator.js';
-
+import * as blogs from './blogs/index.js';
+import * as textfiles from './textfiles/index.js';
 import { TwitterMigrator } from './twitter/twitter.js';
-// import { BookMigrator } from './books/books.js';
-
-//import { TalkMigrator } from './misc/talks.js';
+import { BookMigrator } from './books/books.js';
+import { ArticleReprintMigrator } from './work/article-reprints.js';
+import { TalkMigrator } from './work/talks.js';
 
 export class AllMigrations extends Migrator {
   override async run() {
     this.log.level = 'debug';
 
-    /*     
     await new blogs.PredicateNetMigrator({ logger: this.log }).run();
     await new blogs.LivejournaMigrator({ logger: this.log }).run();
     await new blogs.FuturismMigrator({ logger: this.log }).run();
@@ -25,13 +25,12 @@ export class AllMigrations extends Migrator {
     await new textfiles.TextJournalsMigrator({ logger: this.log }).run();
     await new textfiles.TextFictionMigrator({ logger: this.log }).run();
     await new textfiles.TextEmailMigrator({ logger: this.log }).run();
- */
+    
     await new TwitterMigrator({ logger: this.log }).run();
     await new TwitterMigrator({ logger: this.log }).run();
+
+    await new TalkMigrator({ logger: this.log }).run();
   }
 }
 
-// await new BookMigrator({ logger: { level: 'debug' } }).run();
-// await new TalkMigrator({ logger: { level: 'debug' } }).run();
-
-await new AllMigrations().run();
+await new BookMigrator({ logger: { level: 'debug' } }).run();

@@ -11,11 +11,10 @@ export function oneOrMany<T extends z.ZodTypeAny>(schema: T, expand = false) {
 export function recordWithHints<T extends z.ZodTypeAny>(
   schema: T,
   slots: string[] = [],
-  slotsAreOptional = true,
 ) {
   if (slots.length) {
     const slotSchemas = Object.fromEntries(
-      slots.map(s => [s, slotsAreOptional ? schema.optional() : schema]),
+      slots.map(s => [s, schema]),
     );
     return z.record(schema).and(z.object(slotSchemas));
   } else {

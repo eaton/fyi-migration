@@ -1,26 +1,20 @@
 import 'dotenv/config';
-import { z } from 'zod';
-import { fetchGoogleSheet } from './util/fetch-google-sheet.js';
+import { Fetcher } from './shared/fetcher.js'
+import jetpack from '@eatonfyi/fs-jetpack';
 
-const schema = z.object({
-  id: z.string(),
-  name: z.string(),
-  date: z.coerce.date().optional(),
-  sessionUrl: z.string().optional(),
-  keynoteFile: z.string().optional(),
-  featuredVersion: z.coerce.boolean().default(false),
-  event: z.object({
-    id: z.string(),
-    name: z.string(),
-    url: z.string().optional(),
-    city: z.string().optional(),
-    country: z.string().optional(),
-    dates: z.object({
-      start: z.coerce.date().optional(),
-      end: z.coerce.date().optional(),
-    }).optional()
-  }).optional()
-});
+const dir = jetpack.dir('/Users/jeff/Work')
+const proxies = dir.read('all-proxies.txt')?.split('\n') ?? [];
+const goodProxies = dir.createWriteStream('good-proxies.txt')
 
-const data = await fetchGoogleSheet(process.env.GOOGLE_SHEET_ID!, 'talks', schema);
-console.log(data);
+for (const p of proxies) {
+  const f = new Fetcher({ proxies: [p] });
+  const result = await f.fetcher.headers({
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0'
+  }).get(`https://www.amazon.com/dp/0895770105`).text();
+  if (result.match('<h4>Type the characters you see in this image:</h4>') === null) {
+    console.log('GOOD: ' + p);
+    goodProxies.write(p + '\n');
+  } else {
+    console.log('BAD: ' + p);
+  }
+}
