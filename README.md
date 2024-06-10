@@ -6,31 +6,16 @@ What's in-scope? An awful lot of stuff. Long term this will likely be split out 
 
 Really, most of this just grew out of an earnest if compulsive desire to figure out how much written crap I've actually pushed out onto the internet over the years. If you want to count shit, well, you have to organize it. And if you want to organize it, you need *test harnesses*, and now you're debating the merits of different Typescript document storage abstractions. It's an ugly cycle, but progress is made.
 
-## Weird Oldschool Stuff
-
-- [x] Textfiles covering the mid-late 90s
-  - [x] Including a cluster of very bad fiction
-- [ ] The AOL.com era
-  - [ ] The Kumquat Kuriosity's Home Page Of Fun
-  - [ ] Mac Reviews Digest
-- [ ] wwa.com
-  - [ ] home page permutations and redesigns
-  - [ ] Hope Station, Hope Station Phoenix
-  - [ ] Cornerstone: Off The Beaten Path
-- [ ] dancingmongoose.com
-- [x] predicate.net
-- [ ] ferretshock.com
-- [ ] predicate.org, when it was my personal site
-- [ ] havana-mod.com, when it was a pseudo-aggregator
-
 ## Blogs
 
 Posts and entries from the assorted places I've written over the years. These are being imported as `post` content in Eleventy.
 
 `Textfiles` and `Livejournal` in particular will probably need some post-migration curation and careful consideration. Many of those posts were never intended to be publicly published, are extremely full of teen and post-college cringe, or contain snippets of personal information about folks who probably didn't anticipate their melodrama spilling out.
 
+These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entities linked to a parent `Blog` entity, depending on the nature of the content. Comments will naturally be exposed as `Comment` entities.
+
 - [ ] Blogger
-- [ ] TypePad
+- [x] TypePad
 - [x] Livejournal (minus Textfiles reprints)
 - [x] MovableType
   - [x] Viapositiva
@@ -60,15 +45,6 @@ Posts and entries from the assorted places I've written over the years. These ar
 - [ ] Usenet
 - [ ] Metafilter
 
-## Photos
-
-Whenever possible I'll lean on hotlinking to Flickr for the large photos; keeping them local is likely to be horrifyingly bandwidth intensive.
-
-- [ ] Livejournal photo posts
-- [ ] Instagram selections
-- [ ] Flickr selections
-- [ ] iCloud Photo selections
-
 ## Appearances
 
 Places I've written, presented, been quoted, and so on.
@@ -85,10 +61,11 @@ Places I've written, presented, been quoted, and so on.
 
 ## Projects
 
-This is a very, very wacky grab bag and covers things I've done for funsies as well as work projects.
+This is a very, very wacky grab bag and covers things I've done for funsies as well as work projects. Some of these will end up as line-item entries while others will get a dedicated page, or even multiple pages.
 
 - [ ] Insert Content Here
 - [ ] Christian Rightcast
+- [ ] A Very Special Episode
 - [ ] Quarantoons
 - [ ] Web Sites
 - [ ] The Icebox (my extremely old sites)
@@ -105,21 +82,24 @@ This is a very, very wacky grab bag and covers things I've done for funsies as w
 
 ## Work History
 
-Employment timeline; this is less of a primary focus and more splashover data from the project archive.
+Employment timeline; this is less of a primary focus and more splashover data from the project archive. Each of these will also be exposed as one or more Schema.org `Role` entities, linking me to a particular `Organization`.
 
 - [ ] Kidstuff
 - [ ] America Online
+- [ ] Freelance Writer, Developer
 - [ ] Robis
 - [ ] Willow Creek
 - [ ] Geneer
 - [ ] Retail Vision Systems
 - [ ] Lullabot
   - [ ] Buzzr (AKA Project Codename)
+- [ ] Nerdhaus
+- [ ] Eaton FYI
 - [ ] Autogram
 
 ## Links
 
-Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc.
+Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc. These are unlikely to be exposed as Schema.org entities.
 
 - [ ] Delicious
 - [ ] Pinboard
@@ -128,13 +108,40 @@ Saved and shared links over the years. Accurately capturing the dates/times, and
 - [ ] Blogrolls
 - [ ] Autogram Links
 - [ ] Old sites (MDB files & HTML extraction)
+- [ ] Omnivore
+
+## Photos
+
+Whenever possible I'll lean on hotlinking to Flickr for the large photos; keeping them local is likely to be horrifyingly bandwidth intensive.
+
+- [ ] Livejournal photo posts
+- [ ] Instagram selections
+- [ ] Flickr selections
+- [ ] iCloud Photo selections
+
+## Weird Oldschool Stuff
+
+- [x] Textfiles covering the mid-late 90s
+  - [x] Including a cluster of very bad fiction
+- [ ] The AOL.com era
+  - [ ] The Kumquat Kuriosity's Home Page Of Fun
+  - [ ] Mac Reviews Digest
+- [ ] wwa.com
+  - [ ] home page permutations and redesigns
+  - [ ] Hope Station, Hope Station Phoenix
+  - [ ] Cornerstone: Off The Beaten Path
+- [ ] dancingmongoose.com
+- [x] predicate.net
+- [ ] ferretshock.com
+- [ ] predicate.org, when it was my personal site
+- [ ] havana-mod.com, when it was a pseudo-aggregator
 
 ## Stats
 
 Arbitrary but interesting stuff I'll be doing some dataviz and explanitory posts about.
 
 - [ ] Travel
-- [ ] Email
+- [ ] Email patterns
 - [ ] Words / Topics / Language
 - [ ] Linkrot
 - [ ] Twitter Engagement
