@@ -5,11 +5,13 @@ import { CreativeWork } from '../schemas/creative-work.js';
 import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { NormalizedUrl } from '@eatonfyi/urls';
-import { expandIds } from './normalize-ids.js';
+import { expandIds, getBestId } from './normalize-ids.js';
 
 export interface BookMigratorOptions extends FetcherOptions {
   documentId?: string;
   sheetName?: string;
+  reFetch?: boolean;
+  reParse?: boolean;
 }
 
 const defaults: BookMigratorOptions = {
@@ -18,7 +20,8 @@ const defaults: BookMigratorOptions = {
   output: 'src/books',
   documentId: process.env.GOOGLE_SHEET_LIBRARY,
   sheetName: 'books',
-  concurrency: 1
+  concurrency: 1,
+  reParse: true
 };
 
 const PartialBookSchema = BookSchema.partial();
@@ -60,23 +63,41 @@ export class BookMigrator extends Fetcher {
     // The raw BookList is sparse: it only includes basic identification information
     // for each book, *and* overrides for properties that are known to be borked
     // in the data we parse from Amazon's APIs.
-
     partialBooks = emptyDeep(partialBooks.map(b => this.populateIds(b))) ?? [];
     
     // Write a copy of the original book list; doesn't hurt.
     this.cache.write('books.ndjson', partialBooks);
-
-    const notes = partialBooks.filter(b => b.notes).map(b => ({ id: b.id, text: b.note }));
-    if (notes.length) {
-      this.cache.write('notes.ndjson', notes);
-    }
     
-    // Now we populate the HTML cache
+    const htmlToParse = new Map<Partial<Book>, string | undefined>();
+
+    // Populate the pool of cached HTML
     for (const book of partialBooks) {
-      const url = this.getBookParseUrl(book)
-      if (url) {
-        await this.fetchBookPage(book.url);
+      const url = this.getBookParseUrl(book);
+      const cacheFile = `html/${nanohash(url)}.html`;
+      if (!url) {
+        this.log.error(`No parsable URL for ${book.id}`);
+      } else if (this.cache.exists(cacheFile) && !this.options.reFetch) {
+        const html = this.cache.read(cacheFile);
+        if (html) {
+          htmlToParse.set(book, html);
+        } else {
+          this.log.error(`Empty cache file for ${book.id}; removing file.`);
+          this.cache.remove(cacheFile);
+        }
+      } else {
+        const html = await this.fetchBookPage(url);
+        if (html) {
+          htmlToParse.set(book, html);
+          this.cache.write(cacheFile, html);
+          this.log.debug(`Fetched HTML for ${book.id}`)
+        } else {
+          this.log.error(`Fetched empty HTML for ${book.id}`)
+        }
       }
+    }
+
+    for (const [book, html] of htmlToParse.entries()) {
+      // Do stuff here
     }
 
     return;
@@ -98,6 +119,7 @@ export class BookMigrator extends Fetcher {
   
   protected populateIds(book: Partial<Book>) {
     book.ids = expandIds(book.ids);
+    book.id = getBestId(book.ids);
     return book;
   }
 
@@ -130,7 +152,7 @@ export class BookMigrator extends Fetcher {
             this.cache.write(`html/${hash}.html`, html);
             return html;
           } else {
-            // this.log.debug(`Bad cache for ${url.toString()}`);
+            this.log.debug(`Bad cache for ${url.toString()}`);
             // throw new Error('Bad cache');
           }
         });
