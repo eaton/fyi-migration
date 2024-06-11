@@ -31,7 +31,7 @@ export class Fetcher extends Migrator {
     this.fetcher =
       opt.fetch ??
       wretch().headers({
-        'User-Agent': this.options.userAgent ?? 'Scraper',
+        'User-Agent': this.options.userAgent ?? 'Eaton',
       });
 
     if (opt.proxies.length) {

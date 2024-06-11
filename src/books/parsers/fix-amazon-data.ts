@@ -2,27 +2,31 @@ import { reformat } from "@eatonfyi/dates";
 import { ParsedAmazonData } from "./amazon-schema.js";
 
 export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<string, string[]> = {}) {
-  book.title = book.title?.trim();
 
-  const image = book.images?.hires ?? book.images?.src;
-  if (image) {
-    book.image = fixAmazonImage(image);
-  }
-  book.format = book.format?.trim();
-
-  book.creator = fixAmazonCreator(book.creator_entries ?? []);
-
+  // A bunch of book features and metadata are tucked into these chunks
+  // of parsed markup, we turn them into key/value pairs for convenience.
   const info = mapKeyValues(book.info);
   const carousel = mapKeyValues(book.carousel);
 
-  // Coerce a bunch of IDs
+  // Coerce a bunch of IDs — these are often messy, but useful.
   book.ids ??= {};
   if (book.asin) book.ids.asin = book.asin;
   if (carousel.isbn10) book.ids.isbn10 = carousel.isbn10;
   if (carousel.isbn13) book.ids.isbn13 = carousel.isbn13;
   if (info.page_number_source_isbn) book.ids.isbn10 ??= info.page_number_source_isbn;
   
-  // Attempt to extract series data
+  // Creators are keyed by their roles in the book production.
+  // Split this out for convenience.
+  book.creator = mapAmazonCreators(book.creator_entries ?? []);
+
+  // Boil down the small and (potentially) high res versions into
+  // a single url, then remove the CDN scaling chunks of the URL.
+  const image = book.images?.hires ?? book.images?.src;
+  if (image) {
+    book.image = fixAmazonImage(image);
+  }
+  
+  // Attempt to extract series data from the carousel and feature info.
   if (carousel.series) {
     book.series = carousel.series?.trim();
   }
@@ -31,21 +35,43 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
     book.position = order;
   }
 
+  // Publisher and publication data information is often muddled.
+  // We'll make a quick attempt to tease them apart; this is usually enough.
   book.publisher ??= carousel.publisher || info.publisher;
   book.date = fixAmazonDate(carousel.publication_date || info.publication_date);
   if (info.publication_date) book.publisher = book.publisher?.replace(' (' + info.publication_date + ')', '');
   
+  // Page count is stored in a few different places depending on
+  // the format of the book. We don't care TOO much, since the ebook
+  // page count is almost always derived from the print version anyways.
   const pages = carousel.ebook_pages || carousel.fiona_pages || info.ebook_pages || info.print_length;
   if (pages) {
     book.pages = Number.parseInt(pages);
   }
+  
+  // Try to parse out the book dimensions, which can be tricky.
+  if (carousel.dimensions) {
+    carousel.dimensions = carousel.dimensions.replaceAll(/\s+/g, '').replace(/inches/i, '');
+    let [width, depth, height] = carousel.dimensions.split('x');
+    if (depth && !height) {
+      height = depth;
+      depth = '';
+      width = width.trim();
+    }
+    if (width || depth || height) {
+      book.dimensions = {};
+      if (width) book.dimensions.width = Number.parseFloat(width);
+      if (height) book.dimensions.height = Number.parseFloat(height);
+      if (depth) book.dimensions.depth = Number.parseFloat(depth);
+    }
+  }
 
-
+  // A cluster of standardized fixes for co-mingled and duplicated metadata
+  // across the different fields.
   book = applyMetadataPatterns(book, patterns);
   book = splitTitle(book);
   book = fixAmazonTitles(book);
   book = removeDuplicateMetadata(book);
-
   return book;
 }
 
@@ -78,7 +104,7 @@ function splitTitle(book: ParsedAmazonData) {
   return book;
 }
 
-export function fixMetaDuplicatedInTitle(book: ParsedAmazonData) {
+function fixMetaDuplicatedInTitle(book: ParsedAmazonData) {
   if (!book.title) return book;
   const matches = book.title?.matchAll(/\s*([([](.+)[)\]])\s*/g) ?? []
 
@@ -125,7 +151,8 @@ function isCurSubtitle(input: string, book: ParsedAmazonData) {
 
 function similar(input: string | undefined, comparison: string | undefined) {
   if (input === undefined || input.length === 0) return false;
-return (strip(input) === strip(comparison));
+  return (strip(input) === strip(comparison));
+}
 
 function strip(i: string | undefined) {
   let o = i?.trim();
@@ -134,7 +161,6 @@ function strip(i: string | undefined) {
   o = o.replaceAll(/[\s-_()[].]/g, '');
   o = o.toLocaleLowerCase();
   return o;
-  }
 }
 
 function fixAmazonTitles(book: ParsedAmazonData) {
@@ -211,32 +237,28 @@ function fixAmazonTitles(book: ParsedAmazonData) {
 }
 
 function removeDuplicateMetadata(book: ParsedAmazonData) {
-  if (book.title === undefined) return book;
+  // We might want to be cautious about this. It's ... particularly agressive.
+  book = fixMetaDuplicatedInTitle(book);
 
-  if (book.publisher) book.title = book.title.replace(`${book.publisher}`, '').replaceAll('()', '').trim();
-  if (book.imprint) {
-    book.title = book.title.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
-    if (book.publisher) {
-      book.publisher = book.publisher.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
-    }
+  // The imprint and edition fields often ends up in the publisher field.
+  if (book.imprint && book.publisher) {
+    book.publisher = book.publisher.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
   }
-  if (book.edition) {
-    book.title = book.title.replace(`${book.edition}`, '').replaceAll('()', '').trim();
-    if (book.publisher) {
-      book.publisher = book.publisher.replace(`${book.edition}`, '').replaceAll('()', '').trim();
-    }
+  if (book.edition && book.publisher) {
+    book.publisher = book.publisher.replace(`${book.edition}`, '').replaceAll('()', '').trim();
   }
+
+  // A few series end up with 'Related to: ' and 'Collects books from: '
+  // prefixes when we don't REALLY care that much about the distinction.
   if (book.series) {
-    book.title = book.title?.replace(wrap(book.series), '').trim()
-
     if (book.series.startsWith('Related to:')) {
       book.series = book.series.replace('Related to: ', '');
     }
-
     if (book.series.startsWith('Collects books from:')) {
       book.series = book.series.replace('Collects books from: ', '');
     }
   }
+
   return book;
 }
 
@@ -268,7 +290,7 @@ function fixAmazonImage(input?: string) {
  * Strips out unnamed creators and maps multiple creators and contributors to our
  * generalized role structure
  */
-function fixAmazonCreator(input: { name?: string, url?: string, role?: string }[]) {
+function mapAmazonCreators(input: { name?: string, url?: string, role?: string }[]) {
   const output: Record<string, string[]> = {};
   
   for (const c of input) {

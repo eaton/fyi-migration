@@ -91,6 +91,7 @@ export const schema = z.object({
   format: optionalString,
   date: optionalString,
   creator: z.record(z.array(z.string())).optional(),
+  dimensions: z.record(z.number()).optional(),
 
   creator_entries: z
     .array(
