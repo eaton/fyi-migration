@@ -280,7 +280,7 @@ export class Migrator {
 
   /**
    * Constructs a two-part safe filename from a date identifier (input.date,
-   * input.dates.published, and input.dates.start will be checked in sequence),
+   * input.dates.publish, and input.dates.start will be checked in sequence),
    * and a document identifier (input.name, input.slug, and input.id will be
    * used in that order). If both are found, `yyyy-MM-dd-slug-text.md` will be
    * generated.

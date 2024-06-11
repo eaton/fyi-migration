@@ -27,7 +27,7 @@ function parseStringDimensions(input: string) {
     weightUom: undefined as string | undefined,
     raw: input,
   };
-  
+
   const [width, height, depth] = output.raw.split(/[x⨯×]/g).map(s => s.trim());
   if (width) output.width = Number.parseFloat(width);
   if (height) output.height = Number.parseFloat(height);

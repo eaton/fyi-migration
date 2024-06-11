@@ -1,20 +1,20 @@
-import jetpack from "fs-jetpack";
-import { BookSchema } from "./book.js";
+import jetpack from 'fs-jetpack';
 import { z } from 'zod';
+import { BookSchema } from './book.js';
 
 type BookShape = z.infer<typeof BookSchema>;
 const PartialBook = BookSchema.optional();
 type PartialBookShape = z.infer<typeof PartialBook>;
 
 type Rules = {
-  imprints?: string[],
-  publishers?: string[],
-  series?: string[],
-  editions?: string[],
-  overrides?: Record<string, PartialBookShape>,
-  titleCase?: boolean,
-  trailingPunctuation?: boolean
-}
+  imprints?: string[];
+  publishers?: string[];
+  series?: string[];
+  editions?: string[];
+  overrides?: Record<string, PartialBookShape>;
+  titleCase?: boolean;
+  trailingPunctuation?: boolean;
+};
 
 let loadedRules: Rules | undefined;
 
@@ -54,13 +54,14 @@ export function fixMetadata(input: BookShape): BookShape {
       book.title = book.title.replace(wrap(value), '').trim();
     } else {
       const regex = new RegExp(` \((${value}),? (Book|#)?(\d+)\)`);
-      const [match, series, indicator, seriesOrder] = regex.exec(book.title) ?? [];
+      const [match, series, indicator, seriesOrder] =
+        regex.exec(book.title) ?? [];
       if (match) book.title = book.title.replace(match, '').trim();
       if (series || seriesOrder) {
         book.series ??= {
           name: series.trim().length ? series.trim() : undefined,
-          order: seriesOrder ? Number.parseInt(seriesOrder) : undefined
-        }
+          order: seriesOrder ? Number.parseInt(seriesOrder) : undefined,
+        };
       }
     }
   }
@@ -68,7 +69,7 @@ export function fixMetadata(input: BookShape): BookShape {
     if (book.title.indexOf(wrap(value)) > 0) {
       book.title = book.title.replace(wrap(value), '').trim();
       book.edition ??= value;
-    } else  if (book.title.endsWith(', ' + value)) {
+    } else if (book.title.endsWith(', ' + value)) {
       book.title = book.title.replace(', ' + value, '').trim();
       book.edition ??= value;
     }

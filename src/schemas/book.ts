@@ -15,7 +15,7 @@ export const BookSchema = CreativeWorkSchema.extend({
     'dds',
   ]),
   dates: recordWithHints(z.coerce.date(), [
-    'publication',
+    'publish',
     'copyright',
     'obtained',
     'read',

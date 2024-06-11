@@ -1,8 +1,8 @@
-import { Migrator } from './shared/migrator.js';
 import * as blogs from './blogs/index.js';
+import { BookMigrator } from './books/books.js';
+import { Migrator } from './shared/migrator.js';
 import * as textfiles from './textfiles/index.js';
 import { TwitterMigrator } from './twitter/twitter.js';
-import { BookMigrator } from './books/books.js';
 import { ArticleReprintMigrator } from './work/article-reprints.js';
 import { TalkMigrator } from './work/talks.js';
 
@@ -25,7 +25,7 @@ export class AllMigrations extends Migrator {
     await new textfiles.TextJournalsMigrator({ logger: this.log }).run();
     await new textfiles.TextFictionMigrator({ logger: this.log }).run();
     await new textfiles.TextEmailMigrator({ logger: this.log }).run();
-    
+
     await new TwitterMigrator({ logger: this.log }).run();
     await new TwitterMigrator({ logger: this.log }).run();
 

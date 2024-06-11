@@ -3,7 +3,7 @@ import { oneOrMany } from './helpers.js';
 
 export const ThingSchema = z
   .object({
-    id: z.string(),
+    id: z.coerce.string(),
     ids: z.record(z.string()).optional(),
     type: z.string().default('Thing'),
     name: z.string().optional(),

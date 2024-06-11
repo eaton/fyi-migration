@@ -18,18 +18,19 @@ export function expandIds(input?: IdList): IdList {
 }
 
 export function isbnFromAsin(input: IdList): IdList {
-  if (input.asin && asin.isIsbn10(input.asin)) {
-    input.isbn10 ??= input.asin;
+  if (input.asin && isbn(input.asin)?.isIsbn10) {
+    input.isbn10 = isbn(input.asin)?.isbn10?.padStart(10, '0');
   }
   return input;
 }
 
 export function expandISBNs(input: IdList): IdList {
-  if (input.isbn10 && !input.isbn13) {
+  if (input.isbn10 && (!input.isbn13 || !isbn.isbn13(input.isbn13))) {
     input.isbn13 = isbn(input.isbn10)?.isbn13;
-  } else if (input.isbn13 && !input.isbn10) {
+  } else if (input.isbn13 && (!input.isbn10 || !isbn.isbn10(input.isbn10))) {
     input.isbn10 = isbn(input.isbn13)?.isbn10;
   }
+
   if (input.isbn10) input.isbn10.padStart(10, '0');
   if (input.asin && asin.isIsbn10(input.asin)) input.asin = input.asin.padStart(10, '0');
   return input;

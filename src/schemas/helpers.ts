@@ -14,7 +14,7 @@ export function recordWithHints<T extends z.ZodTypeAny>(
 ) {
   if (slots.length) {
     const slotSchemas = Object.fromEntries(
-      slots.map(s => [s, schema]),
+      slots.map(s => [s, schema.optional()]),
     );
     return z.record(schema).and(z.object(slotSchemas));
   } else {
