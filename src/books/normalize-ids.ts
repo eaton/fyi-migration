@@ -32,6 +32,7 @@ export function expandIds(input?: IdList): IdList {
 export function isbnFromAsin(input: IdList): IdList {
   if (input.asin && isbn(input.asin)?.isIsbn10) {
     input.isbn10 = isbn(input.asin)?.isbn10?.padStart(10, '0');
+    input.asin = undefined;
   }
   return input;
 }

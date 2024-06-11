@@ -3,6 +3,16 @@ import { ParsedAmazonData } from "./amazon-schema.js";
 
 export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<string, string[]> = {}) {
 
+  let breadcrumbs = book.breadcrumbs ? book.breadcrumbs.map(b => b.name) : [];
+  if (breadcrumbs) {
+    if (breadcrumbs[1] === 'Kindle eBooks') {
+      breadcrumbs = breadcrumbs.slice(2);
+    } else if (breadcrumbs[0] === 'Books') {
+      breadcrumbs = breadcrumbs.slice(1);
+    }
+    book.category = breadcrumbs[0];
+  }
+  
   // A bunch of book features and metadata are tucked into these chunks
   // of parsed markup, we turn them into key/value pairs for convenience.
   const info = mapKeyValues(book.info);
@@ -235,10 +245,6 @@ function fixAmazonTitles(book: ParsedAmazonData): ParsedAmazonData {
     book.title = 'The ' + book.title?.replace(', The', '');
   }
 
-  if (book?.series && book.subtitle?.endsWith(wrap(book?.series))) {
-    book.subtitle = book.subtitle.replace(wrap(book?.series), '').trim();
-  }
-
   // Some of our edits may leave dangling colons at the end of the title —
   // catch them.
   book.title = book.title.replace(/: $/, '');
@@ -258,14 +264,23 @@ function removeDuplicateMetadata(book: ParsedAmazonData): ParsedAmazonData {
     book.publisher = book.publisher.replace(`${book.edition}`, '').replaceAll('()', '').trim();
   }
 
-  // A few series end up with 'Related to: ' and 'Collects books from: '
-  // prefixes when we don't REALLY care that much about the distinction.
+  book.subtitle = book.subtitle?.replace(`(${book.imprint})`, '').trim();
+  book.subtitle = book.subtitle?.replace(`(${book.series})`, '').trim();
+  book.title = book.title?.replace(`(${book.imprint})`, '').trim();
+  book.title = book.title?.replace(`(${book.series})`, '').trim();
+
   if (book.series) {
+    // A few series end up with 'Related to: ' and 'Collects books from: '
+    // prefixes when we don't REALLY care that much about the distinction.
+
     if (book.series.startsWith('Related to:')) {
       book.series = book.series.replace('Related to: ', '');
     }
     if (book.series.startsWith('Collects books from:')) {
       book.series = book.series.replace('Collects books from: ', '');
+    }
+    if (book.series.startsWith('Part of:')) {
+      book.series = book.series.replace('Part of: ', '');
     }
   }
 

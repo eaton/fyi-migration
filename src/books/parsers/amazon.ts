@@ -28,6 +28,7 @@ export async function amazon(html: string, patterns?: Record<string, string[]>) 
     creator: data.creator,
     image: data.image,
     dimensions: data.dimensions,
+    category: data.category,
   };
 
   if (data.date) book.dates = { publish: new Date(data.date) }

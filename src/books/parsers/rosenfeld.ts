@@ -25,6 +25,7 @@ export async function rosenfeldmedia(html: string) {
     format: 'Paperback',
     dimensions: { width: 6, height: 9 },
     image: data.image,
+    category: 'Computers & Technology'
   };
 
   const authors: string[] = [];

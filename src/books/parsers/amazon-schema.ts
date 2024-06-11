@@ -21,6 +21,11 @@ export const template: ExtractTemplateObject = {
   // one.
   purchased: '#booksInstantOrderUpdate',
 
+  breadcrumbs: [{
+    $: '#wayfinding-breadcrumbs_feature_div ul span.a-list-item > a',
+    name: '| text'
+  }],
+
   // Author URLs also exist, but are messy; we'd rather just ignore them.
   // Also note that if one person has multiple roles in a work, they get one
   // entry in this list with multiple roles jammed into one line. That needs
@@ -93,6 +98,8 @@ export const schema = z.object({
   date: optionalString,
   creator: z.record(z.array(z.string())).optional(),
   dimensions: DimensionsSchema.optional(),
+  category: optionalString,
+  breadcrumbs: z.array(z.object({ name: z.string() })).optional(),
 
   creator_entries: z
     .array(

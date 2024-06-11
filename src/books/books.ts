@@ -118,7 +118,7 @@ export class BookMigrator extends Fetcher {
       } else {
         const url = this.getBookParseUrl(book);
         const cacheFile = `${nanohash(url)}.html`;
-  
+        
         if (this.html.exists(cacheFile) && !this.options.reFetch) {
           htmlToParse.set(book, cacheFile);
         } else if (url) {
@@ -126,9 +126,9 @@ export class BookMigrator extends Fetcher {
           if (html) {
             htmlToParse.set(book, cacheFile);
             this.html.write(cacheFile, html);
-            this.log.debug(`Fetched HTML for ${book.id}`);
+            this.log.debug(`Fetched HTML for ${url}`);
           } else {
-            this.log.error(`Fetched empty HTML for ${book.id}`);
+            this.log.error(`Fetched empty HTML for ${url}`);
           }
         } else {
           this.log.error(`No cache, no URL for ${book.id}`);
@@ -153,6 +153,15 @@ export class BookMigrator extends Fetcher {
             this.log.error(`Empty parsed data for ${book.url}`);
           } else {
             const merged = this.populateIds(merge(parsedData, emptyDeep(book)) as Partial<Book>);
+            
+            // Our merges are duplicating array elements, that's no good.
+            // This is a quick and dirty fix for it.
+            for (const [creatorType, creators] of Object.entries(merged.creator as Record<string, string[]>)) {
+              if (merged.creator && creators.length > 1) {
+                merged.creator[creatorType] = [...new Set<string>(creators).values()]
+              }
+            }
+
             const final = BookSchema.parse(merged);
 
             if (final.id.length < 10) {
@@ -176,9 +185,9 @@ export class BookMigrator extends Fetcher {
       this.cache.write('book-notes.json', this.notes);
     }
 
-    for (const book of Object.values(this.parsedBooks)) {
+    for (const book of Object.values(this.bookData)) {
       if (!this.covers.exists(this.getCoverFilename(book))) {
-        await this.fetchBookCover(book);
+        book.image = await this.fetchBookCover(book);
       }
     }
 
@@ -201,8 +210,15 @@ export class BookMigrator extends Fetcher {
   }
 
   override async finalize(): Promise<unknown> {
-    this.cache.copy('book-data.ndjson', this.root.path('_data/books.ndjson'), { overwrite: true });
+    this.cache.copy('book-data.ndjson', this.root.path('src/_data/books.ndjson'), { overwrite: true });
     this.copyAssets(this.cache.path('images'), 'books');
+
+    // Finally, we're going to spit out a CSV version of the original book index,
+    // for our own purposes. NOTE that this currently truncates creator lists and
+    // appears to hicup on certain overlaps. We need a better way to round-trip
+    // the information.
+    const flattened = Object.values(this.bookData).map(makeFlattenedBook);
+    this.cache.write('replacement-book-list.csv', flattened);
     return;
   }
 
@@ -215,7 +231,7 @@ export class BookMigrator extends Fetcher {
       const urlId = book.ids?.asin ?? book.ids?.isbn10;
       if (urlId && book.url === undefined) {
         url = new NormalizedUrl(
-          `https://amazon.com/dp/${urlId}`,
+          `https://www.amazon.com/dp/${urlId}`,
         );
       }
     }
@@ -232,7 +248,8 @@ export class BookMigrator extends Fetcher {
   protected async fetchBookCover(book: Book) {
     const file = this.getCoverFilename(book);
     if (book.image && file) {
-      return this.covers.downloadAsync(file, book.image);
+      await this.covers.downloadAsync(file, book.image);
+      return file;
     }
     return;
   }
@@ -269,5 +286,42 @@ export class BookMigrator extends Fetcher {
           this.log.debug(`Bad cache for ${url.toString()}`);
         }
       });
+  }
+}
+
+function makeFlattenedBook(book: Book) {
+  return {
+    'id': '',
+    'category': book.category,
+    'ids.isbn10': book.ids.isbn10,
+    'ids.isbn13': book.ids.isbn13,
+    'ids.asin': book.ids.asin,
+    'ids.upc': book.ids.upc,
+    'ids.ddc': book.ids.ddc,
+    'ids.loc': book.ids.loc,
+    'ids.custom': book.ids.custom,
+    'name': book.name,
+    'subtitle': book.subtitle,
+    'series': book.series,
+    'position': book.position,
+    'publisher': book.publisher,
+    'imprint': book.imprint,
+    'edition': book.edition,
+    'owned': book.owned,
+    'source': book.source,
+    'note': '',
+    'dates.copyright': book.dates?.copyright?.toISOString()?.split('T')[0],
+    'dates.publish': book.dates?.publish?.toISOString()?.split('T')[0],
+    'dates.obtained': book.dates?.obtained?.toISOString()?.split('T')[0],
+    'dates.read': book.dates?.read?.toISOString()?.split('T')[0],
+    'format': book.format,
+    'pages': book.pages,
+    'dimensions': [book?.dimensions?.width, book?.dimensions?.height, book?.dimensions?.depth].filter(d => d !== undefined).join('x'),
+    'url': book.url,
+    'image': book.image,
+    'creator.author.0': book.creator?.author?.[0],
+    'creator.editor.0': book.creator?.editor?.[0],
+    'creator.illustrator.0': book.creator?.illustrator?.[0],
+    'creator.foreword.0': book.creator?.foreword?.[0],
   }
 }

@@ -24,6 +24,7 @@ export async function abookapart(html: string) {
     publisher: 'A Book Apart',
     format: 'Paperback',
     dimensions: { width: 5.5, height: 8.5 },
+    category: 'Computers & Technology'
   };
 
   const authors: string[] = [];
