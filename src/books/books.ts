@@ -4,7 +4,6 @@ import { NormalizedUrl } from '@eatonfyi/urls';
 import { emptyDeep, merge } from 'obby';
 import { parse as parsePath } from 'path';
 import { PartialBookSchema, BookSchema, type Book, type PartialBook } from '../schemas/book.js';
-import { CreativeWork } from '../schemas/creative-work.js';
 import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
@@ -29,8 +28,9 @@ const defaults: BookMigratorOptions = {
 export class BookMigrator extends Fetcher {
   declare options: BookMigratorOptions;
   parsedBooks: Record<string, Book> = {};
+  bookData: Record<string, Book> = {};
   customBooks: Record<string, Book> = {};
-  notes: Record<string, CreativeWork[]> = {};
+  notes: Record<string, string> = {};
   patterns: Record<string, string[]> = {};
 
   html: typeof jetpack;
@@ -134,6 +134,11 @@ export class BookMigrator extends Fetcher {
           this.log.error(`No cache, no URL for ${book.id}`);
         }
       }
+
+      // Tuck any notes away for later.
+      if (book.note && book.id && typeof book.note === 'string') {
+        this.notes[book.id] = book.note;
+      }
     }
 
     for (const [book, htmlFile] of htmlToParse.entries()) {
@@ -164,9 +169,13 @@ export class BookMigrator extends Fetcher {
       }
     }
 
-    const allBooksToProcess = merge(this.parsedBooks, this.customBooks);
-    this.cache.write('book-data.ndjson', Object.values(allBooksToProcess));
-    
+    this.bookData = merge(this.parsedBooks, this.customBooks) as Record<string, Book>;
+    this.cache.write('book-data.ndjson', Object.values(this.bookData));
+
+    if (Object.values(this.notes).length) {
+      this.cache.write('book-notes.json', this.notes);
+    }
+
     for (const book of Object.values(this.parsedBooks)) {
       if (!this.covers.exists(this.getCoverFilename(book))) {
         await this.fetchBookCover(book);
@@ -182,13 +191,19 @@ export class BookMigrator extends Fetcher {
   }
 
   override async readCache(): Promise<unknown> {
-    if (Object.values(this.parsedBooks).length === 0) {
+    if (Object.values(this.bookData).length === 0) {
       const data = this.cache.read('book-data.ndjson', 'auto') as Book[] || undefined;
       for (const b of data) {
-        this.parsedBooks[b.id] = b;
+        this.bookData[b.id] = b;
       }  
     }
-    return this.parsedBooks;
+    return this.bookData;
+  }
+
+  override async finalize(): Promise<unknown> {
+    this.cache.copy('book-data.ndjson', this.root.path('_data/books.ndjson'), { overwrite: true });
+    this.copyAssets(this.cache.path('images'), 'books');
+    return;
   }
 
   protected getBookParseUrl(book: Partial<Book>) {
@@ -252,7 +267,6 @@ export class BookMigrator extends Fetcher {
           return html;
         } else {
           this.log.debug(`Bad cache for ${url.toString()}`);
-          // throw new Error('Bad cache');
         }
       });
   }
