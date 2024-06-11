@@ -1,10 +1,9 @@
 import { extract } from '@eatonfyi/html';
 import { emptyDeep } from 'empty-deep';
-import { Book, BookSchema } from '../../schemas/book.js';
+import { PartialBook, BookSchema } from '../../schemas/book.js';
 import { expandIds, getBestId } from '../normalize-ids.js';
 import { fixAmazonBookData } from './fix-amazon-data.js';
 import { template, schema } from './amazon-schema.js'
-
 
 export async function amazon(html: string, patterns?: Record<string, string[]>) {
   let data = await extract(html, template, schema);
@@ -15,7 +14,7 @@ export async function amazon(html: string, patterns?: Record<string, string[]>) 
   ) as Record<string, string>;
   const id = getBestId({ ...ids });
 
-  const book: Partial<Book> = {
+  const book: PartialBook = {
     id,
     ids,
     name: data.title,
@@ -28,7 +27,7 @@ export async function amazon(html: string, patterns?: Record<string, string[]>) 
     pages: data.pages,
     creator: data.creator,
     image: data.image,
-    dimensions: undefined,
+    dimensions: data.dimensions,
   };
 
   if (data.date) book.dates = { publish: new Date(data.date) }

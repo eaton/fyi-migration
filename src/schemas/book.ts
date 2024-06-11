@@ -36,3 +36,6 @@ export const BookSchema = CreativeWorkSchema.extend({
   dimensions: DimensionsSchema.optional(),
 });
 export type Book = z.infer<typeof BookSchema>;
+
+export const PartialBookSchema = BookSchema.partial();
+export type PartialBook = z.infer<typeof PartialBookSchema>;

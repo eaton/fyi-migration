@@ -50,9 +50,10 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   }
   
   // Try to parse out the book dimensions, which can be tricky.
-  if (carousel.dimensions) {
-    carousel.dimensions = carousel.dimensions.replaceAll(/\s+/g, '').replace(/inches/i, '');
-    let [width, depth, height] = carousel.dimensions.split('x');
+  let dimensions = info.dimensions ?? carousel.dimemsions;
+  if (dimensions) {
+    dimensions = dimensions.replaceAll(/\s+/g, '').replace(/inches/i, '');
+    let [width, depth, height] = dimensions.split('x');
     if (depth && !height) {
       height = depth;
       depth = '';
@@ -64,6 +65,14 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
       if (height) book.dimensions.height = Number.parseFloat(height);
       if (depth) book.dimensions.depth = Number.parseFloat(depth);
     }
+    if (info.item_weight) {
+      const [weight, uom] = info.item_weight.split(/\s+/);
+      if (weight) {
+        book.dimensions ??= {};
+        book.dimensions.weight = Number.parseFloat(weight);
+        book.dimensions.weightUom = uom ? uom : undefined;
+      }
+    }
   }
 
   // A cluster of standardized fixes for co-mingled and duplicated metadata
@@ -72,6 +81,7 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   book = splitTitle(book);
   book = fixAmazonTitles(book);
   book = removeDuplicateMetadata(book);
+  
   return book;
 }
 
@@ -87,24 +97,24 @@ function mapKeyValues(input: { key?: string, label?: string, value?: string }[])
 // Attempts to detect common title/subtitle scenarios with colons and em dashes as separators.
 // The complicating factor is detecting odd scenarios where a series name prefixes an otherwise
 // bland title, or the colon an actual part of the title's text.
-function splitTitle(book: ParsedAmazonData) {
+function splitTitle(book: ParsedAmazonData): ParsedAmazonData {
   if (book.title) {
-  const [title, subtitle] = book.title.split(/[:–]/, 2);
-  if (subtitle) {
-    if (similar(title, book.series) && (book.position !== "1")) {
-      // Something like `Foobar: The Legend Of Baz` in the Foobar series; don't split this.
-    } else {
-      book.title = title.trim();
-      if (!similar(subtitle, book.subtitle)) {
-        book.subtitle = subtitle.trim();
+    const [title, subtitle] = book.title.split(/[:–]/, 2);
+    if (subtitle) {
+      if (similar(title, book.series) && (book.position !== "1")) {
+        // Something like `Foobar: The Legend Of Baz` in the Foobar series; don't split this.
+      } else {
+        book.title = title.trim();
+        if (!similar(subtitle, book.subtitle)) {
+          book.subtitle = subtitle.trim();
+        }
       }
     }
-  }
   }
   return book;
 }
 
-function fixMetaDuplicatedInTitle(book: ParsedAmazonData) {
+function fixMetaDuplicatedInTitle(book: ParsedAmazonData): ParsedAmazonData {
   if (!book.title) return book;
   const matches = book.title?.matchAll(/\s*([([](.+)[)\]])\s*/g) ?? []
 
@@ -163,7 +173,7 @@ function strip(i: string | undefined) {
   return o;
 }
 
-function fixAmazonTitles(book: ParsedAmazonData) {
+function fixAmazonTitles(book: ParsedAmazonData): ParsedAmazonData {
   if (book.title === undefined) return book;
   if (book.subtitle?.length === 0) book.subtitle = undefined;
 
@@ -236,7 +246,7 @@ function fixAmazonTitles(book: ParsedAmazonData) {
   return book;
 }
 
-function removeDuplicateMetadata(book: ParsedAmazonData) {
+function removeDuplicateMetadata(book: ParsedAmazonData): ParsedAmazonData {
   // We might want to be cautious about this. It's ... particularly agressive.
   book = fixMetaDuplicatedInTitle(book);
 

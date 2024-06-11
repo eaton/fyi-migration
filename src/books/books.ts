@@ -3,7 +3,7 @@ import { nanohash } from '@eatonfyi/ids';
 import { NormalizedUrl } from '@eatonfyi/urls';
 import { emptyDeep, merge } from 'obby';
 import { parse as parsePath } from 'path';
-import { Book, BookSchema } from '../schemas/book.js';
+import { PartialBookSchema, BookSchema, type Book, type PartialBook } from '../schemas/book.js';
 import { CreativeWork } from '../schemas/creative-work.js';
 import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
@@ -25,8 +25,6 @@ const defaults: BookMigratorOptions = {
   documentId: process.env.GOOGLE_SHEET_LIBRARY,
   sheetName: 'books',
 };
-
-const PartialBookSchema = BookSchema.partial();
 
 export class BookMigrator extends Fetcher {
   declare options: BookMigratorOptions;
@@ -56,8 +54,8 @@ export class BookMigrator extends Fetcher {
   }
 
   override async cacheIsFilled() {
-    if (!this.cache.exists('raw-books.ndjson')) return false;
-    if (!this.cache.exists('library.ndjson')) return false;
+    if (!this.cache.exists('book-list.ndjson')) return false;
+    if (!this.cache.exists('book-data.ndjson')) return false;
     if (!this.html.list()?.length) return false;
     if (!this.json.list()?.length) return false;
     if (!this.covers.list()?.length) return false;
@@ -65,7 +63,7 @@ export class BookMigrator extends Fetcher {
   }
 
   override async fillCache() {
-    let partialBooks: z.infer<typeof PartialBookSchema>[] = [];
+    let partialBooks: PartialBook[] = [];
 
     // Try the google doc first, if it's not available check for a CSV file in the input directory.
     if (this.options.documentId) {
@@ -107,7 +105,7 @@ export class BookMigrator extends Fetcher {
     partialBooks = partialBooks.map(b => this.populateIds(b));
 
     // Write a copy of the original book list; doesn't hurt.
-    this.cache.write('raw-books.ndjson', partialBooks);
+    this.cache.write('book-list.ndjson', partialBooks);
     this.cache.write('patterns.json', this.patterns);
 
     // Stores HTML file paths, not actual HTML body
@@ -167,7 +165,7 @@ export class BookMigrator extends Fetcher {
     }
 
     const allBooksToProcess = merge(this.parsedBooks, this.customBooks);
-    this.cache.write('library.ndjson', Object.values(allBooksToProcess));
+    this.cache.write('book-data.ndjson', Object.values(allBooksToProcess));
     
     for (const book of Object.values(this.parsedBooks)) {
       if (!this.covers.exists(this.getCoverFilename(book))) {
@@ -185,7 +183,7 @@ export class BookMigrator extends Fetcher {
 
   override async readCache(): Promise<unknown> {
     if (Object.values(this.parsedBooks).length === 0) {
-      const data = this.cache.read('library.ndjson', 'auto') as Book[] || undefined;
+      const data = this.cache.read('book-data.ndjson', 'auto') as Book[] || undefined;
       for (const b of data) {
         this.parsedBooks[b.id] = b;
       }  
