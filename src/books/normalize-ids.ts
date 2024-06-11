@@ -1,5 +1,5 @@
 import { asin, isbn } from '@eatonfyi/ids';
-import { get } from 'obby';
+import { emptyDeep, get } from 'obby';
 
 type IdList = Record<string, string | undefined>;
 
@@ -11,10 +11,22 @@ export function getBestId(input?: IdList): string | undefined {
 
 export function expandIds(input?: IdList): IdList {
   if (input === undefined) return {};
+
+  if (input.isbn10) {
+    input.isbn10 = input.isbn10.replaceAll('-', '').padStart(10, '0');
+    input.isbn10 = isbn(input.isbn10)?.isbn10;
+  }
+
+  if (input.isbn13) {
+    input.isbn13 = input.isbn13.replaceAll('-', '');
+    input.isbn13 = isbn(input.isbn13)?.isbn13;
+  }
+
   input = expandISBNs(input);
   input = isbnFromAsin(input);
   input = expandISBNs(input);
-  return input;
+
+  return emptyDeep(input) ?? {};
 }
 
 export function isbnFromAsin(input: IdList): IdList {

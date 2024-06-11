@@ -1,15 +1,8 @@
-import jetpack from '@eatonfyi/fs-jetpack';
-import 'dotenv/config';
-import * as parsers from './books/parsers/index.js';
+import { nanohash } from "@eatonfyi/ids";
+import { NormalizedUrl } from "@eatonfyi/urls";
 
-const dir = jetpack.dir('/Volumes/migration/cache/books/html');
 
-const amazon = await parsers.amazon(dir.read('acDCNqvL.html', 'utf8') ?? '');
-const rosenfeld = await parsers.rosenfeldmedia(
-  dir.read('eD0DKVBB.html', 'utf8') ?? '',
-);
-const abookapart = await parsers.abookapart(
-  dir.read('aM1d_YsD.html', 'utf8') ?? '',
-);
-
-console.log(abookapart, rosenfeld, amazon);
+const x = ['https://amazon.com/dp/B011T6VBT2', 'https://amazon.com/dp/B00LLOMHZ0', 'https://amazon.com/dp/0137155220']
+for (const u of x) {
+  console.log(`${u} : ` + nanohash(new NormalizedUrl(u).href) + '.html');
+}

@@ -13,6 +13,7 @@ export const BookSchema = CreativeWorkSchema.extend({
     'asin',
     'loc',
     'dds',
+    'custom'
   ]),
   dates: recordWithHints(z.coerce.date(), [
     'publish',

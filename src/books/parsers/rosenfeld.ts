@@ -12,7 +12,7 @@ export async function rosenfeldmedia(html: string) {
     expandIds({
       isbn13: data.features['Paperback ISBN']?.replaceAll('-', ''),
     }),
-  ) as Record<string, string>;
+  ) as Record<string, string> ?? {};
   const id = getBestId(ids);
 
   const book: Partial<Book> = {
@@ -27,8 +27,11 @@ export async function rosenfeldmedia(html: string) {
     image: data.image,
   };
 
-  const authors = data.bylines?.map(b => b.name).filter(i => i !== undefined) ?? [];
-  
+  const authors: string[] = [];
+  for (const a of data.bylines ?? []) {
+    if (a.name !== undefined) authors.push(a.name);
+  }
+
   if (authors) {
     book.creator = {
       author: authors,
@@ -45,9 +48,9 @@ export async function rosenfeldmedia(html: string) {
     };
   }
 
-  const output = BookSchema.safeParse(book);
+  const output = BookSchema.optional().safeParse(book);
   if (output.success) return output.data;
-  else return undefined;
+  return undefined;
 }
 
 const template: ExtractTemplateObject = {

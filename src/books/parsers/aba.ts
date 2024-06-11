@@ -12,7 +12,7 @@ export async function abookapart(html: string) {
     expandIds({
       isbn13: data.features.ISBN?.replaceAll('-', ''),
     }),
-  ) as Record<string, string>;
+  ) as Record<string, string> ?? {};
   const id = getBestId(ids);
 
   const book: Partial<Book> = {
@@ -26,7 +26,11 @@ export async function abookapart(html: string) {
     dimensions: { width: 5.5, height: 8.5 },
   };
 
-  const authors =  data.bylines?.map(b => b.name ?? b.boldName).filter(i => i !== undefined) ?? [];
+  const authors: string[] = [];
+  for (const a of data.bylines ?? []) {
+    const name = a.boldName ?? a.name;
+    if (name !== undefined) authors.push(name);
+  }
 
   if (authors) {
     book.creator = {
@@ -35,53 +39,23 @@ export async function abookapart(html: string) {
   }
 
   if (data.features.Published) {
-    book.dates = {
-      publish: parseDate(
-        data.features.Published.replaceAll(/\s+/g, ' '),
-        'MMM d, yyyy',
-        Date.now(),
-      ),
-    };
+    const firstEdition = data.features.Published.split('; ')[0];
+    const firstEditionDate = firstEdition.split('Ed. ').pop().trim();
+    if (typeof firstEditionDate === 'string') {
+      book.dates = {
+        publish: parseDate(
+          firstEditionDate.replaceAll(/\s+/g, ' '),
+          'MMM d, yyyy',
+          Date.now(),
+        ),
+      };
+    }
   }
 
-  const output = BookSchema.safeParse(book);
+  const output = BookSchema.optional().safeParse(book);
   if (output.success) return output.data;
-  else return undefined;
+  return undefined;
 }
-
-/**
-      if (parsed.data.features.Published) {
-        let dateString = parsed.data.features.Published.replace('First Ed. ', '');
-        dateString = dateString.split(';')[0]?.replace(/\s+/, ' ');
-        parsed.data.date = Dates.reformat(dateString, 'MMM d, yyyy', 'yyyy-MM-dd');
-      }
-
-      parsed.data.pages = parsed.data.features?.Paperback ? Number.parseInt(parsed.data.features?.Paperback?.replace(' pages', '')) : undefined;
-
-      const book = BookSchema.parse({
-        _key: parsed.data.id?.isbn10 ?? parsed.data.id?.isbn13,
-        id: parsed.data.id,
-
-        title: parsed.data.title,
-        subtitle: parsed.data.subtitle,
-        pages: parsed.data.pages,
-        date: parsed.data.date ? { published: parsed.data.date } : undefined,
-        creator: parsed.data.bylines,
-
-        image: imgPath + imageSlug,
-        url: parsed.data.url,
-
-        publisher: 'A Book Apart',
-        series: {
-          name: 'aba' ? 'A Book Apart' : 'A Book Apart Briefs',
-          order: seriesOrder
-        },
-        format: 'Paperback',
-        dimensions: { width: 5.5, height: 8.5 },
-
-        meta: { owned }
-      });
- */
 
 const template: ExtractTemplateObject = {
   title: 'h1.product-header__header span.product-header__title | trim',

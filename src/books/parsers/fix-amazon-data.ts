@@ -3,6 +3,7 @@ import { ParsedAmazonData } from "./amazon-schema.js";
 
 export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<string, string[]> = {}) {
   book.title = book.title?.trim();
+
   const image = book.images?.hires ?? book.images?.src;
   if (image) {
     book.image = fixAmazonImage(image);
@@ -23,9 +24,11 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   
   // Attempt to extract series data
   if (carousel.series) {
-    const [, order, ] = /Book (\d+) of (\d+)/.exec(carousel.series ?? '') ?? []
     book.series = carousel.series?.trim();
-    book.position = order ? order : undefined;
+  }
+  if (carousel.seriesPosition) {
+    const [, order, ] = /Book (\d+) of (\d+)/.exec(carousel.seriesPosition ?? '') ?? []
+    book.position = order;
   }
 
   book.publisher ??= carousel.publisher || info.publisher;
@@ -37,15 +40,21 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
     book.pages = Number.parseInt(pages);
   }
 
-  // Title/Subtitle Splitting
+
+  book = applyMetadataPatterns(book, patterns);
   book = splitTitle(book);
   book = fixAmazonTitles(book);
-  book = applyPatterns(book, patterns);
+  book = removeDuplicateMetadata(book);
+
   return book;
 }
 
 function mapKeyValues(input: { key?: string, label?: string, value?: string }[]) {
   const entries = input.map(item => [(item.key ?? item.label)?.toLocaleLowerCase().replaceAll(/\s+/g, '_') ?? 'undefined', item.value]);
+  const seriesData = input.find(i => i.key?.toLocaleLowerCase() === 'series');
+  if (seriesData) {
+    entries.push(['seriesPosition', seriesData.value]);
+  }
   return Object.fromEntries(entries) as Record<string, string | undefined>;
 }
 
@@ -66,10 +75,6 @@ function splitTitle(book: ParsedAmazonData) {
     }
   }
   }
-  return book;
-}
-
-function applyPatterns(book: ParsedAmazonData, patterns: Record<string, string[]> = {}) {
   return book;
 }
 
@@ -136,19 +141,6 @@ function fixAmazonTitles(book: ParsedAmazonData) {
   if (book.title === undefined) return book;
   if (book.subtitle?.length === 0) book.subtitle = undefined;
 
-  if (book.publisher) book.title = book.title.replace(`(${book.publisher})`, '').trim()
-  if (book.series) {
-    book.title = book.title?.replace(`(${book.series})`, '')
-      .replace('(' + book.series + ')', '')
-      .trim()
-    }
-
-  // Kindle Singles. JFC.
-  if (book.title && book.title.indexOf('(Kindle Single)') > 0) {
-  book.imprint ??= 'Kindle Singles';
-  book.title = book.title?.replace('(Kindle Single)', '');
-  }
-
   const [nssMatch, nssName, , , nssNum] = book.title?.match(/\((.+?)(,? ?(no|no\.|#|book|vol|volume)? ?(\d+))\)/i) ?? [];
   if (nssMatch) {
     book.series ??= nssName.trim();
@@ -178,7 +170,7 @@ function fixAmazonTitles(book: ParsedAmazonData) {
     book.title = book.title?.replace(impMatch, '').trim();
   }
 
-  // Check for Editions in the title, whether duplicated or not
+  // Check for Editions in the title, whether duplicated or not.
   const [editionMatch, editionString, edition] = / *\((([\s\w]+) +(ed|ed\.|Edition))\)/i.exec(book.title ?? '') ?? [];
   if (editionMatch) {
     if (book.edition === undefined) {
@@ -191,14 +183,9 @@ function fixAmazonTitles(book: ParsedAmazonData) {
     book.title = book.title?.replace(editionMatch, '').trim();
   }
 
-  // Known imprint mixups
-  if (book.title && book.title.indexOf('A Tor.Com Original') > 0) {
-    book.imprint = 'Tor.Com Originals';
-    book.title = book.title?.replace('A Tor.Com Original', '').trim();
-  }
-
-  // If there's a colon in the title, split it and make the second half the subtitle.
-  const [newTitle, newSubtitle] = book.title?.split(':', 2) ?? [];
+  // If — after all that — there's a colon followed by a space in the title,
+  // split it and make the second half the subtitle.
+  const [newTitle, newSubtitle] = book.title?.split(': ', 2) ?? [];
   if (newTitle.trim() !== book.series) {
     if (book.subtitle === undefined || book.subtitle === newSubtitle?.trim()) {
       book.subtitle = newSubtitle?.trim();
@@ -206,11 +193,50 @@ function fixAmazonTitles(book: ParsedAmazonData) {
     }
   }
 
+  // "Book Name, The" should be "The Book Name".
   // There are a few of these out there. Might as well catch 'em.
   if (book.title?.endsWith(', The')) {
     book.title = 'The ' + book.title?.replace(', The', '');
   }
 
+  if (book?.series && book.subtitle?.endsWith(wrap(book?.series))) {
+    book.subtitle = book.subtitle.replace(wrap(book?.series), '').trim();
+  }
+
+  // Some of our edits may leave dangling colons at the end of the title —
+  // catch them.
+  book.title = book.title.replace(/: $/, '');
+
+  return book;
+}
+
+function removeDuplicateMetadata(book: ParsedAmazonData) {
+  if (book.title === undefined) return book;
+
+  if (book.publisher) book.title = book.title.replace(`${book.publisher}`, '').replaceAll('()', '').trim();
+  if (book.imprint) {
+    book.title = book.title.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
+    if (book.publisher) {
+      book.publisher = book.publisher.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
+    }
+  }
+  if (book.edition) {
+    book.title = book.title.replace(`${book.edition}`, '').replaceAll('()', '').trim();
+    if (book.publisher) {
+      book.publisher = book.publisher.replace(`${book.edition}`, '').replaceAll('()', '').trim();
+    }
+  }
+  if (book.series) {
+    book.title = book.title?.replace(wrap(book.series), '').trim()
+
+    if (book.series.startsWith('Related to:')) {
+      book.series = book.series.replace('Related to: ', '');
+    }
+
+    if (book.series.startsWith('Collects books from:')) {
+      book.series = book.series.replace('Collects books from: ', '');
+    }
+  }
   return book;
 }
 
@@ -257,4 +283,56 @@ function fixAmazonCreator(input: { name?: string, url?: string, role?: string }[
   }
 
   return output;
+}
+
+export function applyMetadataPatterns(input: ParsedAmazonData, rules: Record<string, string[]> = {}): ParsedAmazonData {
+  if (input.title === undefined) return input;
+  
+  for (const value of rules.imprints ?? []) {
+    if (input.title.indexOf(wrap(value)) > 0) {
+      input.title = input.title.replace(wrap(value), '').trim();
+      input.imprint ??= value;
+    }
+  }
+  for (const value of rules.publishers ?? []) {
+    if (input.title.indexOf(wrap(value)) > 0) {
+      input.title = input.title.replace(wrap(value), '').trim();
+      input.publisher ??= value;
+    }
+  }
+  for (const value of rules.series ?? []) {
+    if (input.title.indexOf(wrap(value)) > 0) {
+      input.title = input.title.replace(wrap(value), '').trim();
+    } else {
+      const regex = new RegExp(` \((${value}),? (Book|#)?(\d+)\)`);
+      const [match, series, , seriesOrder] =
+        regex.exec(input.title) ?? [];
+      if (match) input.title = input.title.replace(match, '').trim();
+      if (series || seriesOrder) {
+        input.series = series.trim().length ? series.trim() : undefined,
+        input.position = seriesOrder ? seriesOrder : undefined;
+      }
+    }
+  }
+  for (const value of rules.editions ?? []) {
+    if (input.title.indexOf(wrap(value)) > 0) {
+      input.title = input.title.replace(wrap(value), '').trim();
+      input.edition ??= value;
+    } else if (input.title.endsWith(', ' + value)) {
+      input.title = input.title.replace(', ' + value, '').trim();
+      input.edition ??= value;
+    }
+  }
+
+  if (input.title.indexOf(': ') > 0) {
+    const [title, subtitle] = input.title.split(': ');
+    input.title = title.trim();
+    input.subtitle = subtitle.trim();
+  }
+
+  return input;
+}
+
+function wrap(input: string, open = ' (', close = ')') {
+  return open + input + close;
 }
