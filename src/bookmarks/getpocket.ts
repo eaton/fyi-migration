@@ -24,7 +24,7 @@ export class PocketMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('getpocket.json') === 'file';
+    return this.cache.exists('getpocket.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -33,13 +33,13 @@ export class PocketMigrator extends Migrator {
     const html = this.input.read('getpocket.html', 'utf8') ?? '';
     this.links = await extract(html, template, z.array(schema));
 
-    this.cache.write('getpocket.json', this.links);
+    this.cache.write('getpocket.ndjson', this.links);
     return this.links;
   }
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('getpocket.json', 'auto') as undefined[] ?? [];
+      const raw = this.cache.read('getpocket.ndjson', 'auto') as undefined[] ?? [];
       this.links = raw.map(l => schema.parse(l)); 
     }
     return this.links;

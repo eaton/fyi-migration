@@ -22,7 +22,7 @@ export class InstapaperMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('instapaper.json') === 'file';
+    return this.cache.exists('instapaper.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -31,13 +31,13 @@ export class InstapaperMigrator extends Migrator {
     const csv = this.input.read('instapaper.csv', 'auto') as unknown[] ?? [];
     this.links = z.array(schema).parse(csv);
     
-    this.cache.write('instapaper.json', this.links);
+    this.cache.write('instapaper.ndjson', this.links);
     return this.links;
   }
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('instapaper.json', 'auto') as undefined[] ?? [];
+      const raw = this.cache.read('instapaper.ndjson', 'auto') as undefined[] ?? [];
       this.links = raw.map(l => schema.parse(l)); 
     }
     return this.links;

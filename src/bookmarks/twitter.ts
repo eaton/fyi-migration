@@ -31,7 +31,7 @@ export class TwitterBookmarkMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('twitter.json') === 'file';
+    return this.cache.exists('twitter.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -79,13 +79,13 @@ export class TwitterBookmarkMigrator extends Migrator {
         return !['twitter.com', 't.co', 'x.com'].includes(u.domain)
       })
     }
-    this.cache.write('twitter.json', this.links);
+    this.cache.write('twitter.ndjson', this.links);
     return this.links;
   }
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('twitter.json', 'auto') as undefined[] ?? [];
+      const raw = this.cache.read('twitter.ndjson', 'auto') as undefined[] ?? [];
       this.links = raw.map(l => schema.parse(l)); 
     }
     return this.links;

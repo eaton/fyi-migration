@@ -32,17 +32,17 @@ export class PinboardMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('pinboard.json') === 'file';
+    return this.cache.exists('pinboard.ndjson') === 'file';
   }
 
   override async fillCache() {
     const api = new Pinboard({ apiKey: this.options.apiKey });
 
-    if (this.input.exists('pinboard.json')) {
-      this.links = api.parse(this.input.read('pinboard.json', 'utf8') ?? '');
+    if (this.input.exists('pinboard.ndjson')) {
+      this.links = api.parse(this.input.read('pinboard.ndjson', 'utf8') ?? '');
     } else {
       this.links = await api.getAll();
-      this.input.write('pinboard.json', this.links);
+      this.input.write('pinboard.ndjson', this.links);
     }
 
     if (this.options.checkApi) {
@@ -55,13 +55,13 @@ export class PinboardMigrator extends Migrator {
       }
     }
 
-    this.cache.write('pinboard.json', this.links);
+    this.cache.write('pinboard.ndjson', this.links);
   }
 
   override async readCache() {
     if (this.links.length === 0) {
       const api = new Pinboard();
-      this.links = api.parse(this.cache.read('pinboard.json', 'utf8') ?? '');
+      this.links = api.parse(this.cache.read('pinboard.ndjson', 'utf8') ?? '');
     }
 
     return this.links;

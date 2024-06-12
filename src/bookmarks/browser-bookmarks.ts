@@ -9,20 +9,27 @@ import micromatch from 'micromatch';
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
   browser?: Thing;
-  ignoreUndated?: boolean;
-  ignore?: string[]
+  webOnly?: boolean;
+  ignore?: string[];
+  missingDates?: 'discard' | 'ignore' | 'fake';
 }
 
 const defaults: Partial<BrowserBookmarkMigratorOptions> = {
   name: 'browser',
   label: 'Browser Bookmarks',
   input: 'input/bookmarks/browser',
-  cache: 'cache/bookmarks'
+  cache: 'cache/bookmarks',
+  missingDates: 'ignore',
+  webOnly: true
 }
 
 export class BrowserBookmarkMigrator extends Migrator {
   declare options: BrowserBookmarkMigratorOptions;
   links: BrowserBookmark[] = [];
+
+  // Starting points for fake bookmark dates.
+  protected minDate = Math.floor(Date.now() / 1000);
+  protected maxDate = 0;
 
   constructor(options: BrowserBookmarkMigratorOptions) {
     super({...defaults, ...options});
@@ -38,14 +45,14 @@ export class BrowserBookmarkMigrator extends Migrator {
       this.links = await extract(html, template, z.array(schema));
     }
 
-    if (this.options.ignoreUndated) {
-      this.links = this.links.filter(l => l.date !== undefined);
-    }
     if (this.options.ignore) {
-      this.links = this.links.filter(l => micromatch.isMatch(l.url, this.options.ignore ?? []))
+      this.links = this.links.filter(l => !micromatch.isMatch(l.url, this.options.ignore ?? []))
     }
 
-    this.cache.write(`${this.options.name}.ndjson`, this.links);
+    if (this.links.length) {
+      this.cache.write(`${this.options.name}.ndjson`, this.links);
+      this.log.debug(`Cached ${this.links.length} links`);
+    }
     return this.links;
   }
 
@@ -60,6 +67,25 @@ export class BrowserBookmarkMigrator extends Migrator {
   override async finalize() {
     const siteStore = this.data.bucket('things');
     const linkStore = this.data.bucket('links');
+
+    if (this.options.webOnly) {
+      this.links = this.links.filter(l => new URL(l.url).protocol.startsWith('http'));
+    }
+
+    if (this.options.missingDates) {
+      if (this.options.missingDates === 'discard') {
+        this.links = this.links.filter(l => l.date !== undefined);
+      } else if (this.options.missingDates === 'fake') {
+        for (const link of this.links) {
+          this.maxDate = Math.max(this.maxDate, link.date?.valueOf() ?? 0)
+          this.minDate = Math.max(this.maxDate, link.date?.valueOf() ?? Math.floor(Date.now() / 1000))
+        }
+  
+        for (const link of this.links) {
+          if (link.date === undefined) link.date = new Date(this.randomTimeStamp())
+        }
+      }
+    }
 
     const cws = this.links.map(l => {
       const link = CreativeWorkSchema.parse({
@@ -89,7 +115,12 @@ export class BrowserBookmarkMigrator extends Migrator {
       siteStore.set(browser);
     }
   }
+
+  protected randomTimeStamp() {
+    return Math.floor(Math.random() * (this.maxDate - this.minDate)) + this.minDate;
+  }  
 }
+
 
 const template: ExtractTemplateObject[] = [{
   $: 'a[href]:not([href=""])',
@@ -103,7 +134,7 @@ const template: ExtractTemplateObject[] = [{
 const schema = z.object({
   url: z.string().url(),
   name: z.string().optional(),
-  date: z.coerce.number().optional().or(z.coerce.date()).transform(d => typeof d === 'number' ? new Date(d) : d),
+  date: z.coerce.number().optional().or(z.coerce.date()).transform(d => typeof d === 'number' ? new Date(d * 1000) : d),
 });
 
 type BrowserBookmark = z.infer<typeof schema>;

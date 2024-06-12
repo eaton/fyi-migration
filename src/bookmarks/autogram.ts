@@ -22,7 +22,7 @@ export class AutogramLinkMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('autogram.json') === 'file';
+    return this.cache.exists('autogram.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -30,13 +30,13 @@ export class AutogramLinkMigrator extends Migrator {
       this.links.push(schema.parse(this.input.read(f, 'auto')));
     }
     
-    this.cache.write('autogram.json', this.links);
+    this.cache.write('autogram.ndjson', this.links);
     return this.links;
   }
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('instapaper.json', 'auto') as undefined[] ?? [];
+      const raw = this.cache.read('autogram.ndjson', 'auto') as undefined[] ?? [];
       this.links = raw.map(l => schema.parse(l)); 
     }
     return this.links;

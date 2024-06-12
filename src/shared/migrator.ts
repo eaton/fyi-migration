@@ -26,6 +26,9 @@ jetpack.setSerializer('.tsv', new Tsv());
 jetpack.setSerializer('.yaml', new Yaml());
 jetpack.setSerializer('.md', new Frontmatter());
 
+/**
+ * Standard options for all Migrator classes
+ */
 export interface MigratorOptions {
   /**
    * The unique name of the migration task.
@@ -81,6 +84,12 @@ export interface MigratorOptions {
    * An already-populated Pino logger instance, or a set of LoggerOptions for the migration to use.
    */
   logger?: Logger | LoggerOptions;
+
+  
+  /**
+   * How progress information should be displayed to the user when a migration is triggered.
+   */
+  progress?: 'silent' | 'progress' | 'status' | 'details'
 }
 
 const loggerDefaults: LoggerOptions = {
@@ -101,6 +110,7 @@ const defaults: MigratorOptions = {
   assets: process.env.MIGRATION_ASSETS ?? 'assets',
   data: process.env.MIGRATION_DATA ?? 'data',
   logger: loggerDefaults,
+  progress: 'status',
 };
 
 /**

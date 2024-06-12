@@ -102,7 +102,7 @@ const noteSchema = z.object({
   text: z.string(),
 });
 
-const ynBool = z.string().optional().transform(s => s === 'yes')
+const ynBool = z.boolean().or(z.string().optional().transform(s => s === 'yes')).default(false)
 
 const linkSchema = z.object({
   href: z.string().url(),
