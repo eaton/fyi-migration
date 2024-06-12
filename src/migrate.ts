@@ -4,7 +4,7 @@ import { Migrator } from './shared/migrator.js';
 import * as textfiles from './textfiles/index.js';
 import { TwitterMigrator } from './twitter/twitter.js';
 import { ArticleReprintMigrator } from './work/article-reprints.js';
-import { TalkMigrator } from './work/talks.js';
+// import { TalkMigrator } from './work/talks.js';
 
 export class AllMigrations extends Migrator {
   override async run() {
@@ -27,10 +27,10 @@ export class AllMigrations extends Migrator {
     await new textfiles.TextEmailMigrator({ logger: this.log }).run();
 
     await new TwitterMigrator({ logger: this.log }).run();
-    await new TwitterMigrator({ logger: this.log }).run();
+    await new BookMigrator({ logger: { level: 'debug' } }).run();
 
-    await new TalkMigrator({ logger: this.log }).run();
+    // await new TalkMigrator({ logger: this.log }).run();
   }
 }
 
-await new BookMigrator({ logger: { level: 'debug' } }).run();
+await new AllMigrations().run();
