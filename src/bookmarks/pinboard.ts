@@ -75,8 +75,8 @@ export class PinboardMigrator extends Migrator {
       const link = CreativeWorkSchema.parse({
         ...cleanLink(l.href),
         date: l.time,
-        name: l.description,
-        description: l.extended,
+        name: l.description?.trim(),
+        description: l.extended?.trim(),
         keywords: l.tags
       });
       if (this.options.deliciousDate) {
