@@ -1,4 +1,4 @@
 
-import { AllBookmarksMigrator } from "./bookmarks/all-bookmarks.js";
+import { AllBlogMigrator } from "./blogs/all-blogs.js";
 
-await new AllBookmarksMigrator().run();
+await new AllBlogMigrator().run();
