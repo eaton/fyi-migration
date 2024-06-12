@@ -109,7 +109,7 @@ Saved and shared links over the years. Accurately capturing the dates/times, and
 - [ ] Blogrolls
 - [x] Autogram Links
 - [ ] Old sites (MDB files & HTML extraction)
-- [ ] Omnivore
+- [x] Omnivore
 
 ## Photos
 
@@ -162,9 +162,9 @@ These will be used to populate 'on this day/week' and other contextual cues arou
 
 These are basically a database of supporting facts that can be used to populate Schema.org data and used to cross-link entris and other content that mentions them. `Books` in particular will be used to construct a reading room view of my library, and `People` will be used to deduplicate references to folks I know in tweets, old posts, and so on.
 
-- [ ] Books
+- [x] Books
   - [ ] TTRPG books
-  - [ ] Comics/Graphic Novels
+  - [x] Comics/Graphic Novels
 - [ ] Games
 - [ ] Films
 - [ ] People

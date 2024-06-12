@@ -1,4 +1,3 @@
+import { BookMigrator } from "./books/books.js";
 
-import { AllBlogMigrator } from "./blogs/all-blogs.js";
-
-await new AllBlogMigrator().run();
+await new BookMigrator({logger:{level:'debug'}}).run();
