@@ -101,12 +101,13 @@ Employment timeline; this is less of a primary focus and more splashover data fr
 
 Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc. These are unlikely to be exposed as Schema.org entities.
 
-- [ ] Delicious
-- [ ] Pinboard
-- [ ] Twitter
-- [ ] Instapaper
+- [x] Browser Bookmarks
+- [x] Delicious
+- [x] Pinboard
+- [x] Twitter
+- [x] Instapaper
 - [ ] Blogrolls
-- [ ] Autogram Links
+- [x] Autogram Links
 - [ ] Old sites (MDB files & HTML extraction)
 - [ ] Omnivore
 
