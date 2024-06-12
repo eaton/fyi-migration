@@ -5,6 +5,7 @@ import { InstapaperMigrator } from "./instapaper.js";
 import { TwitterBookmarkMigrator } from "./twitter.js";
 import { PocketMigrator } from "./getpocket.js";
 import { AutogramLinkMigrator } from "./autogram.js";
+import { OmnivoreMigrator } from "./omnivore.js";
 
 export class AllBookmarksMigrator extends Migrator {
   override async run() {
@@ -40,5 +41,6 @@ export class AllBookmarksMigrator extends Migrator {
     await new TwitterBookmarkMigrator({ logger: this.log }).run();
     await new PocketMigrator({ logger: this.log }).run();
     await new AutogramLinkMigrator({ logger: this.log }).run();
+    await new OmnivoreMigrator({ logger: this.log }).run();
   }
 }

@@ -2,6 +2,7 @@ import { Migrator, MigratorOptions } from "../shared/migrator.js";
 import { cleanLink } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { Omnivore } from '@omnivore-app/api'
+import { z } from "zod";
 
 export interface OmnivoreMigratorOptions extends MigratorOptions {
   apiKey?: string;
@@ -32,7 +33,7 @@ export class OmnivoreMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('pinboard.ndjson') === 'file';
+    return this.cache.exists('omnivore.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -42,39 +43,35 @@ export class OmnivoreMigrator extends Migrator {
     });
     
     if (this.input.exists('omnivore.ndjson')) {
-      this.links = [];
-      // parse the file?
+      this.links = z.array(schema).parse(this.input.read('omnivore.ndjson', 'auto'));
     } else {
-      const items = await api.items.search({
-        // after: <date>
-        format: 'markdown',
-        includeContent: true
-      });
+      let resp = await this.getNextResult(api);
+      this.links.push(...resp.edges.map(e => e.node));
+      let i = 0;
+      while (resp.pageInfo.hasNextPage || i++ < 10) {
+        resp = await this.getNextResult(api, resp);
+        this.links.push(...resp.edges.map(e => e.node));
+      }
 
-      this.input.write('omnivore.ndjson', items);
+      this.input.write('omnivore.ndjson', this.links);
     }
 
     if (this.options.checkApi) {
       // Check if the source links are more than a day old; if so, check the API
       // for new links.
-      const mostRecent = this.links.map(l => l.time.valueOf()).sort().reverse()[0];
+      const mostRecent = this.links.map(l => l.savedAt.valueOf()).sort().reverse()[0];
       if (Date.now() - mostRecent > 1000 * 60 * 60 * 24) {
-        const items = await api.items.search({
-          after: mostRecent.valueOf(),
-          format: 'markdown',
-          includeContent: true,
-        });
-  
-        // this.links.push(...newLinks);
+        // Load just the stuff since the most recent update
       }
     }
 
-    this.cache.write('pinboard.ndjson', this.links);
+    this.cache.write('omnivore.ndjson', this.links);
+    return;
   }
 
   override async readCache() {
-    if (this.links.length === 0) {
-      this.links = (this.cache.read('omnivore.ndjson') as OmnivoreLink[] ?? []);
+    if (this.links.length === 0 && this.cache.exists('omnivore.ndjson')) {
+      this.links = z.array(schema).parse(this.cache.read('omnivore.ndjson'));
     }
 
     return this.links;
@@ -86,8 +83,23 @@ export class OmnivoreMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.href),
+        ...cleanLink(l.url),
+        name: l.title,
+        description: l.description,
+        date: l.savedAt,
+        keywords: l.labels,
+        isPartOf: 'omnivore',
       });
+      for (const h of l.highlights ?? []) {
+        if (h.type === 'NOTE' && h.annotation?.length) {
+          link.notes ??= [];
+          (link.notes as string[]).push(h.annotation)
+        } else if (h.type === 'HIGHLIGHT' && h.quote?.length) {
+          link.highlights ??= [];
+          (link.highlights as string[]).push(h.quote)
+        }
+      }
+      return link;
     });
 
     for (const cw of cws) {
@@ -99,9 +111,67 @@ export class OmnivoreMigrator extends Migrator {
       type: 'WebApplication',
       id: 'omnivore',
       name: 'Omnivore',
-      description: 'A newer, slicker, welf-hostable reading app.',
+      description: 'A newer, slicker, self-hostable reading app.',
       url: 'https://omnivore.app',
     });
     siteStore.set(omnivore);
+    return;
+  }
+
+  async getNextResult(api: Omnivore, response?: OmnivoreApiResponse) {
+    const resp = await api.items.search({
+      format: 'markdown',
+      includeContent: false,
+      first: 100,
+      after: response?.pageInfo.endCursor ? response.pageInfo.endCursor + 1 : 0
+    });
+
+    return apiResponseSchema.parse(resp);
   }
 }
+
+const highlight = z.object({
+  id: z.string(),
+  quote: z.string().nullable(),
+  annotation: z.string().nullable(),
+  labels: z.array(z.string()),
+  type: z.string(),
+  createdAt: z.coerce.date()
+});
+
+const schema = z.object({
+  id: z.string(),
+  title: z.string(),
+  author: z.string().nullable(),
+  url: z.string().url(),
+  image: z.string().url().nullable(),
+  
+  publishedAt: z.coerce.date().nullable(),
+  savedAt: z.coerce.date(),
+  readAt: z.coerce.date().nullable(),
+  archivedAt: z.string().url().nullable(),
+
+  description: z.string().nullable(),
+  labels: z.array(z.string()),
+  content: z.string().nullable(),
+  highlights: z.array(highlight),
+  wordsCount: z.number().nullable(),
+  readingProgressPercent: z.number().nullable(),
+});
+
+const apiResponseSchema = z.object({
+  __typename: z.string(),
+  edges: z.array(z.object({
+    node: schema
+  })),
+  pageInfo: z.object({
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    startCursor: z.coerce.number().optional(),
+    endCursor: z.coerce.number(),
+    totalCount: z.coerce.number(),
+  })
+})
+
+type OmnivoreApiResponse = z.infer<typeof apiResponseSchema>;
+type OmnivoreLink = z.infer<typeof schema>;

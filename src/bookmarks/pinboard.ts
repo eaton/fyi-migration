@@ -16,9 +16,27 @@ const defaults: PinboardMigratorOptions = {
   description: 'Contains both Pinboard and delicious links dating back to 2004 or so.',
   input: 'input/bookmarks',
   cache: 'cache/bookmarks',
+
+  /**
+   * API key for pinboard.in; required for API access, not required when using raw exports.
+   */
   apiKey: process.env.PINBOARD_API_KEY,
+
+  /**
+   * Check the API to ensure that more links haven't been posted since the last cache.
+   */
   checkApi: true,
+
+  /**
+   * Links 'created' before this date will be treated as Delicious links; they were imported
+   * from Delicious anyways.
+   */
   deliciousDate: new Date(2009, 8, 14),
+
+  /**
+   * Only output links that have the `shared` flag set; most do, but this can be useful for
+   * private and work related bookmarks.
+   */
   onlyShared: true,
 }
 
@@ -70,6 +88,10 @@ export class PinboardMigrator extends Migrator {
   override async finalize() {
     const siteStore = this.data.bucket('things');
     const linkStore = this.data.bucket('links');
+
+    if (this.options.onlyShared) {
+      this.links = this.links.filter(l => l.shared);
+    }
 
     const cws = this.links.map(l => {
       const link = CreativeWorkSchema.parse({
