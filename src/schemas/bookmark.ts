@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CreativeWorkSchema } from "./creative-work.js";
+import { urlSchema } from "./url.js";
 
 /**
  * A special-case version of the base SocialMediaPosting type that
@@ -18,11 +19,11 @@ import { CreativeWorkSchema } from "./creative-work.js";
  */
 export const BookmarkSchema = CreativeWorkSchema.extend({
   type: z.string().default('Bookmark'),
-  originalUrl: z.string().url().optional(),
-  redirects: z.array(z.string().url()).optional(),
+  originalUrl: urlSchema.optional(),
+  redirects: z.array(urlSchema).optional(),
   statusCode: z.number().optional(),
   statusDate: z.coerce.date().optional(),
-  sharedContent: z.string().url()
+  sharedContent: urlSchema
 });
 
 export type Bookmark = z.infer<typeof BookmarkSchema>;
