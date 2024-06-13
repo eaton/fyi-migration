@@ -1,3 +1,3 @@
-import { BookMigrator } from "./books/books.js";
+import { AccessMigrator } from "./datasets/access-db.js";
 
-await new BookMigrator({logger:{level:'debug'}}).run();
+await new AccessMigrator({logger:{level:'debug'}}).run();
