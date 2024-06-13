@@ -8,7 +8,7 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/creative-work.js';
-import { cleanLink } from '../../util/clean-link.js';
+import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 
@@ -174,7 +174,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepLink(input: drupal.Node): CreativeWork {
     return CreativeWorkSchema.parse({
-      ...cleanLink(input.link!.url),
+      ...prepUrlForBookmark(input.link!.url, this.name),
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input),

@@ -1,7 +1,8 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
 import { Pinboard, type PinboardLink } from "../apis/pinboard.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface PinboardMigratorOptions extends MigratorOptions {
   deliciousDate?: Date
@@ -57,7 +58,8 @@ export class PinboardMigrator extends Migrator {
     const api = new Pinboard({ apiKey: this.options.apiKey });
 
     if (this.input.exists('pinboard.ndjson')) {
-      this.links = api.parse(this.input.read('pinboard.ndjson', 'utf8') ?? '');
+      const links = this.input.read('pinboard.ndjson', 'auto');
+      this.links = api.parse(links);
     } else {
       this.links = await api.getAll();
       this.input.write('pinboard.ndjson', this.links);
@@ -79,7 +81,7 @@ export class PinboardMigrator extends Migrator {
   override async readCache() {
     if (this.links.length === 0) {
       const api = new Pinboard();
-      this.links = api.parse(this.cache.read('pinboard.ndjson', 'utf8') ?? '');
+      this.links = api.parse(this.cache.read('pinboard.ndjson', 'auto') ?? '');
     }
 
     return this.links;
@@ -94,19 +96,19 @@ export class PinboardMigrator extends Migrator {
     }
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.href),
+      let isPartOf = 'pinboard';
+      if (this.options.deliciousDate) {
+        isPartOf = (this.options.deliciousDate > l.time) ? 'delicious' : 'pinboard';
+      }
+
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.href, isPartOf),
         date: l.time,
         name: l.description?.trim(),
         description: l.extended?.trim(),
-        keywords: l.tags
+        keywords: l.tags,
+        isPartOf
       });
-      if (this.options.deliciousDate) {
-        link.isPartOf = (this.options.deliciousDate > l.time) ? 'delicious' : 'pinboard';
-      } else {
-        link.isPartOf = 'pinboard';
-      }
-
       return link;
     });
 

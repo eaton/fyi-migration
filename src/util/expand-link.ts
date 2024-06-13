@@ -1,4 +1,5 @@
 import wretch from 'wretch';
+import { WretchError } from 'wretch/resolver';
 
 export type ExpandLinkResults = {
   url: string;
@@ -12,21 +13,28 @@ export type ExpandLinkResults = {
 export async function expandLink(input: string | URL) {
   const url = new URL(input);
   return wretch(url.toString())
-    .head()
+    .get()
+    .timeout(err => ({
+      url: url.toString(),
+      redirected: err.response?.redirected,
+      resolved: err.response?.url,
+      status: err.status,
+      statusText: (err.cause as Error).message
+    }))
     .fetchError(cb => ({
       url: url.toString(),
-      redirected: cb.response.redirected,
+      redirected: cb.response?.redirected,
+      resolved: cb.response?.url,
       status: cb.status,
-      statusText: cb.name,
-      resolved: cb.response.url,
+      statusText: (cb.cause as Error).message,
       error: cb.text,
     }))
     .internalError(cb => ({
       url: url.toString(),
-      redirected: cb.response.redirected,
+      redirected: cb.response?.redirected,
       status: cb.status,
       statusText: cb.name,
-      resolved: cb.response.url,
+      resolved: cb.response?.url,
       error: cb.text,
     }))
     .res(response => ({
@@ -35,5 +43,13 @@ export async function expandLink(input: string | URL) {
       status: response.status,
       statusText: response.redirected,
       resolved: response.url,
-    }));
+    }))
+    .catch((err: WretchError) => ({
+      url: url.toString(),
+      redirected: err.response?.redirected,
+      resolved: err.response?.url,
+      status: err.status,
+      statusText: (err.cause as Error).message
+    }))
+
 }

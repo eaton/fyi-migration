@@ -1,8 +1,9 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { Omnivore } from '@omnivore-app/api'
 import { z } from "zod";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface OmnivoreMigratorOptions extends MigratorOptions {
   apiKey?: string;
@@ -71,7 +72,7 @@ export class OmnivoreMigrator extends Migrator {
 
   override async readCache() {
     if (this.links.length === 0 && this.cache.exists('omnivore.ndjson')) {
-      this.links = z.array(schema).parse(this.cache.read('omnivore.ndjson'));
+      this.links = z.array(schema).parse(this.cache.read('omnivore.ndjson', 'auto'));
     }
 
     return this.links;
@@ -82,8 +83,8 @@ export class OmnivoreMigrator extends Migrator {
     const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.url),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.url, 'omnivore'),
         name: l.title,
         description: l.description,
         date: l.savedAt,
@@ -134,7 +135,7 @@ const highlight = z.object({
   id: z.string(),
   quote: z.string().nullable(),
   annotation: z.string().nullable(),
-  labels: z.array(z.string()),
+  labels: z.array(z.string()).optional(),
   type: z.string(),
   createdAt: z.coerce.date()
 });
@@ -152,7 +153,7 @@ const schema = z.object({
   archivedAt: z.string().url().nullable(),
 
   description: z.string().nullable(),
-  labels: z.array(z.string()),
+  labels: z.array(z.string()).optional(),
   content: z.string().nullable(),
   highlights: z.array(highlight),
   wordsCount: z.number().nullable(),

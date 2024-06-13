@@ -1,8 +1,9 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { z } from "zod";
 import { extract, ExtractTemplateObject } from "@eatonfyi/html";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface PocketMigratorOptions extends MigratorOptions {
 }
@@ -50,8 +51,8 @@ export class PocketMigrator extends Migrator {
     const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.url),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.url, 'getpocket'),
         name: (l.name !== l.url) ? l.name : undefined,
         date: l.date,
         keywords: l.tags,

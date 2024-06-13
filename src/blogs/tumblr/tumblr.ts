@@ -5,7 +5,7 @@ import {
   CreativeWorkInput,
   CreativeWorkSchema,
 } from '../../schemas/creative-work.js';
-import { cleanLink } from '../../util/clean-link.js';
+import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
   BlogSchema,
@@ -14,6 +14,7 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
+import { BookmarkSchema } from '../../schemas/bookmark.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
@@ -192,8 +193,8 @@ export class TumblrMigrator extends BlogMigrator {
   }
 
   protected prepLink(input: TumblrPost) {
-    const link = CreativeWorkSchema.parse({
-      ...cleanLink(input.url),
+    const link = BookmarkSchema.parse({
+      ...prepUrlForBookmark(input.url, input.blog_name),
       date: input.date || undefined,
       name: input.title || input.source_title || undefined,
       description:

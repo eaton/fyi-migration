@@ -1,7 +1,8 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { z } from "zod";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface AutogramLinkMigrationOptions extends MigratorOptions {
 }
@@ -47,8 +48,8 @@ export class AutogramLinkMigrator extends Migrator {
     const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.data.link),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.data.link, 'autogram'),
         name: l.data.title,
         date: l.data.date,
         description: l.content,

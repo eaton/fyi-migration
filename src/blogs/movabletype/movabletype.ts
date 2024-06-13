@@ -156,7 +156,7 @@ export class MovableTypeMigrator extends BlogMigrator {
       }
     }
 
-    // Save blogroll links
+    // TODO: Save blogroll links
     await this.copyAssets('files', 'positiva');
     return Promise.resolve();
   }

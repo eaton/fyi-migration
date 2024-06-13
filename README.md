@@ -14,7 +14,7 @@ Posts and entries from the assorted places I've written over the years. These ar
 
 These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entities linked to a parent `Blog` entity, depending on the nature of the content. Comments will naturally be exposed as `Comment` entities.
 
-- [ ] Blogger
+- [ ] ~~Blogger~~
 - [x] TypePad
 - [x] Livejournal (minus Textfiles reprints)
 - [x] MovableType
@@ -30,7 +30,7 @@ These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entiti
   - [x] Via Positiva
   - [x] ALT
   - [x] Growing Up Goddy
-  - [ ] Kirkegaard Lips
+  - [ ] ~~Kirkegaard Lips~~
 - [x] Jekyll (Angry Little Tree)
 - [x] Disqus comments spread across both iterations of the AngryLittleTree site
 

@@ -1,4 +1,8 @@
 import { Migrator } from "../shared/migrator.js";
+
+import { StaticLinkMigrator } from "./static-sites.js";
+import { PredicateLinkMigrator } from "./predicate.js";
+import { HavanaLinkMigrator } from "./havana.js";
 import { BrowserBookmarkMigrator } from "./browser-bookmarks.js";
 import { PinboardMigrator } from "./pinboard.js";
 import { InstapaperMigrator } from "./instapaper.js";
@@ -9,13 +13,17 @@ import { OmnivoreMigrator } from "./omnivore.js";
 
 export class AllBookmarksMigrator extends Migrator {
   override async run() {
+    await new StaticLinkMigrator({ logger: this.log }).run();
+    await new PredicateLinkMigrator({ logger: this.log }).run();
+    await new HavanaLinkMigrator({ logger: this.log }).run();
+
     await new BrowserBookmarkMigrator({
       file: '2001-05-28-ie4-favorites.html',
       name: 'ie4',
       label: 'Internet Explorer 4',
       logger: this.log,
       missingDates: 'fake',
-      ignore: ['**/*.apple.com/*']
+      ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*']
     }).run();
     
     await new BrowserBookmarkMigrator({
@@ -24,7 +32,7 @@ export class AllBookmarksMigrator extends Migrator {
       label: 'Firefox',
       logger: this.log,
       missingDates: 'fake',
-      ignore: ['**/*.apple.com/*']
+      ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*'],
     }).run();
 
     await new BrowserBookmarkMigrator({
@@ -33,7 +41,7 @@ export class AllBookmarksMigrator extends Migrator {
       label: 'Google Chrome',
       logger: this.log,
       missingDates: 'fake',
-      ignore: ['**/*.apple.com/*']
+      ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*'],
     }).run();
 
     await new PinboardMigrator({ logger: this.log }).run();

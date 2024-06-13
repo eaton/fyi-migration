@@ -2,8 +2,9 @@ import { extract, ExtractTemplateObject } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import { z } from 'zod';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
-import { cleanLink } from '../util/clean-link.js';
+import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { BookmarkSchema } from '../schemas/bookmark.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'predicate-net',
@@ -40,8 +41,8 @@ export class PredicateNetMigrator extends BlogMigrator {
 
     const linkStore = this.data.bucket('links');
     for (const l of links ?? []) {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.url),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.url, this.name),
         date: '2001-01-01',
         name: l.title,
         description: l.description,

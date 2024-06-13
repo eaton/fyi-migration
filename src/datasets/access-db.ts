@@ -29,7 +29,7 @@ export class AccessMigrator extends Migrator {
       const data = getMdbInfo(this.input.path(mdb));
       const dbDir = this.cache.dir(dbName);
       for (const t of data.tables) {
-        dbDir.write(`${t}.ndjson`, parseMdbTable(this.input.path(mdb), t))
+        dbDir.write(`${t}.json`, parseMdbTable(this.input.path(mdb), t))
       }
     }
 

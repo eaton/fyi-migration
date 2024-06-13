@@ -19,7 +19,7 @@ export function parseMdbTable<T extends z.ZodTypeAny>(
   table: string,
   schema?: T,
   strict = false,
-): z.infer<T> {
+): z.infer<T>[] {
   const reader =
     typeof mdbFile === 'string'
       ? new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer)

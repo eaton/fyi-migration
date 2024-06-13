@@ -28,6 +28,7 @@
     "prepare": "npm run build",
     "migrate": "node --import=tsimp ./src/migrate.ts",
     "scratchpad": "node --import=tsimp ./src/scratchpad.ts",
+    "finalize": "node --import=tsimp ./src/finalize.ts",
     "test": "ava"
   },
   "author": "eaton",

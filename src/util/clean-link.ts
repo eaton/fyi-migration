@@ -1,12 +1,12 @@
 import { nanohash } from '@eatonfyi/ids';
-import { normalize } from '@eatonfyi/urls';
+import { ParsedUrl } from '@eatonfyi/urls';
 
-export function cleanLink(input?: string | URL) {
+export function prepUrlForBookmark(input?: string | URL, salt?: string) {
   if (!input) return {};
-  const url = normalize(input);
+  const url = new ParsedUrl(input);
   return {
     type: 'Bookmark',
-    id: nanohash(url),
-    url: url.toString(),
+    id: nanohash(salt + url.toString()),
+    sharedContent: url.toString(),
   };
 }

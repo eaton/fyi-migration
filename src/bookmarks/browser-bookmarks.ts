@@ -1,10 +1,11 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { z } from "zod";
 import { extract, ExtractTemplateObject } from "@eatonfyi/html";
 import { Thing } from "../schemas/thing.js";
 import micromatch from 'micromatch';
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
@@ -20,7 +21,7 @@ const defaults: Partial<BrowserBookmarkMigratorOptions> = {
   input: 'input/bookmarks/browser',
   cache: 'cache/bookmarks',
   missingDates: 'ignore',
-  webOnly: true
+  webOnly: true,
 }
 
 export class BrowserBookmarkMigrator extends Migrator {
@@ -32,7 +33,9 @@ export class BrowserBookmarkMigrator extends Migrator {
   protected maxDate = 0;
 
   constructor(options: BrowserBookmarkMigratorOptions) {
-    super({...defaults, ...options});
+    super({ ...defaults, ...options });
+    this.minDate = Math.floor(Date.now() / 1000);
+    this.maxDate = 0;
   }
 
   override async cacheIsFilled() {
@@ -44,7 +47,7 @@ export class BrowserBookmarkMigrator extends Migrator {
       const html = this.input.read(this.options.file, 'utf8') ?? '';
       this.links = await extract(html, template, z.array(schema));
     }
-
+    
     if (this.options.ignore) {
       this.links = this.links.filter(l => !micromatch.isMatch(l.url, this.options.ignore ?? []))
     }
@@ -88,8 +91,8 @@ export class BrowserBookmarkMigrator extends Migrator {
     }
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.url),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.url, this.options.browser?.id ?? this.options.name),
         name: (l.name !== l.url) ? l.name : undefined,
         date: l.date,
         isPartOf: this.options.browser?.id ?? this.options.name

@@ -1,7 +1,8 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { z } from "zod";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface InstapaperMigratorOptions extends MigratorOptions {
 }
@@ -48,8 +49,8 @@ export class InstapaperMigrator extends Migrator {
     const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.URL),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.URL, 'instapaper'),
         name: l.Title,
         date: l.Timestamp,
         description: l.Selection,

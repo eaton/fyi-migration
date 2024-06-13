@@ -1,9 +1,10 @@
 import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { cleanLink } from "../util/clean-link.js";
+import { prepUrlForBookmark } from "../util/clean-link.js";
 import { CreativeWorkSchema } from "../schemas/creative-work.js";
 import { TwitterArchive, ArchiveReadPart, TwitterHelpers, PartialTweet } from 'twitter-archive-reader';
 import { z } from "zod";
 import { ParsedUrl } from "@eatonfyi/urls";
+import { BookmarkSchema } from "../schemas/bookmark.js";
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {
   ignoreLinksToTweets?: boolean;
@@ -95,8 +96,8 @@ export class TwitterBookmarkMigrator extends Migrator {
     const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
-      const link = CreativeWorkSchema.parse({
-        ...cleanLink(l.url),
+      const link = BookmarkSchema.parse({
+        ...prepUrlForBookmark(l.url, `@${l.handle}`),
         date: l.date,
         description: l.description,
         keywords: l.hashtags,
