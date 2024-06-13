@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { urlSchema } from './url';
 
 export const EleventyNavigationSchema = z
   .object({
@@ -7,7 +8,7 @@ export const EleventyNavigationSchema = z
     excerpt: z.string().optional(),
     parent: z.string().optional(),
     order: z.number().optional(),
-    url: z.string().url().optional(),
+    url: urlSchema.optional(),
   })
   .describe("Metadata to control Eleventy's nav + breadcrumb plugin.");
 
