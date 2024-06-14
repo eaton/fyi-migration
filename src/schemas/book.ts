@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
-import { DimensionsSchema } from './dimensions.js';
-import { recordWithHints } from './helpers.js';
+import { DimensionsSchema } from './fragments/dimensions.js';
+import { recordWithHints } from './fragments/index.js';
 
 const semicolonList = z
   .string()

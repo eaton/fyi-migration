@@ -220,7 +220,8 @@ export class TwitterMigrator extends Migrator {
       file = segments.join('/');
 
       this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store === 'arango') await this.arango.set({ ...frontmatter, text });
+      if (this.options.store === 'arango')
+        await this.arango.set({ ...frontmatter, text });
       this.log.debug(`Wrote ${file}`);
     }
 

@@ -15,8 +15,8 @@ import { Logger, LoggerOptions, pino } from 'pino';
 import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
-import { Store, StoreableData } from './store.js';
 import { ArangoDB } from './arango.js';
+import { Store, StoreableData } from './store.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -324,7 +324,7 @@ export class Migrator {
         await this.arango.link(from, to, rel);
         break;
       default:
-        this.log.error('')
+        this.log.error('');
     }
   }
 }

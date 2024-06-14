@@ -74,7 +74,6 @@ export class InstapaperMigrator extends Migrator {
     });
     siteStore.set(insta);
     if (this.options.store === 'arango') await this.arango.set(insta);
-
   }
 }
 

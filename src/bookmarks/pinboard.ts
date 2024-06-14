@@ -145,7 +145,6 @@ export class PinboardMigrator extends Migrator {
 
       siteStore.set(delicious);
       if (this.options.store === 'arango') await this.arango.set(delicious);
-
     }
   }
 }

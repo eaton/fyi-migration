@@ -26,7 +26,7 @@ type Options = {
   listen?: (
     req: http.IncomingMessage,
     body: string | null,
-    res: http.ServerResponse<http.IncomingMessage>
+    res: http.ServerResponse<http.IncomingMessage>,
   ) => boolean | void;
 };
 
@@ -40,7 +40,7 @@ type Result = {
  * promise that resolves to the request and request body.
  */
 export async function listenOnLocalhost(
-  options: Options = {}
+  options: Options = {},
 ): Promise<Result> {
   const port = (options.port ??= 9000);
   let keepListening = false;
@@ -50,7 +50,7 @@ export async function listenOnLocalhost(
     const server = http.createServer();
     server.on('request', (request, response) => {
       const chunks: Uint8Array[] = [];
-      request.on('data', (chunk) => chunks.push(chunk));
+      request.on('data', chunk => chunks.push(chunk));
       request.on('end', () => {
         if (chunks.length) body = Buffer.concat(chunks).toString();
         if (options.listen) {

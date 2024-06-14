@@ -73,7 +73,6 @@ export class AutogramLinkMigrator extends Migrator {
     });
     siteStore.set(autog);
     if (this.options.store === 'arango') await this.arango.set(autog);
-
   }
 }
 const schema = z.object({

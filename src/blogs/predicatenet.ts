@@ -88,7 +88,7 @@ export class PredicateNetMigrator extends BlogMigrator {
       software: 'BBEdit',
     });
 
-    this.data.bucket('things').set(site);    
+    this.data.bucket('things').set(site);
     if (this.options.store === 'arango') await this.arango.set(site);
 
     await this.writeLinks();

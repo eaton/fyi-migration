@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
-import { urlSchema } from './url.js';
+import { urlSchema } from './fragments/index.js';
 
 // Use isPartOf
 export const TalkSchema = CreativeWorkSchema.extend({

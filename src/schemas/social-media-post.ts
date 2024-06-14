@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
-import { urlSchema } from './url.js';
-import { oneOrMany } from './helpers.js';
+import { oneOrMany, urlSchema } from './fragments/index.js';
 
 export const SocialMediaPostingSchema = CreativeWorkSchema.extend({
   type: z.string().default('SocialMediaPosting'),
