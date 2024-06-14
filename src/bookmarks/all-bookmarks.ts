@@ -1,15 +1,15 @@
-import { Migrator } from "../shared/migrator.js";
-import { OpmlMigrator } from "./opml.js";
-import { StaticLinkMigrator } from "./static-sites.js";
-import { PredicateLinkMigrator } from "./predicate.js";
-import { HavanaLinkMigrator } from "./havana.js";
-import { BrowserBookmarkMigrator } from "./browser-bookmarks.js";
-import { PinboardMigrator } from "./pinboard.js";
-import { InstapaperMigrator } from "./instapaper.js";
-import { TwitterBookmarkMigrator } from "./twitter.js";
-import { PocketMigrator } from "./getpocket.js";
-import { AutogramLinkMigrator } from "./autogram.js";
-import { OmnivoreMigrator } from "./omnivore.js";
+import { Migrator } from '../shared/migrator.js';
+import { AutogramLinkMigrator } from './autogram.js';
+import { BrowserBookmarkMigrator } from './browser-bookmarks.js';
+import { PocketMigrator } from './getpocket.js';
+import { HavanaLinkMigrator } from './havana.js';
+import { InstapaperMigrator } from './instapaper.js';
+import { OmnivoreMigrator } from './omnivore.js';
+import { OpmlMigrator } from './opml.js';
+import { PinboardMigrator } from './pinboard.js';
+import { PredicateLinkMigrator } from './predicate.js';
+import { StaticLinkMigrator } from './static-sites.js';
+import { TwitterBookmarkMigrator } from './twitter.js';
 
 export class AllBookmarksMigrator extends Migrator {
   override async run() {
@@ -23,9 +23,9 @@ export class AllBookmarksMigrator extends Migrator {
       label: 'Internet Explorer 4',
       logger: this.log,
       missingDates: 'fake',
-      ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*']
+      ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*'],
     }).run();
-    
+
     await new OpmlMigrator({
       logger: this.log,
       input: 'input/blogs/movabletype',

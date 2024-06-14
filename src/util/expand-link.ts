@@ -19,7 +19,7 @@ export async function expandLink(input: string | URL) {
       redirected: err.response?.redirected,
       resolved: err.response?.url,
       status: err.status,
-      statusText: (err.cause as Error).message
+      statusText: (err.cause as Error).message,
     }))
     .fetchError(cb => ({
       url: url.toString(),
@@ -49,7 +49,6 @@ export async function expandLink(input: string | URL) {
       redirected: err.response?.redirected,
       resolved: err.response?.url,
       status: err.status,
-      statusText: (err.cause as Error).message
-    }))
-
+      statusText: (err.cause as Error).message,
+    }));
 }

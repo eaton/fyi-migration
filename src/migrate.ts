@@ -1,13 +1,12 @@
 import { Migrator } from './shared/migrator.js';
 
-import { BookMigrator } from './books/books.js';
 import { AllBlogMigrator } from './blogs/all-blogs.js';
 import { AllBookmarksMigrator } from './bookmarks/all-bookmarks.js';
+import { BookMigrator } from './books/books.js';
 import { AllTextFilesMigrator } from './textfiles/all-textfiles.js';
-import { ArticleReprintMigrator } from './work/article-reprints.js';
 import { TwitterMigrator } from './twitter/twitter.js';
+import { ArticleReprintMigrator } from './work/article-reprints.js';
 // import { TalkMigrator } from './work/talks.js';
-
 
 export class MigrateEverything extends Migrator {
   override async run() {

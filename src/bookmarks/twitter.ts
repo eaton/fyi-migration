@@ -1,10 +1,14 @@
-import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { prepUrlForBookmark } from "../util/clean-link.js";
-import { CreativeWorkSchema } from "../schemas/creative-work.js";
-import { TwitterArchive, ArchiveReadPart, TwitterHelpers, PartialTweet } from 'twitter-archive-reader';
-import { z } from "zod";
-import { ParsedUrl } from "@eatonfyi/urls";
-import { BookmarkSchema } from "../schemas/bookmark.js";
+import { ParsedUrl } from '@eatonfyi/urls';
+import {
+  ArchiveReadPart,
+  PartialTweet,
+  TwitterArchive,
+  TwitterHelpers,
+} from 'twitter-archive-reader';
+import { z } from 'zod';
+import { BookmarkSchema } from '../schemas/bookmark.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {
   ignoreLinksToTweets?: boolean;
@@ -20,15 +24,15 @@ const defaults: TwitterLinkMigratorOptions = {
   cache: 'cache/bookmarks',
   ignoreLinksToTweets: true,
   ignoreReplies: true,
-  ignoreRetweets: true
-}
+  ignoreRetweets: true,
+};
 
 export class TwitterBookmarkMigrator extends Migrator {
   declare options: TwitterLinkMigratorOptions;
   links: TwitterLink[] = [];
 
   constructor(options: TwitterLinkMigratorOptions = {}) {
-    super({...defaults, ...options});
+    super({ ...defaults, ...options });
   }
 
   override async cacheIsFilled() {
@@ -45,7 +49,7 @@ export class TwitterBookmarkMigrator extends Migrator {
     }
 
     for (const a of archives) {
-      this.log.debug(`Processing links from ${a}`)
+      this.log.debug(`Processing links from ${a}`);
       const ignore = [
         'ad',
         'block',
@@ -57,7 +61,7 @@ export class TwitterBookmarkMigrator extends Migrator {
         'moment',
         'mute',
       ] as ArchiveReadPart[];
-  
+
       const archive = new TwitterArchive(this.input.path(a), { ignore });
       await archive.ready();
 
@@ -77,8 +81,8 @@ export class TwitterBookmarkMigrator extends Migrator {
     if (this.options.ignoreLinksToTweets) {
       this.links = this.links.filter(t => {
         const u = new ParsedUrl(t.url);
-        return !['twitter.com', 't.co', 'x.com'].includes(u.domain)
-      })
+        return !['twitter.com', 't.co', 'x.com'].includes(u.domain);
+      });
     }
     this.cache.write('twitter.ndjson', this.links);
     return this.links;
@@ -86,12 +90,13 @@ export class TwitterBookmarkMigrator extends Migrator {
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('twitter.ndjson', 'auto') as undefined[] ?? [];
-      this.links = raw.map(l => schema.parse(l)); 
+      const raw =
+        (this.cache.read('twitter.ndjson', 'auto') as undefined[]) ?? [];
+      this.links = raw.map(l => schema.parse(l));
     }
     return this.links;
   }
-  
+
   override async finalize() {
     const linkStore = this.data.bucket('links');
 
@@ -101,7 +106,7 @@ export class TwitterBookmarkMigrator extends Migrator {
         date: l.date,
         description: l.description,
         keywords: l.hashtags,
-        isPartOf: `@${l.handle}`
+        isPartOf: `@${l.handle}`,
       });
       return link;
     });
@@ -110,20 +115,28 @@ export class TwitterBookmarkMigrator extends Migrator {
       linkStore.set(cw);
     }
 
-    this.log.info(`Saved ${cws.length} links.`)
+    this.log.info(`Saved ${cws.length} links.`);
   }
 
   processTweet(input: PartialTweet): TwitterLink[] {
     const output: TwitterLink[] = [];
     let text = input.text.trim();
 
-    if (this.options.ignoreRetweets && (input.retweeted_status || input.retweeted)) return [];
+    if (
+      this.options.ignoreRetweets &&
+      (input.retweeted_status || input.retweeted)
+    )
+      return [];
     if (this.options.ignoreReplies) {
-      if (input.in_reply_to_user_id_str && (input.in_reply_to_user_id_str !== input.user.id_str)) return [];
+      if (
+        input.in_reply_to_user_id_str &&
+        input.in_reply_to_user_id_str !== input.user.id_str
+      )
+        return [];
     } else {
-      while(text.length > 0 && text.startsWith('@')) {
-        text = text.replace(/^@[a-zA-Z0-9_-]/, '').trim()
-      }  
+      while (text.length > 0 && text.startsWith('@')) {
+        text = text.replace(/^@[a-zA-Z0-9_-]/, '').trim();
+      }
     }
 
     for (const hashTag of input.entities.hashtags.map(h => h.text)) {
@@ -141,19 +154,19 @@ export class TwitterBookmarkMigrator extends Migrator {
         text = text.replace(link.url, link.display_url).trim();
       }
     }
-    
+
     text = text.trim();
-    if (text.endsWith(':')) text = text.slice(0,-1);
+    if (text.endsWith(':')) text = text.slice(0, -1);
 
     for (const u of input.entities.urls) {
       const link = schema.parse({
-        url:  u.expanded_url,
+        url: u.expanded_url,
         description: text.length ? text : undefined,
         handle: input.user.screen_name,
         date: TwitterHelpers.dateFromTweet(input),
-        hashtags: input.entities.hashtags.map(h => h.text)
+        hashtags: input.entities.hashtags.map(h => h.text),
       });
-      output.push(link)
+      output.push(link);
     }
 
     return output;
@@ -165,7 +178,10 @@ const schema = z.object({
   description: z.string().optional(),
   date: z.coerce.date(),
   handle: z.string(),
-  hashtags: z.array(z.string()).optional().transform(a => a?.length ? a : undefined)
+  hashtags: z
+    .array(z.string())
+    .optional()
+    .transform(a => (a?.length ? a : undefined)),
 });
 
 type TwitterLink = z.infer<typeof schema>;

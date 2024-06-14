@@ -1,6 +1,7 @@
 import { toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { Client } from '@serguun42/tumblr.js';
+import { BookmarkSchema } from '../../schemas/bookmark.js';
 import {
   CreativeWorkInput,
   CreativeWorkSchema,
@@ -14,7 +15,6 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
-import { BookmarkSchema } from '../../schemas/bookmark.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;

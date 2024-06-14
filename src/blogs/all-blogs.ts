@@ -1,15 +1,15 @@
-import { Migrator } from "../shared/migrator.js";
+import { Migrator } from '../shared/migrator.js';
 
-import { LivejournaMigrator } from "./livejournal/livejournal.js";
-import { PredicateNetMigrator } from "./predicatenet.js";
-import { MovableTypeMigrator } from "./movabletype/movabletype.js";
-import { FuturismMigrator } from "./futurism.js";
-import { PositivaDrupalMigrator } from "./positiva-drupal/positiva-drupal.js";
-import { AltDrupalMigrator } from "./alt-drupal/alt-drupal.js";
-import { GoddyMigrator } from "./goddy/goddy.js";
-import { MediumMigrator } from "./medium.js";
-import { TumblrMigrator } from "./tumblr/tumblr.js";
-import { AltJekyllMigrator } from "./alt-jekyll/jekyll.js";
+import { AltDrupalMigrator } from './alt-drupal/alt-drupal.js';
+import { AltJekyllMigrator } from './alt-jekyll/jekyll.js';
+import { FuturismMigrator } from './futurism.js';
+import { GoddyMigrator } from './goddy/goddy.js';
+import { LivejournaMigrator } from './livejournal/livejournal.js';
+import { MediumMigrator } from './medium.js';
+import { MovableTypeMigrator } from './movabletype/movabletype.js';
+import { PositivaDrupalMigrator } from './positiva-drupal/positiva-drupal.js';
+import { PredicateNetMigrator } from './predicatenet.js';
+import { TumblrMigrator } from './tumblr/tumblr.js';
 
 export class AllBlogMigrator extends Migrator {
   override async run() {

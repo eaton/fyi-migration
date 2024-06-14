@@ -85,11 +85,10 @@ export interface MigratorOptions {
    */
   logger?: Logger | LoggerOptions;
 
-  
   /**
    * How progress information should be displayed to the user when a migration is triggered.
    */
-  progress?: 'silent' | 'progress' | 'status' | 'details'
+  progress?: 'silent' | 'progress' | 'status' | 'details';
 }
 
 const loggerDefaults: LoggerOptions = {

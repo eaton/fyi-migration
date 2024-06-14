@@ -1,3 +1,4 @@
+export * from './all-blogs.js';
 export * from './alt-drupal/alt-drupal.js';
 export * from './alt-jekyll/jekyll.js';
 export * from './futurism.js';
@@ -8,4 +9,3 @@ export * from './movabletype/movabletype.js';
 export * from './positiva-drupal/positiva-drupal.js';
 export * from './predicatenet.js';
 export * from './tumblr/tumblr.js';
-export * from './all-blogs.js'

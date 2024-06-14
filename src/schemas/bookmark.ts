@@ -1,18 +1,18 @@
-import { z } from "zod";
-import { CreativeWorkSchema } from "./creative-work.js";
-import { urlSchema } from "./url.js";
+import { z } from 'zod';
+import { CreativeWorkSchema } from './creative-work.js';
+import { urlSchema } from './url.js';
 
 /**
  * A special-case version of the base SocialMediaPosting type that
  * we use to store bookmarks and shared links from a variety of sources.
- * 
+ *
  * Notably, it includes optional properties for information about interim
  * redirects, the current HTTP status, and when it was last checked.
- * 
+ *
  * Note that the link being shared goes in `sharedContent`, not `url`;
  * the url property is the canonical URL of the post in which the link
  * is shared.
- * 
+ *
  * If the original version of a link is dead-dead but an archived version
  * is available (e.g., through the Wayback Machine), use the isArchivedAt
  * property from the base CreativeWorkSchema.
@@ -23,7 +23,7 @@ export const BookmarkSchema = CreativeWorkSchema.extend({
   redirects: z.array(urlSchema).optional(),
   statusCode: z.number().optional(),
   statusDate: z.coerce.date().optional(),
-  sharedContent: urlSchema
+  sharedContent: urlSchema,
 });
 
 export type Bookmark = z.infer<typeof BookmarkSchema>;

@@ -1,4 +1,4 @@
-import { OpmlMigrator } from "./bookmarks/opml.js";
+import { OpmlMigrator } from './bookmarks/opml.js';
 
 await new OpmlMigrator({
   input: 'input/blogs/movabletype',

@@ -3,9 +3,16 @@ import { CreativeWorkSchema } from './creative-work.js';
 import { DimensionsSchema } from './dimensions.js';
 import { recordWithHints } from './helpers.js';
 
-const semicolonList = z.string().or(z.array(z.string()))
-  .transform(i => typeof i === 'string' ? i.split(';').map(s => s.trim()) : i);
-const defaultKey = z.record(semicolonList).or(semicolonList).transform(s => Array.isArray(s) ? ({ author: s }) : s)
+const semicolonList = z
+  .string()
+  .or(z.array(z.string()))
+  .transform(i =>
+    typeof i === 'string' ? i.split(';').map(s => s.trim()) : i,
+  );
+const defaultKey = z
+  .record(semicolonList)
+  .or(semicolonList)
+  .transform(s => (Array.isArray(s) ? { author: s } : s));
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
@@ -17,7 +24,7 @@ export const BookSchema = CreativeWorkSchema.extend({
     'asin',
     'loc',
     'dds',
-    'custom'
+    'custom',
   ]),
   dates: recordWithHints(z.coerce.date(), [
     'publish',

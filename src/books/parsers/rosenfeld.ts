@@ -2,17 +2,18 @@ import { parse as parseDate } from '@eatonfyi/dates';
 import { extract, type ExtractTemplateObject } from '@eatonfyi/html';
 import { emptyDeep } from 'empty-deep';
 import { z } from 'zod';
-import { PartialBook, BookSchema } from '../../schemas/book.js';
+import { BookSchema, PartialBook } from '../../schemas/book.js';
 import { expandIds, getBestId } from '../normalize-ids.js';
 
 export async function rosenfeldmedia(html: string) {
   const data = await extract(html, template, schema);
 
-  const ids = emptyDeep(
-    expandIds({
-      isbn13: data.features['Paperback ISBN']?.replaceAll('-', ''),
-    }),
-  ) as Record<string, string> ?? {};
+  const ids =
+    (emptyDeep(
+      expandIds({
+        isbn13: data.features['Paperback ISBN']?.replaceAll('-', ''),
+      }),
+    ) as Record<string, string>) ?? {};
   const id = getBestId(ids);
 
   const book: PartialBook = {
@@ -25,7 +26,7 @@ export async function rosenfeldmedia(html: string) {
     format: 'Paperback',
     dimensions: { width: 6, height: 9 },
     image: data.image,
-    category: 'Computers & Technology'
+    category: 'Computers & Technology',
   };
 
   const authors: string[] = [];

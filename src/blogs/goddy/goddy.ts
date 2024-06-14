@@ -1,15 +1,15 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
+import { Bookmark, BookmarkSchema } from '../../schemas/bookmark.js';
 import { CommentSchema } from '../../schemas/comment.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/creative-work.js';
+import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { prepUrlForBookmark } from '../../util/clean-link.js';
-import { Bookmark, BookmarkSchema } from '../../schemas/bookmark.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -212,7 +212,7 @@ export class GoddyMigrator extends BlogMigrator {
         ...prepUrlForBookmark(input.link?.field_link_url, this.name),
         title: input.title,
         description: toMarkdown(autop(input.summary ?? '')) || undefined,
-        date: input.created
+        date: input.created,
       });
     } else {
       return CreativeWorkSchema.parse({

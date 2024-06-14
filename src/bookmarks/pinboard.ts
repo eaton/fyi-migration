@@ -1,20 +1,21 @@
-import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { Pinboard, type PinboardLink } from "../apis/pinboard.js";
-import { prepUrlForBookmark } from "../util/clean-link.js";
-import { CreativeWorkSchema } from "../schemas/creative-work.js";
-import { BookmarkSchema } from "../schemas/bookmark.js";
+import { Pinboard, type PinboardLink } from '../apis/pinboard.js';
+import { BookmarkSchema } from '../schemas/bookmark.js';
+import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface PinboardMigratorOptions extends MigratorOptions {
-  deliciousDate?: Date
-  apiKey?: string,
-  checkApi?: boolean,
-  onlyShared?: boolean
+  deliciousDate?: Date;
+  apiKey?: string;
+  checkApi?: boolean;
+  onlyShared?: boolean;
 }
 
 const defaults: PinboardMigratorOptions = {
   name: 'pinboard',
   label: 'Pinboard',
-  description: 'Contains both Pinboard and delicious links dating back to 2004 or so.',
+  description:
+    'Contains both Pinboard and delicious links dating back to 2004 or so.',
   input: 'input/bookmarks',
   cache: 'cache/bookmarks',
 
@@ -39,15 +40,15 @@ const defaults: PinboardMigratorOptions = {
    * private and work related bookmarks.
    */
   onlyShared: true,
-}
+};
 
 export class PinboardMigrator extends Migrator {
   declare options: PinboardMigratorOptions;
-  
+
   links: PinboardLink[] = [];
 
   constructor(options: PinboardMigratorOptions = {}) {
-    super({...defaults, ...options});
+    super({ ...defaults, ...options });
   }
 
   override async cacheIsFilled() {
@@ -68,7 +69,10 @@ export class PinboardMigrator extends Migrator {
     if (this.options.checkApi) {
       // Check if the source links are more than a day old; if so, check the API
       // for new links.
-      const mostRecent = this.links.map(l => l.time.valueOf()).sort().reverse()[0];
+      const mostRecent = this.links
+        .map(l => l.time.valueOf())
+        .sort()
+        .reverse()[0];
       if (Date.now() - mostRecent > 1000 * 60 * 60 * 24) {
         const newLinks = await api.getAll({ from: new Date(mostRecent) });
         this.links.push(...newLinks);
@@ -86,7 +90,7 @@ export class PinboardMigrator extends Migrator {
 
     return this.links;
   }
-  
+
   override async finalize() {
     const siteStore = this.data.bucket('things');
     const linkStore = this.data.bucket('links');
@@ -98,7 +102,8 @@ export class PinboardMigrator extends Migrator {
     const cws = this.links.map(l => {
       let isPartOf = 'pinboard';
       if (this.options.deliciousDate) {
-        isPartOf = (this.options.deliciousDate > l.time) ? 'delicious' : 'pinboard';
+        isPartOf =
+          this.options.deliciousDate > l.time ? 'delicious' : 'pinboard';
       }
 
       const link = BookmarkSchema.parse({
@@ -107,7 +112,7 @@ export class PinboardMigrator extends Migrator {
         name: l.description?.trim(),
         description: l.extended?.trim(),
         keywords: l.tags,
-        isPartOf
+        isPartOf,
       });
       return link;
     });
@@ -115,7 +120,7 @@ export class PinboardMigrator extends Migrator {
     for (const cw of cws) {
       linkStore.set(cw);
     }
-    this.log.info(`Saved ${cws.length} links.`)
+    this.log.info(`Saved ${cws.length} links.`);
 
     const pinboard = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -131,7 +136,8 @@ export class PinboardMigrator extends Migrator {
         type: 'WebApplication',
         id: 'pinboard',
         name: 'Pinboard',
-        description: "Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.",
+        description:
+          'Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.',
         url: 'https://de.licio.us',
       });
 

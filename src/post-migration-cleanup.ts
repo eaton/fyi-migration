@@ -1,5 +1,5 @@
-import { Migrator } from "./shared/migrator.js";
-import { CreativeWork } from "./schemas/creative-work.js";
+import { CreativeWork } from './schemas/creative-work.js';
+import { Migrator } from './shared/migrator.js';
 
 /**
  * There are a bunch of random post-migration cleanup tasks to

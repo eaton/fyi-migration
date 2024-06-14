@@ -1,7 +1,7 @@
 import { Migrator } from '../shared/migrator.js';
 import { TextEmailMigrator } from './email.js';
-import { TextJournalsMigrator } from './journals.js';
 import { TextFictionMigrator } from './fiction.js';
+import { TextJournalsMigrator } from './journals.js';
 
 export class AllTextFilesMigrator extends Migrator {
   override async run() {

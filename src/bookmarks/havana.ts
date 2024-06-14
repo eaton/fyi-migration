@@ -1,9 +1,9 @@
-import { Migrator, MigratorOptions } from "../shared/migrator.js";
-import { prepUrlForBookmark } from "../util/clean-link.js";
-import { CreativeWorkSchema } from "../schemas/creative-work.js";
-import { z } from "zod";
-import { getMdbInfo, parseMdbTable } from "../helpers/parse-mdb.js";
-import { BookmarkSchema } from "../schemas/bookmark.js";
+import { z } from 'zod';
+import { getMdbInfo, parseMdbTable } from '../helpers/parse-mdb.js';
+import { BookmarkSchema } from '../schemas/bookmark.js';
+import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface HavanaLinkMigratorOptions extends MigratorOptions {
   fakeStart?: Date;
@@ -17,14 +17,14 @@ const defaults: HavanaLinkMigratorOptions = {
   cache: 'cache/bookmarks',
   fakeStart: new Date('2001-09-15'),
   fakeEnd: new Date('2001-11-10'),
-}
+};
 
 export class HavanaLinkMigrator extends Migrator {
   declare options: HavanaLinkMigratorOptions;
   links: HavanaLink[] = [];
 
   constructor(options: HavanaLinkMigratorOptions = {}) {
-    super({...defaults, ...options});
+    super({ ...defaults, ...options });
   }
 
   override async cacheIsFilled() {
@@ -40,12 +40,13 @@ export class HavanaLinkMigrator extends Migrator {
 
   override async readCache() {
     if (this.links.length === 0) {
-      const raw = this.cache.read('havana.ndjson', 'auto') as undefined[] ?? [];
-      this.links = raw.map(l => schema.parse(l)); 
+      const raw =
+        (this.cache.read('havana.ndjson', 'auto') as undefined[]) ?? [];
+      this.links = raw.map(l => schema.parse(l));
     }
     return this.links;
   }
-  
+
   override async finalize() {
     const tempDate = getMdbInfo(this.input.path('havana.mdb')).dateCreated;
     const siteStore = this.data.bucket('things');
@@ -57,7 +58,7 @@ export class HavanaLinkMigrator extends Migrator {
         name: l.title,
         description: l.summary,
         date: l.date ?? tempDate,
-        isPartOf: this.options.name
+        isPartOf: this.options.name,
       });
       return link;
     });
@@ -66,7 +67,7 @@ export class HavanaLinkMigrator extends Migrator {
       linkStore.set(cw);
     }
 
-    this.log.info(`Saved ${cws.length} links.`)
+    this.log.info(`Saved ${cws.length} links.`);
 
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebSite',
@@ -75,17 +76,19 @@ export class HavanaLinkMigrator extends Migrator {
       url: 'https://havana-mod.com',
     });
     siteStore.set(getpocket);
-
   }
 }
-
 
 const schema = z.object({
   id: z.number(),
   title: z.string(),
   url: z.string().url(),
   summary: z.string().optional(),
-  date: z.number().or(z.coerce.date()).transform(d => typeof d === 'number' ? new Date(d * 1000) : d).optional(),
+  date: z
+    .number()
+    .or(z.coerce.date())
+    .transform(d => (typeof d === 'number' ? new Date(d * 1000) : d))
+    .optional(),
 });
 
 type HavanaLink = z.infer<typeof schema>;

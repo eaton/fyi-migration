@@ -1,8 +1,10 @@
-import { reformat } from "@eatonfyi/dates";
-import { ParsedAmazonData } from "./amazon-schema.js";
+import { reformat } from '@eatonfyi/dates';
+import { ParsedAmazonData } from './amazon-schema.js';
 
-export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<string, string[]> = {}) {
-
+export function fixAmazonBookData(
+  book: ParsedAmazonData,
+  patterns: Record<string, string[]> = {},
+) {
   let breadcrumbs = book.breadcrumbs ? book.breadcrumbs.map(b => b.name) : [];
   if (breadcrumbs) {
     if (breadcrumbs[1] === 'Kindle eBooks') {
@@ -12,7 +14,7 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
     }
     book.category = breadcrumbs[0];
   }
-  
+
   // A bunch of book features and metadata are tucked into these chunks
   // of parsed markup, we turn them into key/value pairs for convenience.
   const info = mapKeyValues(book.info);
@@ -23,8 +25,9 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   if (book.asin) book.ids.asin = book.asin;
   if (carousel.isbn10) book.ids.isbn10 = carousel.isbn10;
   if (carousel.isbn13) book.ids.isbn13 = carousel.isbn13;
-  if (info.page_number_source_isbn) book.ids.isbn10 ??= info.page_number_source_isbn;
-  
+  if (info.page_number_source_isbn)
+    book.ids.isbn10 ??= info.page_number_source_isbn;
+
   // Creators are keyed by their roles in the book production.
   // Split this out for convenience.
   book.creator = mapAmazonCreators(book.creator_entries ?? []);
@@ -35,13 +38,14 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   if (image) {
     book.image = fixAmazonImage(image);
   }
-  
+
   // Attempt to extract series data from the carousel and feature info.
   if (carousel.series) {
     book.series = carousel.series?.trim();
   }
   if (carousel.seriesPosition) {
-    const [, order, ] = /Book (\d+) of (\d+)/.exec(carousel.seriesPosition ?? '') ?? []
+    const [, order] =
+      /Book (\d+) of (\d+)/.exec(carousel.seriesPosition ?? '') ?? [];
     book.position = order;
   }
 
@@ -49,16 +53,24 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   // We'll make a quick attempt to tease them apart; this is usually enough.
   book.publisher ??= carousel.publisher || info.publisher;
   book.date = fixAmazonDate(carousel.publication_date || info.publication_date);
-  if (info.publication_date) book.publisher = book.publisher?.replace(' (' + info.publication_date + ')', '');
-  
+  if (info.publication_date)
+    book.publisher = book.publisher?.replace(
+      ' (' + info.publication_date + ')',
+      '',
+    );
+
   // Page count is stored in a few different places depending on
   // the format of the book. We don't care TOO much, since the ebook
   // page count is almost always derived from the print version anyways.
-  const pages = carousel.ebook_pages || carousel.fiona_pages || info.ebook_pages || info.print_length;
+  const pages =
+    carousel.ebook_pages ||
+    carousel.fiona_pages ||
+    info.ebook_pages ||
+    info.print_length;
   if (pages) {
     book.pages = Number.parseInt(pages);
   }
-  
+
   // Try to parse out the book dimensions, which can be tricky.
   let dimensions = info.dimensions ?? carousel.dimemsions;
   if (dimensions) {
@@ -91,12 +103,18 @@ export function fixAmazonBookData(book: ParsedAmazonData, patterns: Record<strin
   book = splitTitle(book);
   book = fixAmazonTitles(book);
   book = removeDuplicateMetadata(book);
-  
+
   return book;
 }
 
-function mapKeyValues(input: { key?: string, label?: string, value?: string }[]) {
-  const entries = input.map(item => [(item.key ?? item.label)?.toLocaleLowerCase().replaceAll(/\s+/g, '_') ?? 'undefined', item.value]);
+function mapKeyValues(
+  input: { key?: string; label?: string; value?: string }[],
+) {
+  const entries = input.map(item => [
+    (item.key ?? item.label)?.toLocaleLowerCase().replaceAll(/\s+/g, '_') ??
+      'undefined',
+    item.value,
+  ]);
   const seriesData = input.find(i => i.key?.toLocaleLowerCase() === 'series');
   if (seriesData) {
     entries.push(['seriesPosition', seriesData.value]);
@@ -111,7 +129,7 @@ function splitTitle(book: ParsedAmazonData): ParsedAmazonData {
   if (book.title) {
     const [title, subtitle] = book.title.split(/[:–]/, 2);
     if (subtitle) {
-      if (similar(title, book.series) && (book.position !== "1")) {
+      if (similar(title, book.series) && book.position !== '1') {
         // Something like `Foobar: The Legend Of Baz` in the Foobar series; don't split this.
       } else {
         book.title = title.trim();
@@ -126,18 +144,18 @@ function splitTitle(book: ParsedAmazonData): ParsedAmazonData {
 
 function fixMetaDuplicatedInTitle(book: ParsedAmazonData): ParsedAmazonData {
   if (!book.title) return book;
-  const matches = book.title?.matchAll(/\s*([([](.+)[)\]])\s*/g) ?? []
+  const matches = book.title?.matchAll(/\s*([([](.+)[)\]])\s*/g) ?? [];
 
   for (const [match, segment] of matches) {
     if (
-      isCurEdition(segment, book)
-      || isCurSeries(segment, book)
-      || isCurPublisher(segment, book)
-      || isCurImprint(segment, book)
-      || isCurSubtitle(segment, book)
+      isCurEdition(segment, book) ||
+      isCurSeries(segment, book) ||
+      isCurPublisher(segment, book) ||
+      isCurImprint(segment, book) ||
+      isCurSubtitle(segment, book)
     ) {
       book.title = book.title.replace(match, '').trim();
-    };
+    }
   }
 
   return book;
@@ -171,7 +189,7 @@ function isCurSubtitle(input: string, book: ParsedAmazonData) {
 
 function similar(input: string | undefined, comparison: string | undefined) {
   if (input === undefined || input.length === 0) return false;
-  return (strip(input) === strip(comparison));
+  return strip(input) === strip(comparison);
 }
 
 function strip(i: string | undefined) {
@@ -187,16 +205,19 @@ function fixAmazonTitles(book: ParsedAmazonData): ParsedAmazonData {
   if (book.title === undefined) return book;
   if (book.subtitle?.length === 0) book.subtitle = undefined;
 
-  const [nssMatch, nssName, , , nssNum] = book.title?.match(/\((.+?)(,? ?(no|no\.|#|book|vol|volume)? ?(\d+))\)/i) ?? [];
+  const [nssMatch, nssName, , , nssNum] =
+    book.title?.match(/\((.+?)(,? ?(no|no\.|#|book|vol|volume)? ?(\d+))\)/i) ??
+    [];
   if (nssMatch) {
     book.series ??= nssName.trim();
     if (nssNum) book.position ??= nssNum;
     book.title = book.title?.replace(nssMatch, '').trim();
   }
 
-  const [
-    seriesMatch, seriesString, seriesName, , , , , orderNum
-  ] = /\((([\s\w]+) +(series|duology|trilogy|quintet|sextet|sequence|cycle|saga|collection|novel)?(\s*)),? ?((book|no\.|#)? ?([\d+])?)\)/i.exec(book.title ?? '') ?? [];
+  const [seriesMatch, seriesString, seriesName, , , , , orderNum] =
+    /\((([\s\w]+) +(series|duology|trilogy|quintet|sextet|sequence|cycle|saga|collection|novel)?(\s*)),? ?((book|no\.|#)? ?([\d+])?)\)/i.exec(
+      book.title ?? '',
+    ) ?? [];
   if (seriesMatch) {
     book.title = book.title?.replace(seriesMatch, '').trim();
     if (book.series === seriesName || book.series === seriesString) {
@@ -210,14 +231,16 @@ function fixAmazonTitles(book: ParsedAmazonData): ParsedAmazonData {
   }
 
   // A common pattern for imprints…
-  const [impMatch, impName, impTag] = book.title?.match(/\((.+ (classics|library))\)/i) ?? [];
+  const [impMatch, impName, impTag] =
+    book.title?.match(/\((.+ (classics|library))\)/i) ?? [];
   if (impMatch) {
     book.imprint ??= [impName.trim(), impTag.trim()].join(' ');
     book.title = book.title?.replace(impMatch, '').trim();
   }
 
   // Check for Editions in the title, whether duplicated or not.
-  const [editionMatch, editionString, edition] = / *\((([\s\w]+) +(ed|ed\.|Edition))\)/i.exec(book.title ?? '') ?? [];
+  const [editionMatch, editionString, edition] =
+    / *\((([\s\w]+) +(ed|ed\.|Edition))\)/i.exec(book.title ?? '') ?? [];
   if (editionMatch) {
     if (book.edition === undefined) {
       book.edition = edition + ' Edition';
@@ -258,10 +281,16 @@ function removeDuplicateMetadata(book: ParsedAmazonData): ParsedAmazonData {
 
   // The imprint and edition fields often ends up in the publisher field.
   if (book.imprint && book.publisher) {
-    book.publisher = book.publisher.replace(`${book.imprint}`, '').replaceAll('()', '').trim();
+    book.publisher = book.publisher
+      .replace(`${book.imprint}`, '')
+      .replaceAll('()', '')
+      .trim();
   }
   if (book.edition && book.publisher) {
-    book.publisher = book.publisher.replace(`${book.edition}`, '').replaceAll('()', '').trim();
+    book.publisher = book.publisher
+      .replace(`${book.edition}`, '')
+      .replaceAll('()', '')
+      .trim();
   }
 
   book.subtitle = book.subtitle?.replace(`(${book.imprint})`, '').trim();
@@ -288,25 +317,25 @@ function removeDuplicateMetadata(book: ParsedAmazonData): ParsedAmazonData {
 }
 
 /**
-  * Converts Amazon dates (sometimes `2000 October 30`, sometimes `October 30, 2000`)
-  * to consistent `2000-10-30` format.
-  */
+ * Converts Amazon dates (sometimes `2000 October 30`, sometimes `October 30, 2000`)
+ * to consistent `2000-10-30` format.
+ */
 function fixAmazonDate(input?: string) {
   if (input === undefined) return undefined;
   if (input.indexOf(',') > 0) {
     return reformat(input, 'LLLL d, yyyy', 'yyyy-MM-dd');
   } else {
-   return reformat(input, 'yyyy LLLL d', 'yyyy-MM-dd');
+    return reformat(input, 'yyyy LLLL d', 'yyyy-MM-dd');
   }
 }
 
 /**
-  * Strips out CDN scaling modifiers from Amazon image URLs
-  */
+ * Strips out CDN scaling modifiers from Amazon image URLs
+ */
 function fixAmazonImage(input?: string) {
   if (input === undefined) return undefined;
   if (URL.canParse(input)) {
-    return input.replace(/._[A-Z0-9_]+_.jpg/, '.jpg')
+    return input.replace(/._[A-Z0-9_]+_.jpg/, '.jpg');
   }
   return undefined;
 }
@@ -315,16 +344,22 @@ function fixAmazonImage(input?: string) {
  * Strips out unnamed creators and maps multiple creators and contributors to our
  * generalized role structure
  */
-function mapAmazonCreators(input: { name?: string, url?: string, role?: string }[]) {
+function mapAmazonCreators(
+  input: { name?: string; url?: string; role?: string }[],
+) {
   const output: Record<string, string[]> = {};
-  
+
   for (const c of input) {
-    let role = c.role?.replaceAll(/[()]/g, '').toLocaleLowerCase().split(',').filter(r => !!r);
+    let role = c.role
+      ?.replaceAll(/[()]/g, '')
+      .toLocaleLowerCase()
+      .split(',')
+      .filter(r => !!r);
     role ??= ['author'];
     if (c.name !== 'undefined' && c.name?.trim().length) {
       for (const r of role) {
         output[r.trim()] ??= [];
-        output[r.trim()].push(c.name.trim());  
+        output[r.trim()].push(c.name.trim());
       }
     }
   }
@@ -332,9 +367,12 @@ function mapAmazonCreators(input: { name?: string, url?: string, role?: string }
   return output;
 }
 
-export function applyMetadataPatterns(input: ParsedAmazonData, rules: Record<string, string[]> = {}): ParsedAmazonData {
+export function applyMetadataPatterns(
+  input: ParsedAmazonData,
+  rules: Record<string, string[]> = {},
+): ParsedAmazonData {
   if (input.title === undefined) return input;
-  
+
   for (const value of rules.imprints ?? []) {
     if (input.title.indexOf(wrap(value)) > 0) {
       input.title = input.title.replace(wrap(value), '').trim();
@@ -352,12 +390,11 @@ export function applyMetadataPatterns(input: ParsedAmazonData, rules: Record<str
       input.title = input.title.replace(wrap(value), '').trim();
     } else {
       const regex = new RegExp(` \((${value}),? (Book|#)?(\d+)\)`);
-      const [match, series, , seriesOrder] =
-        regex.exec(input.title) ?? [];
+      const [match, series, , seriesOrder] = regex.exec(input.title) ?? [];
       if (match) input.title = input.title.replace(match, '').trim();
       if (series || seriesOrder) {
-        input.series = series.trim().length ? series.trim() : undefined,
-        input.position = seriesOrder ? seriesOrder : undefined;
+        (input.series = series.trim().length ? series.trim() : undefined),
+          (input.position = seriesOrder ? seriesOrder : undefined);
       }
     }
   }

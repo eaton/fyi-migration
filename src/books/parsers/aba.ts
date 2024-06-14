@@ -8,11 +8,12 @@ import { expandIds, getBestId } from '../normalize-ids.js';
 export async function abookapart(html: string) {
   const data = await extract(html, template, schema);
 
-  const ids = emptyDeep(
-    expandIds({
-      isbn13: data.features.ISBN?.replaceAll('-', ''),
-    }),
-  ) as Record<string, string> ?? {};
+  const ids =
+    (emptyDeep(
+      expandIds({
+        isbn13: data.features.ISBN?.replaceAll('-', ''),
+      }),
+    ) as Record<string, string>) ?? {};
   const id = getBestId(ids);
 
   const book: PartialBook = {
@@ -24,7 +25,7 @@ export async function abookapart(html: string) {
     publisher: 'A Book Apart',
     format: 'Paperback',
     dimensions: { width: 5.5, height: 8.5 },
-    category: 'Computers & Technology'
+    category: 'Computers & Technology',
   };
 
   const authors: string[] = [];

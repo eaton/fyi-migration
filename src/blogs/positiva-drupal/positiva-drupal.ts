@@ -3,6 +3,7 @@ import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
 import is from '@sindresorhus/is';
 import { ZodTypeAny, z } from 'zod';
+import { BookmarkSchema } from '../../schemas/bookmark.js';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
 import {
   CreativeWork,
@@ -11,7 +12,6 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { BookmarkSchema } from '../../schemas/bookmark.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',

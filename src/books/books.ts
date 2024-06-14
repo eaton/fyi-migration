@@ -3,12 +3,17 @@ import { nanohash } from '@eatonfyi/ids';
 import { NormalizedUrl } from '@eatonfyi/urls';
 import { emptyDeep, merge } from 'obby';
 import { parse as parsePath } from 'path';
-import { PartialBookSchema, BookSchema, type Book, type PartialBook } from '../schemas/book.js';
+import { z } from 'zod';
+import {
+  BookSchema,
+  PartialBookSchema,
+  type Book,
+  type PartialBook,
+} from '../schemas/book.js';
 import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
-import { z } from 'zod';
 
 export interface BookMigratorOptions extends FetcherOptions {
   documentId?: string;
@@ -37,7 +42,13 @@ export class BookMigrator extends Fetcher {
   json: typeof jetpack;
   covers: typeof jetpack;
 
-  parsableDomains: Record<string, (html: string, patterns?: Record<string, string[]>) => Promise<Book | undefined>>;
+  parsableDomains: Record<
+    string,
+    (
+      html: string,
+      patterns?: Record<string, string[]>,
+    ) => Promise<Book | undefined>
+  >;
 
   constructor(options: BookMigratorOptions = {}) {
     super({ ...defaults, ...options });
@@ -75,10 +86,13 @@ export class BookMigrator extends Fetcher {
 
       const helperSchema = z.object({ name: z.string() });
       for (const sh of ['imprints', 'publishers', 'editions', 'series']) {
-        const data = await fetchGoogleSheet(this.options.documentId, sh, helperSchema);
+        const data = await fetchGoogleSheet(
+          this.options.documentId,
+          sh,
+          helperSchema,
+        );
         this.patterns[sh] = data.map(d => d.name);
       }
-
     } else if (this.input.exists('books.csv')) {
       const raw =
         (this.input.read('books.csv', 'auto') as
@@ -118,7 +132,7 @@ export class BookMigrator extends Fetcher {
       } else {
         const url = this.getBookParseUrl(book);
         const cacheFile = `${nanohash(url)}.html`;
-        
+
         if (this.html.exists(cacheFile) && !this.options.reFetch) {
           htmlToParse.set(book, cacheFile);
         } else if (url) {
@@ -152,13 +166,19 @@ export class BookMigrator extends Fetcher {
           if (!parsedData) {
             this.log.error(`Empty parsed data for ${book.url}`);
           } else {
-            const merged = this.populateIds(merge(parsedData, emptyDeep(book)) as Partial<Book>);
-            
+            const merged = this.populateIds(
+              merge(parsedData, emptyDeep(book)) as Partial<Book>,
+            );
+
             // Our merges are duplicating array elements, that's no good.
             // This is a quick and dirty fix for it.
-            for (const [creatorType, creators] of Object.entries(merged.creator as Record<string, string[]>)) {
+            for (const [creatorType, creators] of Object.entries(
+              merged.creator as Record<string, string[]>,
+            )) {
               if (merged.creator && creators.length > 1) {
-                merged.creator[creatorType] = [...new Set<string>(creators).values()]
+                merged.creator[creatorType] = [
+                  ...new Set<string>(creators).values(),
+                ];
               }
             }
 
@@ -178,7 +198,10 @@ export class BookMigrator extends Fetcher {
       }
     }
 
-    this.bookData = merge(this.parsedBooks, this.customBooks) as Record<string, Book>;
+    this.bookData = merge(this.parsedBooks, this.customBooks) as Record<
+      string,
+      Book
+    >;
     this.cache.write('book-data.ndjson', Object.values(this.bookData));
 
     if (Object.values(this.notes).length) {
@@ -193,7 +216,9 @@ export class BookMigrator extends Fetcher {
 
     const customCoverDir = this.input.dir('images');
     for (const cover of customCoverDir.list() ?? []) {
-      jetpack.copy(customCoverDir.path(cover), this.covers.path(cover), { overwrite: true });
+      jetpack.copy(customCoverDir.path(cover), this.covers.path(cover), {
+        overwrite: true,
+      });
     }
 
     return;
@@ -201,16 +226,21 @@ export class BookMigrator extends Fetcher {
 
   override async readCache(): Promise<unknown> {
     if (Object.values(this.bookData).length === 0) {
-      const data = this.cache.read('book-data.ndjson', 'auto') as Book[] || undefined;
+      const data =
+        (this.cache.read('book-data.ndjson', 'auto') as Book[]) || undefined;
       for (const b of data) {
         this.bookData[b.id] = b;
-      }  
+      }
     }
     return this.bookData;
   }
 
   override async finalize(): Promise<unknown> {
-    this.cache.copy('book-data.ndjson', this.root.path('src/_data/books.ndjson'), { overwrite: true });
+    this.cache.copy(
+      'book-data.ndjson',
+      this.root.path('src/_data/books.ndjson'),
+      { overwrite: true },
+    );
     this.copyAssets(this.cache.path('images'), 'books');
 
     // Finally, we're going to spit out a CSV version of the original book index,
@@ -230,9 +260,7 @@ export class BookMigrator extends Fetcher {
     if (!url || !this.parsableDomains[url.domainWithoutSuffix]) {
       const urlId = book.ids?.asin ?? book.ids?.isbn10;
       if (urlId && book.url === undefined) {
-        url = new NormalizedUrl(
-          `https://www.amazon.com/dp/${urlId}`,
-        );
+        url = new NormalizedUrl(`https://www.amazon.com/dp/${urlId}`);
       }
     }
     return url?.toString();
@@ -291,8 +319,8 @@ export class BookMigrator extends Fetcher {
 
 function makeFlattenedBook(book: Book) {
   return {
-    'id': '',
-    'category': book.category,
+    id: '',
+    category: book.category,
     'ids.isbn10': book.ids.isbn10,
     'ids.isbn13': book.ids.isbn13,
     'ids.asin': book.ids.asin,
@@ -300,28 +328,34 @@ function makeFlattenedBook(book: Book) {
     'ids.ddc': book.ids.ddc,
     'ids.loc': book.ids.loc,
     'ids.custom': book.ids.custom,
-    'name': book.name,
-    'subtitle': book.subtitle,
-    'series': book.series,
-    'position': book.position,
-    'publisher': book.publisher,
-    'imprint': book.imprint,
-    'edition': book.edition,
-    'owned': book.owned,
-    'source': book.source,
-    'note': '',
+    name: book.name,
+    subtitle: book.subtitle,
+    series: book.series,
+    position: book.position,
+    publisher: book.publisher,
+    imprint: book.imprint,
+    edition: book.edition,
+    owned: book.owned,
+    source: book.source,
+    note: '',
     'dates.copyright': book.dates?.copyright?.toISOString()?.split('T')[0],
     'dates.publish': book.dates?.publish?.toISOString()?.split('T')[0],
     'dates.obtained': book.dates?.obtained?.toISOString()?.split('T')[0],
     'dates.read': book.dates?.read?.toISOString()?.split('T')[0],
-    'format': book.format,
-    'pages': book.pages,
-    'dimensions': [book?.dimensions?.width, book?.dimensions?.height, book?.dimensions?.depth].filter(d => d !== undefined).join('x'),
-    'url': book.url,
-    'image': book.image,
+    format: book.format,
+    pages: book.pages,
+    dimensions: [
+      book?.dimensions?.width,
+      book?.dimensions?.height,
+      book?.dimensions?.depth,
+    ]
+      .filter(d => d !== undefined)
+      .join('x'),
+    url: book.url,
+    image: book.image,
     'creator.author.0': book.creator?.author?.[0],
     'creator.editor.0': book.creator?.editor?.[0],
     'creator.illustrator.0': book.creator?.illustrator?.[0],
     'creator.foreword.0': book.creator?.foreword?.[0],
-  }
+  };
 }
