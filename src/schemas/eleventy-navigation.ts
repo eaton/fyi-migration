@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { urlSchema } from './url';
+import { urlSchema } from './url.js';
 
 export const EleventyNavigationSchema = z
   .object({

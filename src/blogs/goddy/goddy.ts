@@ -8,6 +8,8 @@ import {
 } from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { prepUrlForBookmark } from '../../util/clean-link.js';
+import { Bookmark, BookmarkSchema } from '../../schemas/bookmark.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -161,22 +163,27 @@ export class GoddyMigrator extends BlogMigrator {
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
     const commentStore = this.data.bucket('comments');
+    const linkStore = this.data.bucket('links');
 
     // Prep the comments first, so they're easier to attach to the nodes.
     const comments = cache.comments.map(c => this.prepComment(c));
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
     for (const { text, ...frontmatter } of nodes) {
-      const file = this.makeFilename(frontmatter);
-      this.output.write(file, { content: text, data: frontmatter });
-      this.log.debug(`Wrote ${file}`);
+      if (frontmatter.type === 'Bookmark') {
+        linkStore.set(frontmatter);
+      } else {
+        const file = this.makeFilename(frontmatter);
+        this.output.write(file, { content: text, data: frontmatter });
+        this.log.debug(`Wrote ${file}`);
 
-      const nodeComments = comments.filter(c => c.about === frontmatter.id);
-      if (nodeComments.length) {
-        commentStore.set(frontmatter.id, nodeComments);
-        this.log.debug(
-          `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
-        );
+        const nodeComments = comments.filter(c => c.about === frontmatter.id);
+        if (nodeComments.length) {
+          commentStore.set(frontmatter.id, nodeComments);
+          this.log.debug(
+            `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
+          );
+        }
       }
     }
 
@@ -199,27 +206,36 @@ export class GoddyMigrator extends BlogMigrator {
     return raw.map(u => schema.parse(u) as z.infer<T>);
   }
 
-  protected prepEntry(input: drupal.GoddyNode): CreativeWork {
-    return CreativeWorkSchema.parse({
-      type: 'BlogPosting',
-      id: `goddy-${input.nid}`,
-      date: input.created,
-      name: input.title,
-      slug: toSlug(input.title),
-      description: input.summary,
-      isPartOf: this.name,
-      quote: input.money_quote
-        ? toMarkdown(autop(input.money_quote.field_money_quote_value))
-        : undefined,
-      about:
-        (input.product
-          ? input.product.field_product_asin?.trim()
-          : undefined) ??
-        input.link?.field_link_url ??
-        undefined,
-      text: toMarkdown(autop(input.body ?? '')),
-      nodeType: input.type,
-    });
+  protected prepEntry(input: drupal.GoddyNode): CreativeWork | Bookmark {
+    if (input.link?.field_link_url) {
+      return BookmarkSchema.parse({
+        ...prepUrlForBookmark(input.link?.field_link_url, this.name),
+        title: input.title,
+        description: toMarkdown(autop(input.summary ?? '')) || undefined,
+        date: input.created
+      });
+    } else {
+      return CreativeWorkSchema.parse({
+        type: 'BlogPosting',
+        id: `goddy-${input.nid}`,
+        date: input.created,
+        name: input.title,
+        slug: toSlug(input.title),
+        description: input.summary,
+        isPartOf: this.name,
+        quote: input.money_quote
+          ? toMarkdown(autop(input.money_quote.field_money_quote_value))
+          : undefined,
+        isAbout:
+          (input.product
+            ? input.product.field_product_asin?.trim()
+            : undefined) ??
+          input.link?.field_link_url ??
+          undefined,
+        text: toMarkdown(autop(input.body ?? '')),
+        nodeType: input.type,
+      });
+    }
   }
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {

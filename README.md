@@ -106,9 +106,9 @@ Saved and shared links over the years. Accurately capturing the dates/times, and
 - [x] Pinboard
 - [x] Twitter
 - [x] Instapaper
-- [ ] Blogrolls
+- [x] Blogrolls
 - [x] Autogram Links
-- [ ] Old sites (MDB files & HTML extraction)
+- [x] Old sites (MDB files & HTML extraction)
 - [x] Omnivore
 
 ## Photos

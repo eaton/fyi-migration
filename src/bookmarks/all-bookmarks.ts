@@ -1,5 +1,5 @@
 import { Migrator } from "../shared/migrator.js";
-
+import { OpmlMigrator } from "./opml.js";
 import { StaticLinkMigrator } from "./static-sites.js";
 import { PredicateLinkMigrator } from "./predicate.js";
 import { HavanaLinkMigrator } from "./havana.js";
@@ -26,6 +26,13 @@ export class AllBookmarksMigrator extends Migrator {
       ignore: ['http*://(dev,local)(*,*/**)', '**/*login*', '**/*.apple.com/*']
     }).run();
     
+    await new OpmlMigrator({
+      logger: this.log,
+      input: 'input/blogs/movabletype',
+      name: 'positiva-mt',
+      date: new Date(2005, 2, 5),
+    }).run();
+
     await new BrowserBookmarkMigrator({
       file: 'bookmarks-2006-08-19.html',
       name: 'firefox',

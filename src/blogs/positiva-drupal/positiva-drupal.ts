@@ -11,6 +11,7 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { BookmarkSchema } from '../../schemas/bookmark.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -173,11 +174,11 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   }
 
   protected prepLink(input: drupal.Node): CreativeWork {
-    return CreativeWorkSchema.parse({
+    return BookmarkSchema.parse({
       ...prepUrlForBookmark(input.link!.url, this.name),
       date: input.created,
       name: input.title,
-      description: this.buildNodeBody(input),
+      description: this.buildNodeBody(input) || undefined,
       isPartOf: this.name,
     });
   }
