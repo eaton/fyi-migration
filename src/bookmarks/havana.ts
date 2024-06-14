@@ -65,17 +65,19 @@ export class HavanaLinkMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);
 
-    const getpocket = CreativeWorkSchema.parse({
+    const havana = CreativeWorkSchema.parse({
       type: 'WebSite',
       id: this.options.name,
       name: this.options.label,
       url: 'https://havana-mod.com',
     });
-    siteStore.set(getpocket);
+    siteStore.set(havana);
+    if (this.options.store === 'arango') await this.arango.set(havana);
   }
 }
 

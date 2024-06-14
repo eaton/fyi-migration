@@ -63,6 +63,7 @@ export class PocketMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);
@@ -75,6 +76,7 @@ export class PocketMigrator extends Migrator {
       url: 'https://getpocket.com',
     });
     siteStore.set(getpocket);
+    if (this.options.store === 'arango') await this.arango.set(getpocket);
   }
 }
 

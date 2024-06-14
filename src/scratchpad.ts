@@ -1,7 +1,3 @@
-import { OpmlMigrator } from './bookmarks/opml.js';
+import { AllBookmarksMigrator } from './bookmarks/all-bookmarks.js';
 
-await new OpmlMigrator({
-  input: 'input/blogs/movabletype',
-  name: 'positiva-mt',
-  date: new Date(2005, 2, 29),
-}).run();
+await new AllBookmarksMigrator().run();

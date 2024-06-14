@@ -119,6 +119,7 @@ export class PinboardMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
     this.log.info(`Saved ${cws.length} links.`);
 
@@ -130,18 +131,21 @@ export class PinboardMigrator extends Migrator {
       url: 'https://pinboard.in',
     });
     siteStore.set(pinboard);
+    if (this.options.store === 'arango') await this.arango.set(pinboard);
 
     if (this.options.deliciousDate) {
       const delicious = CreativeWorkSchema.parse({
         type: 'WebApplication',
-        id: 'pinboard',
-        name: 'Pinboard',
+        id: 'delicious',
+        name: 'Delicious',
         description:
           'Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.',
         url: 'https://de.licio.us',
       });
 
       siteStore.set(delicious);
+      if (this.options.store === 'arango') await this.arango.set(delicious);
+
     }
   }
 }

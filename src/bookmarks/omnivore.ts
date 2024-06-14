@@ -93,7 +93,7 @@ export class OmnivoreMigrator extends Migrator {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url, 'omnivore'),
         name: l.title,
-        description: l.description,
+        description: l.description || undefined,
         date: l.savedAt,
         keywords: l.labels,
         isPartOf: 'omnivore',
@@ -112,6 +112,7 @@ export class OmnivoreMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
     this.log.info(`Saved ${cws.length} links.`);
 
@@ -123,6 +124,7 @@ export class OmnivoreMigrator extends Migrator {
       url: 'https://omnivore.app',
     });
     siteStore.set(omnivore);
+    if (this.options.store === 'arango') await this.arango.set(omnivore);
     return;
   }
 

@@ -16,6 +16,7 @@ import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { Store, StoreableData } from './store.js';
+import { ArangoDB } from './arango.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -89,6 +90,8 @@ export interface MigratorOptions {
    * How progress information should be displayed to the user when a migration is triggered.
    */
   progress?: 'silent' | 'progress' | 'status' | 'details';
+
+  store?: string | 'arango' | 'pgsql' | 'sqlite' | 'file';
 }
 
 const loggerDefaults: LoggerOptions = {
@@ -110,6 +113,7 @@ const defaults: MigratorOptions = {
   data: process.env.MIGRATION_DATA ?? 'data',
   logger: loggerDefaults,
   progress: 'status',
+  store: process.env.STORAGE_DEFAULT ?? 'file',
 };
 
 /**
@@ -124,8 +128,8 @@ export class Migrator {
   protected _cache?: typeof jetpack;
   protected _output?: typeof jetpack;
   protected _assets?: typeof jetpack;
-
   protected _data?: Store<StoreableData>;
+  protected _arango?: ArangoDB;
 
   log: Logger;
 
@@ -159,6 +163,11 @@ export class Migrator {
 
   get description() {
     return (this.options.description ??= this.name);
+  }
+
+  get arango() {
+    this._arango ??= new ArangoDB();
+    return this._arango;
   }
 
   get root() {
@@ -298,4 +307,24 @@ export class Migrator {
    * the filename to avoid collisions.
    */
   makeFilename = toFilename;
+
+  async store(thing: Thing) {
+    switch (this.options.store) {
+      case 'arango':
+        await this.arango.set(thing);
+        break;
+      default:
+        this.data.bucket(thing.type.toLocaleLowerCase()).set(thing);
+    }
+  }
+
+  async link(from: string | Thing, rel: string, to: string | Thing) {
+    switch (this.options.store) {
+      case 'arango':
+        await this.arango.link(from, to, rel);
+        break;
+      default:
+        this.log.error('')
+    }
+  }
 }

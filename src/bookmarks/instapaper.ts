@@ -61,6 +61,7 @@ export class InstapaperMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);
@@ -72,6 +73,8 @@ export class InstapaperMigrator extends Migrator {
       url: 'https://instapaper.com',
     });
     siteStore.set(insta);
+    if (this.options.store === 'arango') await this.arango.set(insta);
+
   }
 }
 

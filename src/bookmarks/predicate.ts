@@ -10,7 +10,7 @@ export interface PredicateLinkMigratorOptions extends MigratorOptions {
 }
 
 const defaults: PredicateLinkMigratorOptions = {
-  name: 'predicate',
+  name: 'predicate-net',
   input: 'input/datasets/access',
   cache: 'cache/bookmarks',
   fakeStart: new Date('2000-09-13'),
@@ -65,6 +65,7 @@ export class PredicateLinkMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);

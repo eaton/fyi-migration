@@ -140,8 +140,9 @@ export class TwitterMigrator extends Migrator {
         | CreativeWork[]
         | undefined;
       if (users) {
-        for (const u of users)
+        for (const u of users) {
           this.users.set(u.id, CreativeWorkSchema.parse(u));
+        }
       }
     }
 
@@ -219,12 +220,14 @@ export class TwitterMigrator extends Migrator {
       file = segments.join('/');
 
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store === 'arango') await this.arango.set({ ...frontmatter, text });
       this.log.debug(`Wrote ${file}`);
     }
 
     if (this.options.saveUsers) {
       for (const user of [...this.users.values()]) {
         this.data.bucket('things').set(user);
+        if (this.options.store === 'arango') await this.arango.set(user);
       }
     }
 
@@ -242,6 +245,7 @@ export class TwitterMigrator extends Migrator {
         `Copied ${ct} files to ${this.output.path('../_static/twitter')}`,
       );
     }
+    return;
   }
 
   async processArchive(fileOrFolder: string) {

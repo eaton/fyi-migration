@@ -60,17 +60,20 @@ export class AutogramLinkMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
+      if (this.options.store === 'arango') await this.arango.set(cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);
 
-    const insta = CreativeWorkSchema.parse({
+    const autog = CreativeWorkSchema.parse({
       type: 'Organization',
       id: 'autogram',
       name: 'Autogram',
       url: 'https://autogram.is',
     });
-    siteStore.set(insta);
+    siteStore.set(autog);
+    if (this.options.store === 'arango') await this.arango.set(autog);
+
   }
 }
 const schema = z.object({

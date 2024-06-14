@@ -48,7 +48,8 @@ export class PredicateNetMigrator extends BlogMigrator {
         description: l.description,
         isPartOf: this.name,
       });
-      linkStore.set(nanohash(link.url), link);
+      linkStore.set(link);
+      if (this.options.store === 'arango') await this.arango.set(link);
     }
   }
 
@@ -78,17 +79,17 @@ export class PredicateNetMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    this.data.bucket('things').set(
-      'predicate-net',
-      CreativeWorkSchema.parse({
-        id: 'predicate-net',
-        type: 'Blog',
-        url: 'http://predicate.net',
-        name: 'Predicate.net',
-        hosting: 'Site5 (IIS)',
-        software: 'BBEdit',
-      }),
-    );
+    const site = CreativeWorkSchema.parse({
+      id: 'predicate-net',
+      type: 'Blog',
+      url: 'http://predicate.net',
+      name: 'Predicate.net',
+      hosting: 'Site5 (IIS)',
+      software: 'BBEdit',
+    });
+
+    this.data.bucket('things').set(site);    
+    if (this.options.store === 'arango') await this.arango.set(site);
 
     await this.writeLinks();
     await this.writeQuotes();

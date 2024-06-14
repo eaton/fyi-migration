@@ -2,6 +2,7 @@ import { toCase, toSlug } from '@eatonfyi/text';
 import { TwitterArchive } from 'twitter-archive-reader';
 import { CreativeWorkSchema } from '../schemas/index.js';
 import { Tweet } from './schema.js';
+import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
@@ -27,7 +28,7 @@ export function user(info: Record<string, string> | TwitterArchive) {
 }
 
 export function tweet(tweet: Tweet) {
-  return CreativeWorkSchema.parse({
+  return SocialMediaPostingSchema.parse({
     type: 'SocialMediaPosting',
     id: tweet.id,
     about: tweet.aboutId
