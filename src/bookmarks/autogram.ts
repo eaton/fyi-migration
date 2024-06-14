@@ -9,7 +9,7 @@ export interface AutogramLinkMigrationOptions extends MigratorOptions {}
 const defaults: AutogramLinkMigrationOptions = {
   name: 'autogram',
   label: 'autogram',
-  input: 'input/bookmarks/autogram',
+  input: 'input/blogs/autogram/src/links',
   cache: 'cache/bookmarks',
 };
 
