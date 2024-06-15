@@ -18,6 +18,7 @@ export type ParentSortableItem = {
 export function sortByParents(items: ParentSortableItem[]) {
   const dlm = '/';
   const eor = '.';
+  const startNum = -1;
 
   for (const c of items.sort(compareThread)) {
     populateThreadForItem(c);
@@ -38,7 +39,7 @@ export function sortByParents(items: ParentSortableItem[]) {
         // by retrieving the maximum thread level.
         max = stripEor(getMaxThread());
         parts = max?.split(dlm) ?? [];
-        n = max ? Number.parseInt(parts[0], 36) : 0;
+        n = max ? Number.parseInt(parts[0], 36) : startNum;
         prefix = '';
 
       } else {
@@ -61,7 +62,7 @@ export function sortByParents(items: ParentSortableItem[]) {
           // First child of this parent. As the other two cases do an
           // increment of the thread number before creating the thread
           // string set this to 0 so it requires an increment too.
-          n = 0;
+          n = startNum;
         }
         else {
           // Strip the "/" at the end of the thread.
