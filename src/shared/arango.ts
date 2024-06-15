@@ -179,6 +179,8 @@ export class ArangoDB extends Database {
     await this.ensureEdgeCollection('role');
 
     await this.ensureCollection('text');
+    await this.ensureCollection('url');
+    await this.ensureCollection('media');
   }
 
   getKey(item: string | Thing, type: string = 'thing'): string {

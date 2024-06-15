@@ -26,11 +26,11 @@ These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entiti
   - [x] CMS Whoops
   - [x] To My Former Self
 - [x] Medium (minus Growing Up Goddy reprints)
-- [ ] Drupal
+- [x] Drupal
   - [x] Via Positiva
   - [x] ALT
   - [x] Growing Up Goddy
-  - [ ] ~~Kirkegaard Lips~~
+  - [ ] ~~Kirkegaard Lips~~ (Looks like most of the posts were by other users; mine went to Growing Up Goddy.)
 - [x] Jekyll (Angry Little Tree)
 - [x] Disqus comments spread across both iterations of the AngryLittleTree site
 
@@ -102,14 +102,16 @@ Employment timeline; this is less of a primary focus and more splashover data fr
 Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc. These are unlikely to be exposed as Schema.org entities.
 
 - [x] Browser Bookmarks
+- [x] Old sites (MDB files & HTML extraction)
 - [x] Delicious
 - [x] Pinboard
-- [x] Twitter
+- [x] Twitter (Restricted to single-link posts to URLs that aren't tweets)
 - [x] Instapaper
 - [x] Blogrolls
 - [x] Autogram Links
-- [x] Old sites (MDB files & HTML extraction)
 - [x] Omnivore
+- [ ] Links *mentioned in blog posts*, which might necessitate separate storage from the 'Bookmark' concept.
+- [ ] Link deduplication, 404/30x/dead-domain handling
 
 ## Photos
 
