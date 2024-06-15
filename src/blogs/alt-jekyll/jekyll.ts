@@ -10,6 +10,7 @@ import {
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -61,6 +62,8 @@ export class AltJekyllMigrator extends BlogMigrator {
         for (const comment of thread.posts) {
           this.comments[identifier].push(this.prepComment(comment));
         }
+
+        sortByParents(this.comments[identifier]);
       }
     }
 
@@ -139,7 +142,6 @@ export class AltJekyllMigrator extends BlogMigrator {
       id: `altj-c${comment.dsqId}`,
       parent: comment.parent ? `altj-c${comment.parent}` : undefined,
       about: comment.linkId ? `altj-c${comment.linkId}` : undefined,
-      sort: comment.sort,
       date: comment.createdAt,
       commenter: { name: comment.author.name },
       text: toMarkdown(autop(comment.message)),

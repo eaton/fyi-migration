@@ -13,7 +13,7 @@ export const CommentSchema = CreativeWorkSchema.extend({
     .string()
     .optional()
     .describe('An entry ID or a URL the comment was posted in reply to.'),
-  sort: z
+  thread: z
     .string()
     .optional()
     .describe(

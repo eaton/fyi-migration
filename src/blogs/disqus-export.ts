@@ -75,13 +75,6 @@ export async function parse(xml: string | Buffer, options: Options = {}) {
     // Order the posts by date, which puts 'earliest' posts first.
     // Then loop through the posts, creating a 'sort string'
     posts.sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf());
-    for (const post of posts) {
-      post.sort =
-        '/' +
-        (post.parent ? byId(posts, post.parent)?.dsqId + '/' : '') +
-        post.id;
-    }
-    posts.sort((a, b) => a.sort!.localeCompare(b.sort!));
   }
 
   for (const t of threads) {
@@ -104,10 +97,6 @@ export async function parse(xml: string | Buffer, options: Options = {}) {
         );
       }
     }
-  }
-
-  function byId(posts: { dsqId: string }[], id: string) {
-    return posts.find(p => p.dsqId === id);
   }
 
   if (options.discardEmpty && options.groupContainers) {

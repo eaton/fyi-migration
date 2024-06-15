@@ -240,6 +240,7 @@ export class AltDrupalMigrator extends BlogMigrator {
         mail: input.mail,
         url: input.homepage,
       },
+      thread: input.thread,
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });
