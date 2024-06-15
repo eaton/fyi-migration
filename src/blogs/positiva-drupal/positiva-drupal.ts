@@ -203,7 +203,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       type: 'Comment',
       id: `vpd-c${input.cid}`,
       parent: input.pid ? `vpd-c${input.pid}` : undefined,
-      sort: input.thread,
+      thread: input.thread,
       about: `vpd-${input.nid}`,
       date: input.timestamp,
       commenter: {

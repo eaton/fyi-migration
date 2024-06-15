@@ -16,6 +16,9 @@ export type ParentSortableItem = {
  * @see {@link https://git.drupalcode.org/project/drupal/-/blob/11.x/core/modules/comment/src/Entity/Comment.php | Drupal's comment module } 
  */
 export function sortByParents(items: ParentSortableItem[]) {
+  const dlm = '/';
+  const eor = '.';
+
   for (const c of items.sort(compareThread)) {
     populateThreadForItem(c);
   }
@@ -33,8 +36,8 @@ export function sortByParents(items: ParentSortableItem[]) {
       if (c.parent === undefined) {
         // This is a comment with no parent comment (depth 0): we start
         // by retrieving the maximum thread level.
-        max = stripSlash(getMaxThread());
-        parts = max?.split('/') ?? [];
+        max = stripEor(getMaxThread());
+        parts = max?.split(dlm) ?? [];
         n = max ? Number.parseInt(parts[0], 36) : 0;
         prefix = '';
 
@@ -49,10 +52,10 @@ export function sortByParents(items: ParentSortableItem[]) {
         // If the parent hasn't been handle yet, handle it.
         populateThreadForItem(parent!);
 
-        prefix = stripSlash(getThread(parent!)) + '/';
+        prefix = stripEor(getThread(parent!)) + dlm;
 
         // Get the max value in *this* thread.
-        max = stripSlash(getMaxThreadPerThread(c.parent));
+        max = stripEor(getMaxThreadPerThread(c.parent));
 
         if (max === undefined) {
           // First child of this parent. As the other two cases do an
@@ -62,23 +65,23 @@ export function sortByParents(items: ParentSortableItem[]) {
         }
         else {
           // Strip the "/" at the end of the thread.
-          max = stripSlash(max);
+          max = stripEor(max);
 
           // Get the value at the correct depth.
-          parts = max?.split('/') ?? [];
+          parts = max?.split(dlm) ?? [];
 
           const parent_depth = (parts ?? []).length;
           n = Number.parseInt(parts[parent_depth-1], 36);
         }
       }
 
-      thread = prefix + (++n).toString(36).padStart(2, '0') + '.';
+      thread = prefix + (++n).toString(36).padStart(2, '0') + eor;
       setThread(c, thread);
     }
   }
   
-  function stripSlash(thread?: string) {
-    if (thread && thread.endsWith('.')) {
+  function stripEor(thread?: string) {
+    if (thread && thread.endsWith(eor)) {
       return thread.slice(0, -1);
     }
     return thread;
