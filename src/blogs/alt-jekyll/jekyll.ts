@@ -62,7 +62,8 @@ export class AltJekyllMigrator extends BlogMigrator {
         for (const comment of thread.posts) {
           this.comments[identifier].push(this.prepComment(comment));
         }
-
+        
+        // Add threading. Why not.
         sortByParents(this.comments[identifier]);
       }
     }
