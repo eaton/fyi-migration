@@ -7,7 +7,7 @@ import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {
-  name: 'predicate-net',
+  name: 'predicate',
   label: 'Predicate.net',
   input: 'input/blogs/predicatenet',
 };
@@ -63,7 +63,6 @@ export class PredicateNetMigrator extends BlogMigrator {
       .readAsync('quotes.xml')
       .then(xml => extract(xml ?? '', template, schema, { xml: true }));
 
-    const quoteStore = this.data.bucket('quotes');
     for (const quote of quotes ?? []) {
       const cw = CreativeWorkSchema.parse({
         id: nanohash(quote.content),
@@ -72,13 +71,13 @@ export class PredicateNetMigrator extends BlogMigrator {
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
       });
-      quoteStore.set(cw.id, cw);
+      await this.saveThing(cw);
     }
   }
 
   override async finalize() {
     const site = CreativeWorkSchema.parse({
-      id: 'predicate-net',
+      id: 'predicate',
       type: 'Blog',
       url: 'http://predicate.net',
       name: 'Predicate.net',

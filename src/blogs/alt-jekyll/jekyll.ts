@@ -74,30 +74,14 @@ export class AltJekyllMigrator extends BlogMigrator {
     if (this.entries.length === 0) {
       await this.readCache();
     }
-    const commentStore = this.data.bucket('comments');
 
     for (const e of this.entries) {
-      const { text, ...frontmatter } = e;
-      const fileName = this.makeFilename(frontmatter);
-      if (this.options.store == 'arango') {
-        await this.arango.set({ ...frontmatter, text });
-      }
-      this.output.write(fileName, { data: frontmatter, content: text });
+      await this.saveThings(e);
+      await this.saveThings(e, 'markdown');
 
-      this.log.debug(`Wrote ${fileName}`);
-
-      // Find a thread that matches this file.
       const comments = this.comments[e.id];
       if (comments?.length) {
-        commentStore.set(frontmatter.id, comments);
-        if (this.options.store === 'arango') {
-          for (const c of this.comments[frontmatter.id]) {
-            await this.arango.set(c);
-          }
-        }
-        this.log.debug(
-          `Saved ${comments.length} comments for ${frontmatter.url}`,
-        );
+        await this.saveThings(comments);
       }
     }
 

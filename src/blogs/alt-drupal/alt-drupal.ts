@@ -177,34 +177,16 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   override async finalize() {
     // Currently ignoring comments, whoop whoop
-    const commentStore = this.data.bucket('comments');
-
-    for (const { text, ...frontmatter } of this.entries) {
-      const filename = this.makeFilename(frontmatter);
-      this.output.write(filename, { content: text, data: frontmatter });
-      if (this.options.store === 'arango') {
-        await this.arango.set({ ...frontmatter, text });
-      }
-
-      this.log.debug(`Wrote ${filename}`);
+    for (const e of this.entries) {
+      await this.saveThing(e);
+      await this.saveThing(e, 'markdown');
 
       const entryComments = this.comments.filter(
-        c => c.about === frontmatter.id,
+        c => c.about === e.id,
       );
       if (entryComments.length) {
         sortByParents(entryComments);
-        commentStore.set(frontmatter.id, entryComments);
-        this.log.debug(
-          `Saved ${entryComments.length} comments for ${frontmatter.id}`,
-        );
-        if (this.options.store === 'arango') {
-          for (const c of entryComments) {
-            await this.arango.set(c);
-          }
-        }
-      }
-      if (this.options.store == 'arango') {
-        await this.arango.set({ ...frontmatter, text });
+        await this.saveThings(entryComments);
       }
     }
 

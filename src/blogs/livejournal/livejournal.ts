@@ -132,36 +132,15 @@ export class LivejournaMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    const commentStore = this.data.bucket('comments');
+    for (const e of this.entries) {
+      await this.saveThing(e);
+      await this.saveThing(e, 'markdown');
 
-    for (const { text, ...frontmatter } of this.entries) {
-      const file = this.makeFilename(frontmatter);
-      if (file) {
-        this.output.write(file, { content: text, data: frontmatter });
-        if (this.options.store == 'arango') {
-          await this.arango.set({ ...frontmatter, text });
-        }
-
-        this.log.debug(`Wrote ${file}`);
-
-        // write entry comments
-        if (
-          this.comments[frontmatter.id] &&
-          this.comments[frontmatter.id].length
-        ) {
-          commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
-          if (this.options.store === 'arango') {
-            for (const c of this.comments[frontmatter.id]) {
-              await this.arango.set(c);
-            }
-          }
-
-          this.log.debug(
-            `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
-          );
-        }
-      } else {
-        this.log.debug(frontmatter, 'Could not create filename');
+      if (
+        this.comments[e.id] &&
+        this.comments[e.id].length
+      ) {
+        await this.saveThings(this.comments[e.id])
       }
     }
 
@@ -172,7 +151,6 @@ export class LivejournaMigrator extends BlogMigrator {
       url: 'http://predicate.livejournal.com',
       hosting: 'Livejournal',
     });
-
     await this.saveThing(lj);
 
     await this.copyAssets('media/lj-photos', 'lj');

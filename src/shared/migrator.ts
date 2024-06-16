@@ -347,7 +347,7 @@ export class Migrator {
         this.data.bucket(b).set(nw);
       }
     }
-    this.log.debug(`Merged ${input.id}`);
+    this.log.debug(`Merged ${input.type} ${input.id}`);
     return;
   }
 
