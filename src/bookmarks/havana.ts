@@ -55,7 +55,7 @@ export class HavanaLinkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.options.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         description: l.summary,
         date: l.date ?? tempDate,

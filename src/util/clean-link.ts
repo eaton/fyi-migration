@@ -1,7 +1,7 @@
 import { nanohash } from '@eatonfyi/ids';
 import { ParsedUrl } from '@eatonfyi/urls';
 
-export function prepUrlForBookmark(input?: string | URL, salt?: string) {
+export function prepUrlForBookmark(input?: string | URL) {
   if (!input) return {};
   const url = new ParsedUrl(input);
   return {

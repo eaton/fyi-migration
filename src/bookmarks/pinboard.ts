@@ -108,7 +108,7 @@ export class PinboardMigrator extends Migrator {
       }
 
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.href, isPartOf),
+        ...prepUrlForBookmark(l.href),
         date: l.time,
         name: l.description?.trim(),
         description: l.extended?.trim(),

@@ -61,7 +61,7 @@ export class OpmlMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         date: this.options.date,
         description: l.notes,

@@ -192,7 +192,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepLink(input: drupal.Node): CreativeWork {
     return BookmarkSchema.parse({
-      ...prepUrlForBookmark(input.link!.url, this.name),
+      ...prepUrlForBookmark(input.link!.url),
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input) || undefined,

@@ -92,7 +92,7 @@ export class OmnivoreMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, 'omnivore'),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         description: l.description || undefined,
         date: l.savedAt,

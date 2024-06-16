@@ -104,7 +104,7 @@ export class TwitterBookmarkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, `@${l.handle}`),
+        ...prepUrlForBookmark(l.url),
         date: l.date,
         description: l.description,
         keywords: l.hashtags,

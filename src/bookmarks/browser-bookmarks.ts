@@ -105,10 +105,7 @@ export class BrowserBookmarkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(
-          l.url,
-          this.options.browser?.id ?? this.options.name,
-        ),
+        ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         isPartOf: this.options.browser?.id ?? this.options.name,

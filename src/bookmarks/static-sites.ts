@@ -86,7 +86,7 @@ export class StaticLinkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, l.source ?? this.options.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title || undefined,
         date: l.date,
         description: l.description || undefined,

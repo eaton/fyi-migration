@@ -53,7 +53,7 @@ export class PocketMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, 'getpocket'),
+        ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         keywords: l.tags,

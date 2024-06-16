@@ -39,7 +39,7 @@ export class MediumMigrator extends BlogMigrator {
         url: get(markdown, 'data.url') || undefined,
         date: get(markdown, 'data.date') || undefined,
         text: get(markdown, 'content') || undefined,
-        isPartOf: this.name,
+        isPartOf: 'Blog:' + this.name,
       });
 
       const file = this.makeFilename(frontmatter);

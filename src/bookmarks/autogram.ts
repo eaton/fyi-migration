@@ -50,7 +50,7 @@ export class AutogramLinkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.data.link, 'autogram'),
+        ...prepUrlForBookmark(l.data.link),
         name: l.data.title,
         date: l.data.date,
         description: l.content,

@@ -225,7 +225,7 @@ export class GoddyMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.GoddyNode): CreativeWork | Bookmark {
     if (input.link?.field_link_url) {
       return BookmarkSchema.parse({
-        ...prepUrlForBookmark(input.link?.field_link_url, this.name),
+        ...prepUrlForBookmark(input.link?.field_link_url),
         title: input.title,
         description: toMarkdown(autop(input.summary ?? '')) || undefined,
         date: input.created,

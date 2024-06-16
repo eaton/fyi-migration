@@ -56,7 +56,7 @@ export class PredicateLinkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.options.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         date: l.date ?? tempDate,
         isPartOf: this.options.name,

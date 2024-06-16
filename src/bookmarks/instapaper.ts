@@ -51,7 +51,7 @@ export class InstapaperMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.URL, 'instapaper'),
+        ...prepUrlForBookmark(l.URL),
         name: l.Title,
         date: l.Timestamp,
         description: l.Selection,

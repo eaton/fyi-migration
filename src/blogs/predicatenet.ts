@@ -42,7 +42,7 @@ export class PredicateNetMigrator extends BlogMigrator {
     const linkStore = this.data.bucket('links');
     for (const l of links ?? []) {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.name),
+        ...prepUrlForBookmark(l.url),
         date: '2001-01-01',
         name: l.title,
         description: l.description,

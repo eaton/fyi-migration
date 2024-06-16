@@ -169,7 +169,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `tumblr-${input.id}`,
+      id: `${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,
@@ -178,7 +178,7 @@ export class TumblrMigrator extends BlogMigrator {
       published: !!input.date,
       keywords: input.tags,
       url: input.url,
-      isPartOf: `${input.blog_name}`,
+      isPartOf: input.blog_name,
       tumblrType: input.type,
     };
 
@@ -203,7 +203,7 @@ export class TumblrMigrator extends BlogMigrator {
 
   protected prepLink(input: TumblrPost) {
     const link = BookmarkSchema.parse({
-      ...prepUrlForBookmark(input.url, input.blog_name),
+      ...prepUrlForBookmark(input.url),
       date: input.date || undefined,
       name: input.title || input.source_title || undefined,
       description:
