@@ -50,7 +50,7 @@ export class ArticleReprintMigrator extends Migrator {
 
       if (markdown.data.things) {
         const things = this.prepThings(markdown.data.things);
-        this.saveThings(things);
+        await this.saveThings(things);
       }
     }
   }
@@ -59,8 +59,12 @@ export class ArticleReprintMigrator extends Migrator {
     for (const { text, ...frontmatter } of this.articles) {
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
       this.log.debug(`Wrote ${file}`);
     }
+
     await this.copyAssets('images', 'articles');
   }
 }

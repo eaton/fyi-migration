@@ -16,14 +16,12 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    this.data.bucket('things').set(
-      'medium',
+    await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'medium',
-        name: 'Medium',
+        id: this.name,
+        name: this.label,
         url: 'https://medium.com/@eaton',
-        hosting: 'Medium',
       }),
     );
 
@@ -44,6 +42,9 @@ export class MediumMigrator extends BlogMigrator {
 
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
     }
 
     await this.copyAssets('images', 'medium');

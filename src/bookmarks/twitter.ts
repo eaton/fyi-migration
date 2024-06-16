@@ -85,6 +85,7 @@ export class TwitterBookmarkMigrator extends Migrator {
       });
     }
     this.cache.write('twitter.ndjson', this.links);
+
     return this.links;
   }
 
@@ -98,11 +99,9 @@ export class TwitterBookmarkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, `@${l.handle}`),
+        ...prepUrlForBookmark(l.url),
         date: l.date,
         description: l.description,
         keywords: l.hashtags,
@@ -111,11 +110,8 @@ export class TwitterBookmarkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
+    return;
   }
 
   processTweet(input: PartialTweet): TwitterLink[] {

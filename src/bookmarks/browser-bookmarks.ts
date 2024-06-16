@@ -74,9 +74,6 @@ export class BrowserBookmarkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     if (this.options.webOnly) {
       this.links = this.links.filter(l =>
         new URL(l.url).protocol.startsWith('http'),
@@ -91,7 +88,7 @@ export class BrowserBookmarkMigrator extends Migrator {
           this.maxDate = Math.max(this.maxDate, link.date?.valueOf() ?? 0);
           this.minDate = Math.max(
             this.maxDate,
-            link.date?.valueOf() ?? Math.floor(Date.now() / 1000),
+            link.date?.valueOf() ?? Date.now() / 1000,
           );
         }
 
@@ -104,10 +101,7 @@ export class BrowserBookmarkMigrator extends Migrator {
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(
-          l.url,
-          this.options.browser?.id ?? this.options.name,
-        ),
+        ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         isPartOf: this.options.browser?.id ?? this.options.name,
@@ -115,23 +109,15 @@ export class BrowserBookmarkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
+    await this.mergeThings(cws);
 
-    this.log.info(`Saved ${cws.length} links.`);
-
-    if (this.options.browser) {
-      siteStore.set(CreativeWorkSchema.parse(this.options.browser));
-    } else {
-      const browser = CreativeWorkSchema.parse({
-        type: 'SoftwareApplication',
-        id: this.options.name,
-        name: this.options.label,
-        description: this.options.description,
-      });
-      siteStore.set(browser);
-    }
+    const browser = this.options.browser ?? CreativeWorkSchema.parse({
+      type: 'SoftwareApplication',
+      id: this.options.name,
+      name: this.options.label,
+      description: this.options.description,
+    });
+    await this.saveThing(browser);
   }
 
   protected randomTimeStamp() {
@@ -159,7 +145,7 @@ const schema = z.object({
     .number()
     .optional()
     .or(z.coerce.date())
-    .transform(d => (typeof d === 'number' ? new Date(d * 1000) : d)),
+    .transform(d => (typeof d === 'number' ? (d < 10_000_000_000 ? new Date(d * 1000) : new Date(d)) : d)),
 });
 
 type BrowserBookmark = z.infer<typeof schema>;

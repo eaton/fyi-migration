@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
-import { oneOrMany } from './helpers.js';
+import { oneOrMany } from './fragments/index.js';
 
 export const MessageSchema = CreativeWorkSchema.extend({
   type: z.string().default('Message'),

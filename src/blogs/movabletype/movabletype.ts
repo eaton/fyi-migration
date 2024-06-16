@@ -109,7 +109,7 @@ export class MovableTypeMigrator extends BlogMigrator {
     }
 
     for (const e of entries) {
-      e.comments = comments.filter(c => c.comment_entry_id === e.entry_id);
+      e.comments = comments.filter(c => c.comment_entry_id === e.entry_id && c.comment_blog_id == e.entry_blog_id);
     }
 
     for (const b of blogs) {
@@ -126,12 +126,10 @@ export class MovableTypeMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const thingStore = this.data.bucket('things');
-    const commentStore = this.data.bucket('comments');
 
     for (const blog of cache.blogs) {
       const site = this.prepSite(blog);
-      thingStore.set(site.id, site);
+      await this.saveThing(site);
 
       for (const entry of blog.entries ?? []) {
         const category = blog.categories?.find(
@@ -145,13 +143,13 @@ export class MovableTypeMigrator extends BlogMigrator {
 
         const file = [site.id, this.makeFilename(frontmatter)].join('/');
         this.output.write(file, { content: text, data: frontmatter });
+        if (this.options.store == 'arango') {
+          await this.arango.set({ ...frontmatter, text });
+        }
         this.log.debug(`Wrote ${file}`);
 
         if (mappedComments.length) {
-          commentStore.set(frontmatter.id, mappedComments);
-          this.log.debug(
-            `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
-          );
+          await this.saveThings(mappedComments);
         }
       }
     }

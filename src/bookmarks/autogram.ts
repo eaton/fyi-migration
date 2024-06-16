@@ -44,12 +44,9 @@ export class AutogramLinkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.data.link, 'autogram'),
+        ...prepUrlForBookmark(l.data.link),
         name: l.data.title,
         date: l.data.date,
         description: l.content,
@@ -58,19 +55,15 @@ export class AutogramLinkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
+    await this.mergeThings(cws);
 
-    this.log.info(`Saved ${cws.length} links.`);
-
-    const insta = CreativeWorkSchema.parse({
+    const autog = CreativeWorkSchema.parse({
       type: 'Organization',
       id: 'autogram',
       name: 'Autogram',
       url: 'https://autogram.is',
     });
-    siteStore.set(insta);
+    await this.saveThing(autog);
   }
 }
 const schema = z.object({

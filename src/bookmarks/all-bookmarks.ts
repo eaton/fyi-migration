@@ -29,7 +29,7 @@ export class AllBookmarksMigrator extends Migrator {
     await new OpmlMigrator({
       logger: this.log,
       input: 'input/blogs/movabletype',
-      name: 'positiva-mt',
+      name: 'viapositiva',
       date: new Date(2005, 2, 5),
     }).run();
 

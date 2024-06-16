@@ -92,9 +92,6 @@ export class PinboardMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     if (this.options.onlyShared) {
       this.links = this.links.filter(l => l.shared);
     }
@@ -107,7 +104,7 @@ export class PinboardMigrator extends Migrator {
       }
 
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.href, isPartOf),
+        ...prepUrlForBookmark(l.href),
         date: l.time,
         name: l.description?.trim(),
         description: l.extended?.trim(),
@@ -117,10 +114,7 @@ export class PinboardMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const pinboard = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -129,19 +123,19 @@ export class PinboardMigrator extends Migrator {
       description: 'When de.licio.us died, Pinboard took up the slack.',
       url: 'https://pinboard.in',
     });
-    siteStore.set(pinboard);
+    await this.saveThing(pinboard);
 
     if (this.options.deliciousDate) {
       const delicious = CreativeWorkSchema.parse({
         type: 'WebApplication',
-        id: 'pinboard',
-        name: 'Pinboard',
+        id: 'delicious',
+        name: 'Delicious',
         description:
           'Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.',
         url: 'https://de.licio.us',
       });
 
-      siteStore.set(delicious);
+      await this.saveThing(delicious);
     }
   }
 }

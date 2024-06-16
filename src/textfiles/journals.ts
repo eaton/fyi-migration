@@ -36,9 +36,10 @@ export class TextJournalsMigrator extends Migrator {
       })[0];
 
       const cw = CreativeWorkSchema.parse({
-        id: 'txt-' + nanohash(txt.data),
+        id: nanohash(txt.data),
+        type: 'JournalEntry',
         date: txt.data.date,
-        ifPartOf: txtId,
+        isPartOf: txtId,
         text: txt.content,
       });
 
@@ -54,11 +55,13 @@ export class TextJournalsMigrator extends Migrator {
         }
       }
 
-      this.output.write(file.replace('.txt', '.md'), txt);
+      const { text, ...frontmatter } = cw;
+      this.output.write(file.replace('.txt', '.md'), { content: text, data: frontmatter });
+      if (this.options.store == 'arango') await this.arango.set(cw);
       this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
     }
 
-    this.saveThings(Object.values(textFiles));
+    await this.saveThings(Object.values(textFiles));
     return;
   }
 }

@@ -1,7 +1,7 @@
 import { ExtractTemplateObject, extract } from '@eatonfyi/html';
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/bookmark.js';
-import { urlSchema } from '../schemas/url.js';
+import { urlSchema } from '../schemas/fragments/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
@@ -56,11 +56,9 @@ export class OpmlMigrator extends Migrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         date: this.options.date,
         description: l.notes,
@@ -69,11 +67,7 @@ export class OpmlMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
   }
 }
 

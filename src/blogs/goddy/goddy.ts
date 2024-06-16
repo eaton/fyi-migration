@@ -10,6 +10,7 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -162,8 +163,6 @@ export class GoddyMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const commentStore = this.data.bucket('comments');
-    const linkStore = this.data.bucket('links');
 
     // Prep the comments first, so they're easier to attach to the nodes.
     const comments = cache.comments.map(c => this.prepComment(c));
@@ -171,15 +170,23 @@ export class GoddyMigrator extends BlogMigrator {
 
     for (const { text, ...frontmatter } of nodes) {
       if (frontmatter.type === 'Bookmark') {
-        linkStore.set(frontmatter);
+        await this.saveThing(frontmatter);
+        if (this.options.store == 'arango') {
+          await this.arango.set(frontmatter);
+        }
       } else {
         const file = this.makeFilename(frontmatter);
         this.output.write(file, { content: text, data: frontmatter });
+        if (this.options.store == 'arango') {
+          await this.arango.set({ ...frontmatter, text });
+        }
+
         this.log.debug(`Wrote ${file}`);
 
         const nodeComments = comments.filter(c => c.about === frontmatter.id);
         if (nodeComments.length) {
-          commentStore.set(frontmatter.id, nodeComments);
+          sortByParents(nodeComments);
+          await this.saveThings(nodeComments);
           this.log.debug(
             `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
           );
@@ -187,7 +194,7 @@ export class GoddyMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('things').set('goddy', {
+    const site = CreativeWorkSchema.parse({
       type: 'Blog',
       id: this.name,
       url: 'https://growingupgoddy.com',
@@ -196,6 +203,7 @@ export class GoddyMigrator extends BlogMigrator {
       software: 'Drupal 6',
       hosting: 'Linode',
     });
+    await this.saveThing(site);
 
     this.copyAssets('files', 'goddy');
     return Promise.resolve();
@@ -209,15 +217,16 @@ export class GoddyMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.GoddyNode): CreativeWork | Bookmark {
     if (input.link?.field_link_url) {
       return BookmarkSchema.parse({
-        ...prepUrlForBookmark(input.link?.field_link_url, this.name),
+        ...prepUrlForBookmark(input.link?.field_link_url),
         title: input.title,
+        isPartOf: this.name,
         description: toMarkdown(autop(input.summary ?? '')) || undefined,
         date: input.created,
       });
     } else {
       return CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: `goddy-${input.nid}`,
+        id: `gdy-${input.nid}`,
         date: input.created,
         name: input.title,
         slug: toSlug(input.title),
@@ -240,16 +249,17 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {
     return CommentSchema.parse({
-      id: `goddy-c${input.cid}`,
-      about: `goddy-${input.nid}`,
-      parent: input.pid ? `goddy-c${input.pid}` : undefined,
-      sort: input.thread,
+      id: `gdy-c${input.cid}`,
+      about: `gdy-${input.nid}`,
+      parent: input.pid ? `gdy-c${input.pid}` : undefined,
+      thread: undefined, // Set it later manually
       date: input.created,
       commenter: {
         name: input.name,
         mail: input.mail,
         url: input.homepage,
       },
+      isPartOf: this.name,
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

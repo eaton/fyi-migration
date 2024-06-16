@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { oneOrMany } from './helpers.js';
+import { oneOrMany } from './fragments/index.js';
 import { ThingSchema } from './thing.js';
 
 export const CreativeWorkSchema = ThingSchema.extend({

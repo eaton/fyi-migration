@@ -12,6 +12,7 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -56,9 +57,9 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     }
 
     this.log.debug('Assembling Comment data');
-    const comments = this.readTableCsv('comment.csv', drupal.commentSchema);
+    const comments = this.readTableCsv('comments.csv', drupal.commentSchema);
     for (const c of comments) {
-      if (!c.status) continue;
+      if (c.status) continue;
       if (c.spam) continue;
       if (!approvedNodes.has(c.nid)) continue;
       this.cache.write(`comments/${c.nid}-${c.cid}.json`, c);
@@ -108,41 +109,37 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const quoteStore = this.data.bucket('quotes');
-    const linkStore = this.data.bucket('links');
-    const commentStore = this.data.bucket('comments');
 
     for (const n of cache.nodes) {
       if (n.type === 'weblink' && n.link?.url !== undefined) {
         const link = this.prepLink(n);
-        linkStore.set(link.id, link);
-        this.log.debug(`Wrote link to ${link.url}`);
+        await this.saveThing(link);
       } else if (n.type === 'quotes') {
         const quote = this.prepQuote(n);
-        quoteStore.set(quote.id, quote);
+        await this.saveThing(quote);
         this.log.debug(`Wrote quote by ${quote.spokenBy}`);
       } else if (n.type === 'blog' || n.type === 'review') {
-        // TODO: entries vs notes
-        const { text, ...frontmatter } = this.prepEntry(n);
-        const file = this.makeFilename(frontmatter);
-        this.output.write(file, { content: text, data: frontmatter });
-
+        const entry = this.prepEntry(n);
+        await this.saveThing(entry);
+        await this.saveThing(entry, 'markdown');
+        
         // Handle comments
         const mappedComments = cache.comments
           .filter(c => c.nid === n.nid)
           .map(c => this.prepComment(c));
 
         if (mappedComments.length) {
-          commentStore.set(frontmatter.id, mappedComments);
+          sortByParents(mappedComments);
+          await this.saveThings(mappedComments);
           this.log.debug(
-            `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
+            `Saved ${mappedComments.length} comments for ${entry.id}`,
           );
         }
       }
     }
 
     const site = this.prepSite(cache.vars);
-    this.data.bucket('things').set(site.id, site);
+    await this.saveThing(site);
 
     this.copyAssets('files', 'positiva');
     return Promise.resolve();
@@ -167,7 +164,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
       text: this.buildNodeBody(input),
       about: input.amazon?.asin ? input.amazon.asin : undefined,
     });
@@ -175,11 +172,11 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   protected prepLink(input: drupal.Node): CreativeWork {
     return BookmarkSchema.parse({
-      ...prepUrlForBookmark(input.link!.url, this.name),
+      ...prepUrlForBookmark(input.link!.url),
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input) || undefined,
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
     });
   }
 
@@ -194,18 +191,19 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       spokenBy: input.quote?.author ?? undefined,
       isBasedOn: undefined,
       recordedIn: undefined,
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
     });
   }
 
   protected prepComment(input: drupal.Comment): Comment {
     return CommentSchema.parse({
       type: 'Comment',
-      id: `vpd-c${input.cid}`,
-      parent: input.pid ? `vpd-c${input.pid}` : undefined,
-      sort: input.thread,
+      id: `vp-c${input.cid}d`,
+      parent: input.pid ? `vp-c${input.pid}d` : undefined,
+      thread: undefined, // set it again later
       about: `vpd-${input.nid}`,
       date: input.timestamp,
+      isPartOf: 'viapositiva',
       commenter: {
         name: input.name,
         mail: input.mail,

@@ -1,13 +1,10 @@
 import { z } from 'zod';
 import { CreativeWorkSchema } from './creative-work.js';
-import { urlSchema } from './url.js';
+import { urlSchema } from './fragments/index.js';
 
 /**
  * A special-case version of the base SocialMediaPosting type that
  * we use to store bookmarks and shared links from a variety of sources.
- *
- * Notably, it includes optional properties for information about interim
- * redirects, the current HTTP status, and when it was last checked.
  *
  * Note that the link being shared goes in `sharedContent`, not `url`;
  * the url property is the canonical URL of the post in which the link
@@ -19,10 +16,6 @@ import { urlSchema } from './url.js';
  */
 export const BookmarkSchema = CreativeWorkSchema.extend({
   type: z.string().default('Bookmark'),
-  originalUrl: urlSchema.optional(),
-  redirects: z.array(urlSchema).optional(),
-  statusCode: z.number().optional(),
-  statusDate: z.coerce.date().optional(),
   sharedContent: urlSchema,
 });
 

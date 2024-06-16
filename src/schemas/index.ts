@@ -10,5 +10,5 @@ export * from './creative-work.js';
 export * from './message.js';
 export * from './talk.js';
 
-export * from './dimensions.js';
-export * from './eleventy-navigation.js';
+export * from './fragments/dimensions.js';
+export * from './fragments/eleventy-navigation.js';

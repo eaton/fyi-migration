@@ -13,6 +13,7 @@ import {
   type LivejournalEntry,
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -21,7 +22,7 @@ export interface LivejournalMigrateOptions extends BlogMigratorOptions {
 }
 
 const defaults: LivejournalMigrateOptions = {
-  name: 'predicate-lj',
+  name: 'lj',
   label: "Predicate's Livejournal",
   description: 'Posts, comments, and images from Livejournal',
   ignoreBefore: new Date('2001-06-01'),
@@ -122,46 +123,35 @@ export class LivejournaMigrator extends BlogMigrator {
       if (entry.comments && entry.comments.length) {
         this.comments[cw.id] ??= [];
         for (const comment of entry.comments) {
-          this.comments[cw.id].push(this.prepComment(comment));
+          this.comments[cw.id].push(this.prepComment({ entry: entry.id, ...comment }));
         }
+        if (this.comments[cw.id].length) sortByParents(this.comments[cw.id]);
       }
     }
     return;
   }
 
   override async finalize() {
-    const commentStore = this.data.bucket('comments');
+    for (const e of this.entries) {
+      await this.saveThing(e);
+      await this.saveThing(e, 'markdown');
 
-    for (const { text, ...frontmatter } of this.entries) {
-      const file = this.makeFilename(frontmatter);
-      if (file) {
-        this.output.write(file, { content: text, data: frontmatter });
-        this.log.debug(`Wrote ${file}`);
-
-        // write entry comments
-        if (
-          this.comments[frontmatter.id] &&
-          this.comments[frontmatter.id].length
-        ) {
-          commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
-          this.log.debug(
-            `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
-          );
-        }
-      } else {
-        this.log.debug(frontmatter, 'Could not create filename');
+      if (
+        this.comments[e.id] &&
+        this.comments[e.id].length
+      ) {
+        await this.saveThings(this.comments[e.id])
       }
     }
-    this.data.bucket('things').set(
-      'livejournal',
-      CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: this.name,
-        name: this.label,
-        url: 'http://predicate.livejournal.com',
-        hosting: 'Livejournal',
-      }),
-    );
+
+    const lj = CreativeWorkSchema.parse({
+      type: 'Blog',
+      id: this.name,
+      name: this.label,
+      url: 'http://predicate.livejournal.com',
+      hosting: 'Livejournal',
+    });
+    await this.saveThing(lj);
 
     await this.copyAssets('media/lj-photos', 'lj');
     return Promise.resolve();
@@ -190,6 +180,7 @@ export class LivejournaMigrator extends BlogMigrator {
         name: comment.name,
         mail: comment.email,
       },
+      isPartOf: this.name,
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
     });

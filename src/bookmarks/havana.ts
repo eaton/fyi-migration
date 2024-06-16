@@ -49,12 +49,10 @@ export class HavanaLinkMigrator extends Migrator {
 
   override async finalize() {
     const tempDate = getMdbInfo(this.input.path('havana.mdb')).dateCreated;
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.options.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
         description: l.summary,
         date: l.date ?? tempDate,
@@ -63,19 +61,15 @@ export class HavanaLinkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
+    await this.mergeThings(cws);
 
-    this.log.info(`Saved ${cws.length} links.`);
-
-    const getpocket = CreativeWorkSchema.parse({
+    const havana = CreativeWorkSchema.parse({
       type: 'WebSite',
       id: this.options.name,
       name: this.options.label,
       url: 'https://havana-mod.com',
     });
-    siteStore.set(getpocket);
+    await this.saveThing(havana);
   }
 }
 

@@ -45,12 +45,9 @@ export class InstapaperMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.URL, 'instapaper'),
+        ...prepUrlForBookmark(l.URL),
         name: l.Title,
         date: l.Timestamp,
         description: l.Selection,
@@ -59,11 +56,7 @@ export class InstapaperMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const insta = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -71,7 +64,7 @@ export class InstapaperMigrator extends Migrator {
       name: 'Instapaper',
       url: 'https://instapaper.com',
     });
-    siteStore.set(insta);
+    await this.saveThing(insta);
   }
 }
 

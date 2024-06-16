@@ -10,11 +10,12 @@ import {
   jsonDateParser,
 } from '@eatonfyi/serializers';
 import 'dotenv/config';
-import { merge } from 'obby';
+import { emptyDeep, merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
 import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
+import { ArangoDB } from './arango.js';
 import { Store, StoreableData } from './store.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
@@ -89,6 +90,8 @@ export interface MigratorOptions {
    * How progress information should be displayed to the user when a migration is triggered.
    */
   progress?: 'silent' | 'progress' | 'status' | 'details';
+
+  store?: string | 'arango' | 'pgsql' | 'sqlite' | 'file';
 }
 
 const loggerDefaults: LoggerOptions = {
@@ -110,6 +113,7 @@ const defaults: MigratorOptions = {
   data: process.env.MIGRATION_DATA ?? 'data',
   logger: loggerDefaults,
   progress: 'status',
+  store: process.env.STORAGE_DEFAULT ?? 'file',
 };
 
 /**
@@ -124,8 +128,8 @@ export class Migrator {
   protected _cache?: typeof jetpack;
   protected _output?: typeof jetpack;
   protected _assets?: typeof jetpack;
-
   protected _data?: Store<StoreableData>;
+  protected _arango?: ArangoDB;
 
   log: Logger;
 
@@ -159,6 +163,11 @@ export class Migrator {
 
   get description() {
     return (this.options.description ??= this.name);
+  }
+
+  get arango() {
+    this._arango ??= new ArangoDB();
+    return this._arango;
   }
 
   get root() {
@@ -263,16 +272,6 @@ export class Migrator {
     jetpack.copyAsync(inp, outp, { overwrite });
   }
 
-  // TODO: We probably want to start prefixing by type or something.
-  // There's bound to be collision once we really use this a lot.
-  protected saveThings(input: Thing | Thing[]) {
-    const things = Array.isArray(input) ? input : [input];
-    const thingStore = this.data.bucket('things');
-    for (const thing of things) {
-      thingStore.set(thing);
-    }
-  }
-
   protected prepThings(input: unknown | unknown[]) {
     const raw = Array.isArray(input) ? input : [input];
     const output: Thing[] = [];
@@ -298,4 +297,68 @@ export class Migrator {
    * the filename to avoid collisions.
    */
   makeFilename = toFilename;
+
+  async saveThings(input: Thing | Thing[], store?: string) {
+    const things = Array.isArray(input) ? input : [input]
+    return await Promise.all(things.map(t => this.saveThing(t, store)));
+  }
+
+  async saveThing(input: Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'markdown') {
+      const { text, ...frontmatter } = input;
+      const filename = this.makeFilename(frontmatter);
+      this.output.write(filename, { data: frontmatter, content: text });
+      this.log.debug(`Wrote ${input.id} to ${filename}`);
+    } else if (storage === 'arango') {
+      await this.arango.set(input);
+      this.log.debug(`Saved ${input.id}`);
+    } else {
+      this.data.bucket(input.type.toLocaleLowerCase()).set(input);
+    }
+    return;
+  }
+
+  async mergeThings(input: Thing | Thing[], store?: string) {
+    const things = Array.isArray(input) ? input : [input]
+    return await Promise.all(things.map(t => this.mergeThing(t, store)));
+  }
+
+  async mergeThing(input: Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'arango') {
+      const ex = await this.arango.load(this.arango.getKey(input)) as Thing | undefined;
+      if ((ex?.date ?? 0) < (input.date ?? 0)) {
+        const nw = { ...emptyDeep(ex) as Thing, ...emptyDeep(input) as Thing }
+        await this.arango.set(nw);
+      } else {
+        const nw = { ...emptyDeep(input) as Thing, ...emptyDeep(ex) as Thing }
+        await this.arango.set(nw);
+      }
+    } else {
+      const b = input.type.toLocaleLowerCase();
+      const id = input.id;
+      const ex = this.data.bucket(b).get(id) as Thing | undefined;
+      if ((ex?.date ?? 0) < (input.date ?? 0)) {
+        const nw = { ...emptyDeep(ex) as Thing, ...emptyDeep(input) as Thing }
+        this.data.bucket(b).set(nw);
+      } else {
+        const nw = { ...emptyDeep(input) as Thing, ...emptyDeep(ex) as Thing }
+        this.data.bucket(b).set(nw);
+      }
+    }
+    this.log.debug(`Merged ${input.type} ${input.id}`);
+    return;
+  }
+
+  async linkThings(from: string | Thing, rel: string | Record<string, unknown>, to: string | Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'arango') {
+      await this.arango.link(from, to, rel);
+      this.log.debug(`Linked ${typeof from === 'string' ? from : from.id} to ${typeof to === 'string' ? to : to.id}`);
+    } else {
+      this.log.error(`Linking not supported with current storage mechanism (${storage})`)
+    }
+    return;
+  }
 }

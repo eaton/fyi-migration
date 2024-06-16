@@ -20,6 +20,7 @@ const defaults: Required<StoreOptions> = {
 export class Store<T extends StoreableData = StoreableData> {
   protected root: typeof jetpack;
   protected format: string;
+  protected buckets: Record<string, Store<T>> = {};
 
   constructor(options: StoreOptions = {}) {
     const opt = { ...defaults, ...options };
@@ -59,10 +60,11 @@ export class Store<T extends StoreableData = StoreableData> {
   }
 
   bucket<S extends T = T>(name: string, format?: string) {
-    return new Store<S>({
+    this.buckets[name] ??= new Store<S>({
       root: this.root.dir(name),
       format: format ?? this.format,
     });
+    return this.buckets[name];
   }
 
   protected asKey(input: StoreKey | StoreableData) {

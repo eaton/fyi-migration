@@ -81,11 +81,9 @@ export class StaticLinkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, l.source ?? this.options.name),
+        ...prepUrlForBookmark(l.url),
         name: l.title || undefined,
         date: l.date,
         description: l.description || undefined,
@@ -94,11 +92,7 @@ export class StaticLinkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
   }
 }
 

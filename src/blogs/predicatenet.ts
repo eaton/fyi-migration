@@ -7,7 +7,7 @@ import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {
-  name: 'predicate-net',
+  name: 'predicate',
   label: 'Predicate.net',
   input: 'input/blogs/predicatenet',
 };
@@ -39,16 +39,15 @@ export class PredicateNetMigrator extends BlogMigrator {
       .readAsync('links.xml')
       .then(xml => extract(xml ?? '', template, schema, { xml: true }));
 
-    const linkStore = this.data.bucket('links');
     for (const l of links ?? []) {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, this.name),
+        ...prepUrlForBookmark(l.url),
         date: '2001-01-01',
         name: l.title,
         description: l.description,
         isPartOf: this.name,
       });
-      linkStore.set(nanohash(link.url), link);
+      await this.saveThing(link);
     }
   }
 
@@ -64,7 +63,6 @@ export class PredicateNetMigrator extends BlogMigrator {
       .readAsync('quotes.xml')
       .then(xml => extract(xml ?? '', template, schema, { xml: true }));
 
-    const quoteStore = this.data.bucket('quotes');
     for (const quote of quotes ?? []) {
       const cw = CreativeWorkSchema.parse({
         id: nanohash(quote.content),
@@ -73,22 +71,22 @@ export class PredicateNetMigrator extends BlogMigrator {
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
       });
-      quoteStore.set(cw.id, cw);
+      await this.saveThing(cw);
     }
   }
 
   override async finalize() {
-    this.data.bucket('things').set(
-      'predicate-net',
-      CreativeWorkSchema.parse({
-        id: 'predicate-net',
-        type: 'Blog',
-        url: 'http://predicate.net',
-        name: 'Predicate.net',
-        hosting: 'Site5 (IIS)',
-        software: 'BBEdit',
-      }),
-    );
+    const site = CreativeWorkSchema.parse({
+      id: 'predicate',
+      type: 'Blog',
+      url: 'http://predicate.net',
+      name: 'Predicate.net',
+      hosting: 'Site5 (IIS)',
+      software: 'BBEdit',
+    });
+
+    await this.saveThing(site);
+    if (this.options.store === 'arango') await this.arango.set(site);
 
     await this.writeLinks();
     await this.writeQuotes();

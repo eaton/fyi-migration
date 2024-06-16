@@ -119,26 +119,21 @@ export class TumblrMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-    const thingStore = this.data.bucket('things');
-
     for (const e of this.posts) {
-      const md = this.prepEntry(e);
-      const file = this.makeFilename(md);
-      const { text, ...frontmatter } = md;
-      this.output.write(file, { content: text, data: frontmatter });
-      this.log.debug(`Wrote ${file}`);
+      const entry = this.prepEntry(e);
+      await this.saveThing(entry);
+      await this.saveThing(entry, 'markdown')
     }
 
     if (this.links && this.links.length) {
       for (const l of this.links.map(l => this.prepLink(l))) {
-        linkStore.set(l.id, l);
+        await this.saveThing(l);
       }
     }
 
     if (this.blogs && this.blogs.length) {
       for (const b of this.blogs.map(b => this.prepSite(b))) {
-        thingStore.set(b.id, b);
+        await this.saveThing(b);
       }
     }
 
@@ -160,7 +155,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `entry/tumblr-${input.id}`,
+      id: `tmblr-${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,
@@ -169,7 +164,7 @@ export class TumblrMigrator extends BlogMigrator {
       published: !!input.date,
       keywords: input.tags,
       url: input.url,
-      isPartOf: `${input.blog_name}`,
+      isPartOf: input.blog_name,
       tumblrType: input.type,
     };
 
@@ -194,7 +189,7 @@ export class TumblrMigrator extends BlogMigrator {
 
   protected prepLink(input: TumblrPost) {
     const link = BookmarkSchema.parse({
-      ...prepUrlForBookmark(input.url, input.blog_name),
+      ...prepUrlForBookmark(input.url),
       date: input.date || undefined,
       name: input.title || input.source_title || undefined,
       description:

@@ -9,6 +9,12 @@ import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import * as prep from './prep.js';
 import { Tweet, TweetSchema } from './schema.js';
+import { get } from 'obby';
+import { toShortDate } from '../util/to-short-date.js';
+import is from '@sindresorhus/is';
+import { toSlug } from '@eatonfyi/text';
+import { nanohash } from '@eatonfyi/ids';
+import { SocialMediaPosting } from '../schemas/social-media-post.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   archiveGlob?: string;
@@ -140,8 +146,9 @@ export class TwitterMigrator extends Migrator {
         | CreativeWork[]
         | undefined;
       if (users) {
-        for (const u of users)
+        for (const u of users) {
           this.users.set(u.id, CreativeWorkSchema.parse(u));
+        }
       }
     }
 
@@ -195,36 +202,13 @@ export class TwitterMigrator extends Migrator {
     }
 
     for (const smp of toExport) {
-      const { text, ...frontmatter } = smp;
-      let file = this.makeFilename(frontmatter);
-      const segments: string[] = [];
-
-      if (this.options.group) {
-        if (this.options.group.handle && typeof frontmatter.handle === 'string')
-          segments.push(frontmatter.handle.toLocaleLowerCase());
-        if (this.options.group.kind) {
-          if (frontmatter.hasPart) {
-            segments.push('threads');
-          } else if (frontmatter.isRetweet) {
-            segments.push('retweets');
-          } else if (frontmatter.about) {
-            segments.push('replies');
-          } else {
-            segments.push('singles');
-          }
-        }
-        if (this.options.group.year) segments.push(file.split('-')[0]);
-      }
-      segments.push(file);
-      file = segments.join('/');
-
-      this.output.write(file, { content: text, data: frontmatter });
-      this.log.debug(`Wrote ${file}`);
+      await this.saveThing(smp);
+      await this.saveThing(smp, 'markdown');
     }
 
     if (this.options.saveUsers) {
       for (const user of [...this.users.values()]) {
-        this.data.bucket('things').set(user);
+        await this.saveThing(user);
       }
     }
 
@@ -242,7 +226,43 @@ export class TwitterMigrator extends Migrator {
         `Copied ${ct} files to ${this.output.path('../_static/twitter')}`,
       );
     }
+    return;
   }
+
+  toFilename = (input: SocialMediaPosting, suffix = '.md') => {
+    let parts: string[] = [];
+    const date = get(input, 'date dates.start date.publish dates.*');
+    if (is.date(date)) parts.push(toShortDate(date)!);
+
+    const name = get(input, 'slug name id');
+    if (is.string(name)) {
+      const slug = toSlug(name);
+      if (slug.length) parts.push(slug);
+    }
+
+    parts = [(parts.length ? nanohash(input) : parts.join('-')) + suffix];
+
+    if (this.options.group) {
+      if (this.options.group.kind) {
+        if (input.hasPart) {
+          parts.unshift('threads');
+        } else if (input.isRetweet) {
+          parts.unshift('retweets');
+        } else if (input.about) {
+          parts.unshift('replies');
+        } else {
+          parts.unshift('singles');
+        }
+      }
+      if (this.options.group.year) parts.unshift(input.date?.getFullYear().toString() ?? 'unknown');
+      if (this.options.group.handle && typeof input.handle === 'string') {
+        parts.unshift(input.handle.toLocaleLowerCase());
+      }
+    }
+
+    return parts.join('/');
+  }
+
 
   async processArchive(fileOrFolder: string) {
     const ignore = [

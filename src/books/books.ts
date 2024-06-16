@@ -14,6 +14,7 @@ import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
+import { Thing } from '../schemas/thing.js';
 
 export interface BookMigratorOptions extends FetcherOptions {
   documentId?: string;
@@ -241,6 +242,13 @@ export class BookMigrator extends Fetcher {
       this.root.path('src/_data/books.ndjson'),
       { overwrite: true },
     );
+    if (this.options.store === 'arango') {
+      for (const book of Object.values(this.bookData)) {
+        const b = BookSchema.parse({ ...book, date: book.dates?.['obtained'] ?? book.dates?.['publish'] }) as Thing;
+        await this.arango.set(b);
+      } 
+    }
+
     this.copyAssets(this.cache.path('images'), 'books');
 
     // Finally, we're going to spit out a CSV version of the original book index,

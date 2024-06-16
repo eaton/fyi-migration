@@ -9,6 +9,7 @@ import {
 import { Thing } from '../../schemas/thing.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -176,35 +177,27 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   override async finalize() {
     // Currently ignoring comments, whoop whoop
-    const commentStore = this.data.bucket('comments');
-
-    for (const { text, ...frontmatter } of this.entries) {
-      const filename = this.makeFilename(frontmatter);
-      this.output.write(filename, { content: text, data: frontmatter });
-      this.log.debug(`Wrote ${filename}`);
+    for (const e of this.entries) {
+      await this.saveThing(e);
+      await this.saveThing(e, 'markdown');
 
       const entryComments = this.comments.filter(
-        c => c.about === frontmatter.id,
+        c => c.about === e.id,
       );
       if (entryComments.length) {
-        commentStore.set(frontmatter.id, entryComments);
-        this.log.debug(
-          `Saved ${entryComments.length} comments for ${frontmatter.id}`,
-        );
+        sortByParents(entryComments);
+        await this.saveThings(entryComments);
       }
     }
 
-    this.data.bucket('things').set(
-      'alt-drupal',
+    await this.saveThing(
       CreativeWorkSchema.parse({
-        id: 'alt-drupal',
+        id: 'alt',
         type: 'Blog',
         url: 'https://angrylittletree.com',
         name: this.entityData.variables['site_name']?.toString() ?? undefined,
         subtitle:
           this.entityData.variables['site_slogan']?.toString() ?? undefined,
-        hosting: 'Linode',
-        software: 'Drupal 7',
       }),
     );
 
@@ -220,7 +213,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       name: input.title,
       description: input.summary ? toMarkdown(input.summary) : undefined,
       text: input.body ? toMarkdown(autop(input.body)) : '',
-      isPartOf: this.name,
+      isPartOf: 'alt',
       attachments: input.attachments?.map(a => ({
         filename: a.file?.filename,
         description: a.field_attachments_description,
@@ -230,9 +223,8 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.AltComment): Comment {
     return CommentSchema.parse({
-      id: `alt-c${input.cid}`,
-      parent: input.pid ? `alt-c${input.pid}` : undefined,
-      sort: input.thread,
+      id: `alt-c${input.cid}d`,
+      parent: input.pid ? `alt-c${input.pid}d` : undefined,
       about: `alt-${input.nid}`,
       date: input.created,
       commenter: {
@@ -240,6 +232,8 @@ export class AltDrupalMigrator extends BlogMigrator {
         mail: input.mail,
         url: input.homepage,
       },
+      thread: undefined, // We throw away the thread value and recalculate it later.
+      isPartOf: 'alt',
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

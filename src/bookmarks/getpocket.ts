@@ -47,12 +47,9 @@ export class PocketMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, 'getpocket'),
+        ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         keywords: l.tags,
@@ -61,12 +58,8 @@ export class PocketMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
-
+    this.mergeThings(cws);
+    
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebApplication',
       id: 'getpocket',
@@ -74,7 +67,7 @@ export class PocketMigrator extends Migrator {
       description: 'One of the nicer read-it-later tools.',
       url: 'https://getpocket.com',
     });
-    siteStore.set(getpocket);
+    await this.saveThing(getpocket);
   }
 }
 

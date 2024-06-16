@@ -10,6 +10,7 @@ import { ArticleReprintMigrator } from './work/article-reprints.js';
 
 export class MigrateEverything extends Migrator {
   override async run() {
+    await this.arango.initialize();
     await new AllTextFilesMigrator({ logger: this.log }).run();
     await new AllBlogMigrator({ logger: this.log }).run();
     await new ArticleReprintMigrator({ logger: this.log }).run();

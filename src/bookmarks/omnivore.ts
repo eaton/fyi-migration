@@ -86,14 +86,11 @@ export class OmnivoreMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
-        ...prepUrlForBookmark(l.url, 'omnivore'),
+        ...prepUrlForBookmark(l.url),
         name: l.title,
-        description: l.description,
+        description: l.description || undefined,
         date: l.savedAt,
         keywords: l.labels,
         isPartOf: 'omnivore',
@@ -110,10 +107,7 @@ export class OmnivoreMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-    }
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const omnivore = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -122,7 +116,7 @@ export class OmnivoreMigrator extends Migrator {
       description: 'A newer, slicker, self-hostable reading app.',
       url: 'https://omnivore.app',
     });
-    siteStore.set(omnivore);
+    await this.saveThing(omnivore);
     return;
   }
 
