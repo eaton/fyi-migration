@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface StaticLinkMigratorOptions extends MigratorOptions {
   sourceDates?: Record<string, Date>;
@@ -96,7 +97,7 @@ export class StaticLinkMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
-      if (this.options.store === 'arango') await this.arango.set(cw);
+      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);

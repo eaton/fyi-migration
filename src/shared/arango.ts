@@ -34,8 +34,8 @@ export class ArangoDB extends Database {
     const _key =
       id.indexOf(':') > 0 ? id : `${type?.toLocaleLowerCase()}:${id}`;
     return await this.collection('thing')
-      .document(_key)
-      .then(d => (schema ? schema.parse(d) : d));
+      .document(_key, { graceful: true })
+      .then(d => d ? (schema ? schema.parse(d) : d) : undefined);
   }
 
   /**
@@ -169,11 +169,11 @@ export class ArangoDB extends Database {
 
   async initialize() {
     await this.ensureCollection('thing');
-    await this.ensureCollection('person');
-    await this.ensureCollection('organization');
-    await this.ensureCollection('creativework');
-    await this.ensureCollection('place');
-    await this.ensureCollection('event');
+    // await this.ensureCollection('person');
+    // await this.ensureCollection('organization');
+    // await this.ensureCollection('creativework');
+    // await this.ensureCollection('place');
+    // await this.ensureCollection('event');
 
     await this.ensureEdgeCollection('link');
     await this.ensureEdgeCollection('role');

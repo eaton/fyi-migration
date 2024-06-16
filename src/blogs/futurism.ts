@@ -32,20 +32,20 @@ export class FuturismMigrator extends BlogMigrator {
 
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store === 'arango') await this.arango.set({ ...frontmatter, text });
       this.log.debug(`'Wrote ${file}`);
     }
 
-    this.data.bucket('things').set(
-      this.name,
-      CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: this.name,
-        name: this.label,
-        description: this.description,
-        url: 'http://future.viapositiva.net',
-        hosting: 'TypePad',
-      }),
-    );
+    const site = CreativeWorkSchema.parse({
+      type: 'Blog',
+      id: this.name,
+      name: this.label,
+      description: this.description,
+      url: 'http://future.viapositiva.net',
+      hosting: 'TypePad',
+    });
+    this.data.bucket('things').set(site);
+    if (this.options.store === 'arango') await this.arango.set(site);
 
     return;
   }

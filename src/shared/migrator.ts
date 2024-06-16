@@ -274,11 +274,14 @@ export class Migrator {
 
   // TODO: We probably want to start prefixing by type or something.
   // There's bound to be collision once we really use this a lot.
-  protected saveThings(input: Thing | Thing[]) {
+  protected async saveThings(input: Thing | Thing[]) {
     const things = Array.isArray(input) ? input : [input];
     const thingStore = this.data.bucket('things');
     for (const thing of things) {
       thingStore.set(thing);
+      if (this.options.store === 'arango') {
+        await this.arango.set(thing);
+      }
     }
   }
 

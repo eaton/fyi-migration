@@ -127,18 +127,27 @@ export class TumblrMigrator extends BlogMigrator {
       const file = this.makeFilename(md);
       const { text, ...frontmatter } = md;
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
       this.log.debug(`Wrote ${file}`);
     }
 
     if (this.links && this.links.length) {
       for (const l of this.links.map(l => this.prepLink(l))) {
         linkStore.set(l.id, l);
+        if (this.options.store == 'arango') {
+          await this.arango.set(l);
+        }
       }
     }
 
     if (this.blogs && this.blogs.length) {
       for (const b of this.blogs.map(b => this.prepSite(b))) {
         thingStore.set(b.id, b);
+        if (this.options.store == 'arango') {
+          await this.arango.set(b);
+        }
       }
     }
 
@@ -160,7 +169,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `entry/tumblr-${input.id}`,
+      id: `tumblr-${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,

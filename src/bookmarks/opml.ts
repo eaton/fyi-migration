@@ -1,9 +1,10 @@
 import { ExtractTemplateObject, extract } from '@eatonfyi/html';
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/bookmark.js';
-import { urlSchema } from '../schemas/url.js';
+import { urlSchema } from '../schemas/fragments/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface OpmlMigrationOptions extends MigratorOptions {
   date?: Date;
@@ -71,7 +72,7 @@ export class OpmlMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
-      if (this.options.store === 'arango') await this.arango.set(cw);
+      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);

@@ -145,10 +145,19 @@ export class MovableTypeMigrator extends BlogMigrator {
 
         const file = [site.id, this.makeFilename(frontmatter)].join('/');
         this.output.write(file, { content: text, data: frontmatter });
+        if (this.options.store == 'arango') {
+          await this.arango.set({ ...frontmatter, text });
+        }
         this.log.debug(`Wrote ${file}`);
 
         if (mappedComments.length) {
           commentStore.set(frontmatter.id, mappedComments);
+          if (this.options.store === 'arango') {
+            for (const c of mappedComments) {
+              await this.arango.set(c);
+            }
+          }
+
           this.log.debug(
             `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
           );

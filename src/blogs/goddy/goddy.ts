@@ -172,9 +172,16 @@ export class GoddyMigrator extends BlogMigrator {
     for (const { text, ...frontmatter } of nodes) {
       if (frontmatter.type === 'Bookmark') {
         linkStore.set(frontmatter);
+        if (this.options.store == 'arango') {
+          await this.arango.set(frontmatter);
+        }
       } else {
         const file = this.makeFilename(frontmatter);
         this.output.write(file, { content: text, data: frontmatter });
+        if (this.options.store == 'arango') {
+          await this.arango.set({ ...frontmatter, text });
+        }
+
         this.log.debug(`Wrote ${file}`);
 
         const nodeComments = comments.filter(c => c.about === frontmatter.id);
@@ -183,11 +190,16 @@ export class GoddyMigrator extends BlogMigrator {
           this.log.debug(
             `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
           );
+          if (this.options.store === 'arango') {
+            for (const c of nodeComments) {
+              await this.arango.set(c);
+            }
+          }
         }
       }
     }
 
-    this.data.bucket('things').set('goddy', {
+    const site = CreativeWorkSchema.parse({
       type: 'Blog',
       id: this.name,
       url: 'https://growingupgoddy.com',
@@ -196,6 +208,10 @@ export class GoddyMigrator extends BlogMigrator {
       software: 'Drupal 6',
       hosting: 'Linode',
     });
+    this.data.bucket('things').set(site);
+    if (this.options.store == 'arango') {
+      await this.arango.set(site);
+    }
 
     this.copyAssets('files', 'goddy');
     return Promise.resolve();

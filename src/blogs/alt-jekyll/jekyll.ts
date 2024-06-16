@@ -81,6 +81,10 @@ export class AltJekyllMigrator extends BlogMigrator {
       const { text, ...frontmatter } = e;
       const fileName = this.makeFilename(frontmatter);
       this.output.write(fileName, { data: frontmatter, content: text });
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
+
       this.log.debug(`Wrote ${fileName}`);
 
       // Find a thread that matches this file.
@@ -90,6 +94,11 @@ export class AltJekyllMigrator extends BlogMigrator {
         this.log.debug(
           `Saved ${comments.length} comments for ${frontmatter.url}`,
         );
+        if (this.options.store === 'arango') {
+          for (const c of this.comments[e.id]) {
+            await this.arango.set(c);
+          }
+        }
       }
     }
 

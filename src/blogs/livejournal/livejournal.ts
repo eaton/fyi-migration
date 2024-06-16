@@ -136,6 +136,10 @@ export class LivejournaMigrator extends BlogMigrator {
       const file = this.makeFilename(frontmatter);
       if (file) {
         this.output.write(file, { content: text, data: frontmatter });
+        if (this.options.store == 'arango') {
+          await this.arango.set({ ...frontmatter, text });
+        }
+
         this.log.debug(`Wrote ${file}`);
 
         // write entry comments
@@ -144,6 +148,12 @@ export class LivejournaMigrator extends BlogMigrator {
           this.comments[frontmatter.id].length
         ) {
           commentStore.set(frontmatter.id, this.comments[frontmatter.id]);
+          if (this.options.store === 'arango') {
+            for (const c of this.comments[frontmatter.id]) {
+              await this.arango.set(c);
+            }
+          }
+
           this.log.debug(
             `Saved ${this.comments[frontmatter.id].length} comments for ${frontmatter.id}`,
           );
@@ -152,16 +162,17 @@ export class LivejournaMigrator extends BlogMigrator {
         this.log.debug(frontmatter, 'Could not create filename');
       }
     }
-    this.data.bucket('things').set(
-      'livejournal',
-      CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: this.name,
-        name: this.label,
-        url: 'http://predicate.livejournal.com',
-        hosting: 'Livejournal',
-      }),
-    );
+
+    const lj = CreativeWorkSchema.parse({
+      type: 'Blog',
+      id: this.name,
+      name: this.label,
+      url: 'http://predicate.livejournal.com',
+      hosting: 'Livejournal',
+    });
+
+    this.data.bucket('things').set(lj);
+    if (this.options.store === 'arango') await this.arango.set(lj);
 
     await this.copyAssets('media/lj-photos', 'lj');
     return Promise.resolve();

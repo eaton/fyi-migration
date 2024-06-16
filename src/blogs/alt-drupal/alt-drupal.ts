@@ -181,6 +181,10 @@ export class AltDrupalMigrator extends BlogMigrator {
     for (const { text, ...frontmatter } of this.entries) {
       const filename = this.makeFilename(frontmatter);
       this.output.write(filename, { content: text, data: frontmatter });
+      if (this.options.store === 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
+
       this.log.debug(`Wrote ${filename}`);
 
       const entryComments = this.comments.filter(
@@ -191,6 +195,14 @@ export class AltDrupalMigrator extends BlogMigrator {
         this.log.debug(
           `Saved ${entryComments.length} comments for ${frontmatter.id}`,
         );
+        if (this.options.store === 'arango') {
+          for (const c of entryComments) {
+            await this.arango.set(c);
+          }
+        }
+      }
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
       }
     }
 

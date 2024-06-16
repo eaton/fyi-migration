@@ -58,7 +58,7 @@ export class TextJournalsMigrator extends Migrator {
       this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
     }
 
-    this.saveThings(Object.values(textFiles));
+    await this.saveThings(Object.values(textFiles));
     return;
   }
 }

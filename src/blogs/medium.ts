@@ -44,6 +44,9 @@ export class MediumMigrator extends BlogMigrator {
 
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
+      if (this.options.store == 'arango') {
+        await this.arango.set({ ...frontmatter, text });
+      }
     }
 
     await this.copyAssets('images', 'medium');

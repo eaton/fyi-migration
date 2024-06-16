@@ -3,6 +3,7 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface InstapaperMigratorOptions extends MigratorOptions {}
 
@@ -61,7 +62,7 @@ export class InstapaperMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
-      if (this.options.store === 'arango') await this.arango.set(cw);
+      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);

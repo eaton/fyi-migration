@@ -1,4 +1,3 @@
-import { toCase, toSlug } from '@eatonfyi/text';
 import { TwitterArchive } from 'twitter-archive-reader';
 import { CreativeWorkSchema } from '../schemas/index.js';
 import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
@@ -10,7 +9,6 @@ export function user(info: Record<string, string> | TwitterArchive) {
       type: 'Blog',
       id: `@${info.user.screen_name.toLocaleLowerCase()}`,
       id_str: info.user.id,
-      name: info.user.screen_name,
       subtitle: info.user.name,
       date: info.user.created_at,
       image: info.user.profile_img_url,
@@ -51,13 +49,10 @@ export function tweet(tweet: Tweet) {
 export function thread(tweets: Tweet[]) {
   const first = tweets[0];
   const text = tweets.map(t => tweetToMarkdown(t)).join('\n\n');
-  const name = text.replaceAll('\n', ' ').slice(0, 48);
 
-  const cw = CreativeWorkSchema.parse({
-    type: 'SocialMediaPosting',
-    id: `tweet-${first.id}`,
-    name: toCase.title(name),
-    slug: toSlug(name),
+  const cw = SocialMediaPostingSchema.parse({
+    type: 'SocialMediaThread',
+    id: first.id,
     handle: first.handle,
     isPartOf: `@${first.handle.toLocaleLowerCase()}`,
     about: first.aboutId
@@ -72,7 +67,7 @@ export function thread(tweets: Tweet[]) {
     },
     text,
     url: tweetUrl(first.id, first.handle),
-    hasPart: tweets.map(t => tweetUrl(t.id, t.handle)),
+    hasPart: tweets.map(t => 'SocialMediaPost:' + t.id),
     keywords: [...new Set(tweets.flatMap(t => t.hashtags ?? [])).values()],
     favorites: tweets
       .map(t => t.favorites)

@@ -6,6 +6,7 @@ import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Thing } from '../schemas/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
@@ -91,7 +92,7 @@ export class BrowserBookmarkMigrator extends Migrator {
           this.maxDate = Math.max(this.maxDate, link.date?.valueOf() ?? 0);
           this.minDate = Math.max(
             this.maxDate,
-            link.date?.valueOf() ?? Math.floor(Date.now() / 1000),
+            link.date?.valueOf() ?? Date.now() / 1000,
           );
         }
 
@@ -117,7 +118,7 @@ export class BrowserBookmarkMigrator extends Migrator {
 
     for (const cw of cws) {
       linkStore.set(cw);
-      if (this.options.store === 'arango') await this.arango.set(cw);
+      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
     }
 
     this.log.info(`Saved ${cws.length} links.`);
@@ -161,7 +162,7 @@ const schema = z.object({
     .number()
     .optional()
     .or(z.coerce.date())
-    .transform(d => (typeof d === 'number' ? new Date(d * 1000) : d)),
+    .transform(d => (typeof d === 'number' ? (d < 10_000_000_000 ? new Date(d * 1000) : new Date(d)) : d)),
 });
 
 type BrowserBookmark = z.infer<typeof schema>;
