@@ -12,6 +12,7 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -56,9 +57,9 @@ export class PositivaDrupalMigrator extends BlogMigrator {
     }
 
     this.log.debug('Assembling Comment data');
-    const comments = this.readTableCsv('comment.csv', drupal.commentSchema);
+    const comments = this.readTableCsv('comments.csv', drupal.commentSchema);
     for (const c of comments) {
-      if (!c.status) continue;
+      if (c.status) continue;
       if (c.spam) continue;
       if (!approvedNodes.has(c.nid)) continue;
       this.cache.write(`comments/${c.nid}-${c.cid}.json`, c);
@@ -142,6 +143,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
           .map(c => this.prepComment(c));
 
         if (mappedComments.length) {
+          sortByParents(mappedComments);
           commentStore.set(frontmatter.id, mappedComments);
           this.log.debug(
             `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
@@ -184,7 +186,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
       text: this.buildNodeBody(input),
       about: input.amazon?.asin ? input.amazon.asin : undefined,
     });
@@ -196,7 +198,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input) || undefined,
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
     });
   }
 
@@ -211,18 +213,19 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       spokenBy: input.quote?.author ?? undefined,
       isBasedOn: undefined,
       recordedIn: undefined,
-      isPartOf: this.name,
+      isPartOf: 'viapositiva',
     });
   }
 
   protected prepComment(input: drupal.Comment): Comment {
     return CommentSchema.parse({
       type: 'Comment',
-      id: `vpd-c${input.cid}`,
-      parent: input.pid ? `vpd-c${input.pid}` : undefined,
-      thread: input.thread,
+      id: `vp-c${input.cid}d`,
+      parent: input.pid ? `vp-c${input.pid}d` : undefined,
+      thread: undefined, // set it again later
       about: `vpd-${input.nid}`,
       date: input.timestamp,
+      isPartOf: 'viapositiva',
       commenter: {
         name: input.name,
         mail: input.mail,

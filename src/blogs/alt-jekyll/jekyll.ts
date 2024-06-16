@@ -4,7 +4,6 @@ import { Frontmatter } from '@eatonfyi/serializers';
 import { Comment, CommentSchema } from '../../schemas/comment.js';
 import {
   CreativeWork,
-  CreativeWorkInput,
   CreativeWorkSchema,
 } from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
@@ -57,7 +56,7 @@ export class AltJekyllMigrator extends BlogMigrator {
       const xml = this.input.read(file, 'utf8') ?? '';
       const threads = (await Disqus.parse(xml)).threads;
       for (const thread of threads) {
-        const identifier = thread.id;
+        const identifier = nanohash(thread.id);
         this.comments[identifier] ??= [];
         for (const comment of thread.posts) {
           this.comments[identifier].push(this.prepComment(comment));
@@ -80,10 +79,10 @@ export class AltJekyllMigrator extends BlogMigrator {
     for (const e of this.entries) {
       const { text, ...frontmatter } = e;
       const fileName = this.makeFilename(frontmatter);
-      this.output.write(fileName, { data: frontmatter, content: text });
       if (this.options.store == 'arango') {
         await this.arango.set({ ...frontmatter, text });
       }
+      this.output.write(fileName, { data: frontmatter, content: text });
 
       this.log.debug(`Wrote ${fileName}`);
 
@@ -91,26 +90,23 @@ export class AltJekyllMigrator extends BlogMigrator {
       const comments = this.comments[e.id];
       if (comments?.length) {
         commentStore.set(frontmatter.id, comments);
-        this.log.debug(
-          `Saved ${comments.length} comments for ${frontmatter.url}`,
-        );
         if (this.options.store === 'arango') {
-          for (const c of this.comments[e.id]) {
+          for (const c of this.comments[frontmatter.id]) {
             await this.arango.set(c);
           }
         }
+        this.log.debug(
+          `Saved ${comments.length} comments for ${frontmatter.url}`,
+        );
       }
     }
 
     this.data.bucket('things').set(
-      'alt-jekyll',
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'alt-jekyll',
+        id: 'alt',
         url: 'https://angrylittletree.com',
         name: 'Angry Little Tree',
-        hosting: 'Github Pages',
-        software: 'Jekyll',
       }),
     );
 
@@ -119,17 +115,19 @@ export class AltJekyllMigrator extends BlogMigrator {
   }
 
   protected prepEntry(input: JekyllPost): CreativeWork {
-    const cw: CreativeWorkInput = {
+
+    const cw= CreativeWorkSchema.parse({
       type: 'BlogPosting',
       id: 'tmp',
       date: input.data.date,
       name: input.data.title,
-      description: input.data.title,
+      description: input.data.summary,
+      isPartOf: 'alt',
       headline: input.data.subtitle
         ? input.data.title + ': ' + input.data.subtitle
         : undefined,
       slug: input.data.slug,
-    };
+    });
 
     if (input?.file) {
       const [, date, slug] =
@@ -138,9 +136,9 @@ export class AltJekyllMigrator extends BlogMigrator {
       cw.slug ??= slug;
     }
 
-    cw.url = `http://angrylittletree.com/${input.data.date?.getFullYear()}/${input.data.date?.getUTCMonth()}/${input.data.slug}.html`;
-    cw.id = 'alt-' + nanohash(cw.url);
-    cw.isPartOf = 'alt-jekyll';
+    const oldUrl = `/${cw.date?.getFullYear()}/${cw.date?.getUTCMonth()}/${cw.slug}.html`;
+    cw.id = 'alt-' + nanohash(oldUrl);
+    cw.isPartOf = 'alt';
 
     cw.text = input.content;
 
@@ -149,10 +147,11 @@ export class AltJekyllMigrator extends BlogMigrator {
 
   protected prepComment(comment: Disqus.Post): Comment {
     return CommentSchema.parse({
-      id: `altj-c${comment.dsqId}`,
-      parent: comment.parent ? `altj-c${comment.parent}` : undefined,
-      about: comment.linkId ? `altj-c${comment.linkId}` : undefined,
+      id: `alt-c${comment.dsqId}`,
+      parent: comment.parent ? `alt-c${comment.parent}` : undefined,
+      about: comment.linkId ? `alt-${nanohash(comment.linkId)}` : undefined,
       date: comment.createdAt,
+      isPartOf: 'alt',
       commenter: { name: comment.author.name },
       text: toMarkdown(autop(comment.message)),
     });

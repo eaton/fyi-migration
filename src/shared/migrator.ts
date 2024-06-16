@@ -311,7 +311,7 @@ export class Migrator {
    */
   makeFilename = toFilename;
 
-  async store(thing: Thing) {
+  async saveToStore(thing: Thing) {
     switch (this.options.store) {
       case 'arango':
         await this.arango.set(thing);
@@ -321,10 +321,14 @@ export class Migrator {
     }
   }
 
-  async link(from: string | Thing, rel: string, to: string | Thing) {
+  async linkInStore(from: string | Thing, rel: string, to: string | Thing, extra?: Record<string, unknown>) {
     switch (this.options.store) {
       case 'arango':
-        await this.arango.link(from, to, rel);
+        if (extra) {
+          await this.arango.link(from, to, { ...extra, rel });
+        } else {
+          await this.arango.link(from, to, rel);
+        }
         break;
       default:
         this.log.error('');

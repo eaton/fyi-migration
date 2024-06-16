@@ -13,6 +13,7 @@ import {
   type LivejournalEntry,
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -21,7 +22,7 @@ export interface LivejournalMigrateOptions extends BlogMigratorOptions {
 }
 
 const defaults: LivejournalMigrateOptions = {
-  name: 'predicate-lj',
+  name: 'lj',
   label: "Predicate's Livejournal",
   description: 'Posts, comments, and images from Livejournal',
   ignoreBefore: new Date('2001-06-01'),
@@ -122,8 +123,9 @@ export class LivejournaMigrator extends BlogMigrator {
       if (entry.comments && entry.comments.length) {
         this.comments[cw.id] ??= [];
         for (const comment of entry.comments) {
-          this.comments[cw.id].push(this.prepComment(comment));
+          this.comments[cw.id].push(this.prepComment({ entry: entry.id, ...comment }));
         }
+        if (this.comments[cw.id].length) sortByParents(this.comments[cw.id]);
       }
     }
     return;
@@ -201,6 +203,7 @@ export class LivejournaMigrator extends BlogMigrator {
         name: comment.name,
         mail: comment.email,
       },
+      isPartOf: this.name,
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
     });

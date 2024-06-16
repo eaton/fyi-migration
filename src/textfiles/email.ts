@@ -43,7 +43,7 @@ export class TextEmailMigrator extends Migrator {
       const raw = this.input.read(f);
       if (raw) {
         const message = await parseMail(raw);
-        this.processMail(message, raw);
+        await this.processMail(message, raw);
       }
     }
 
@@ -55,7 +55,7 @@ export class TextEmailMigrator extends Migrator {
     }
   }
 
-  protected processMail(input: ParsedMail, raw?: string) {
+  protected async processMail(input: ParsedMail, raw?: string) {
     if (!this.messageMatches(input, raw)) {
       this.log.debug(`Skipped message, did not match filter.`);
       return;
@@ -66,6 +66,7 @@ export class TextEmailMigrator extends Migrator {
     const { text, ...frontmatter } = email;
 
     this.output.write(file, { data: frontmatter, content: text });
+    if (this.options.store == 'arango') await this.arango.set({ ...frontmatter, text });
     this.handleAttachments(input);
     this.log.debug(`Wrote ${file}`);
 

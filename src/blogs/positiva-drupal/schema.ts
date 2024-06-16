@@ -35,10 +35,10 @@ export const commentSchema = z.object({
   status: z.number(),
   spam: z.unknown(),
 
-  name: z.string().optional(),
-  mail: z.string().optional(),
-  hostname: z.string().optional(),
-  homepage: z.string().optional(),
+  name: z.coerce.string().optional(),
+  mail: z.coerce.string().optional(),
+  hostname: z.coerce.string().optional(),
+  homepage: z.coerce.string().optional(),
 
   timestamp: epochString,
   subject: z.string().optional(),

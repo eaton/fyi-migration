@@ -10,6 +10,7 @@ import {
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { sortByParents } from '../../util/parent-sort.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -186,6 +187,7 @@ export class GoddyMigrator extends BlogMigrator {
 
         const nodeComments = comments.filter(c => c.about === frontmatter.id);
         if (nodeComments.length) {
+          sortByParents(nodeComments);
           commentStore.set(frontmatter.id, nodeComments);
           this.log.debug(
             `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
@@ -233,7 +235,7 @@ export class GoddyMigrator extends BlogMigrator {
     } else {
       return CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: `goddy-${input.nid}`,
+        id: `gdy-${input.nid}`,
         date: input.created,
         name: input.title,
         slug: toSlug(input.title),
@@ -256,16 +258,17 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {
     return CommentSchema.parse({
-      id: `goddy-c${input.cid}`,
-      about: `goddy-${input.nid}`,
-      parent: input.pid ? `goddy-c${input.pid}` : undefined,
-      sort: input.thread,
+      id: `gdy-c${input.cid}`,
+      about: `gdy-${input.nid}`,
+      parent: input.pid ? `gdy-c${input.pid}` : undefined,
+      thread: undefined, // Set it later manually
       date: input.created,
       commenter: {
         name: input.name,
         mail: input.mail,
         url: input.homepage,
       },
+      isPartOf: this.name,
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

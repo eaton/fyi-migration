@@ -20,10 +20,9 @@ export class MediumMigrator extends BlogMigrator {
       'medium',
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'medium',
-        name: 'Medium',
+        id: this.name,
+        name: this.label,
         url: 'https://medium.com/@eaton',
-        hosting: 'Medium',
       }),
     );
 

@@ -169,7 +169,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `${input.id}`,
+      id: `tmblr-${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,

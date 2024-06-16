@@ -1,3 +1,2 @@
-import { AllBookmarksMigrator } from './bookmarks/all-bookmarks.js';
-
-await new AllBookmarksMigrator().run();
+import { PositivaDrupalMigrator } from "./blogs/index.js";
+await new PositivaDrupalMigrator().run();

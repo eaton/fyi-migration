@@ -109,7 +109,7 @@ export class MovableTypeMigrator extends BlogMigrator {
     }
 
     for (const e of entries) {
-      e.comments = comments.filter(c => c.comment_entry_id === e.entry_id);
+      e.comments = comments.filter(c => c.comment_entry_id === e.entry_id && c.comment_blog_id == e.entry_blog_id);
     }
 
     for (const b of blogs) {
@@ -154,6 +154,7 @@ export class MovableTypeMigrator extends BlogMigrator {
           commentStore.set(frontmatter.id, mappedComments);
           if (this.options.store === 'arango') {
             for (const c of mappedComments) {
+              c.isPartOf = frontmatter.isPartOf;
               await this.arango.set(c);
             }
           }
