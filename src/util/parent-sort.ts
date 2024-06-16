@@ -20,7 +20,7 @@ export function sortByParents(items: ParentSortableItem[]) {
   const eor = '.';
   const startNum = -1;
 
-  for (const c of items.sort(compareThread)) {
+  for (const c of items) {
     populateThreadForItem(c);
   }
   
@@ -34,7 +34,7 @@ export function sortByParents(items: ParentSortableItem[]) {
     let prefix = '';
 
     if (thread === undefined) {
-      if (c.parent === undefined) {
+      if (c.parent === undefined || !items.find(i => i.id === c.parent)) {
         // This is a comment with no parent comment (depth 0): we start
         // by retrieving the maximum thread level.
         max = stripEor(getMaxThread());
@@ -50,8 +50,12 @@ export function sortByParents(items: ParentSortableItem[]) {
         // Get the parent comment:
         const parent = items.find(i => i.id == c.parent);
       
+        if (!parent) {
+          throw new Error('Comment parent not found');
+        }
+
         // If the parent hasn't been handle yet, handle it.
-        populateThreadForItem(parent!);
+        populateThreadForItem(parent);
 
         prefix = stripEor(getThread(parent!)) + dlm;
 
