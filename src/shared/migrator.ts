@@ -10,7 +10,7 @@ import {
   jsonDateParser,
 } from '@eatonfyi/serializers';
 import 'dotenv/config';
-import { merge } from 'obby';
+import { emptyDeep, merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
 import { Thing, ThingSchema } from '../schemas/thing.js';
 import { isLogger } from '../util/index.js';
@@ -272,19 +272,6 @@ export class Migrator {
     jetpack.copyAsync(inp, outp, { overwrite });
   }
 
-  // TODO: We probably want to start prefixing by type or something.
-  // There's bound to be collision once we really use this a lot.
-  protected async saveThings(input: Thing | Thing[]) {
-    const things = Array.isArray(input) ? input : [input];
-    const thingStore = this.data.bucket('things');
-    for (const thing of things) {
-      thingStore.set(thing);
-      if (this.options.store === 'arango') {
-        await this.arango.set(thing);
-      }
-    }
-  }
-
   protected prepThings(input: unknown | unknown[]) {
     const raw = Array.isArray(input) ? input : [input];
     const output: Thing[] = [];
@@ -311,27 +298,67 @@ export class Migrator {
    */
   makeFilename = toFilename;
 
-  async saveToStore(thing: Thing) {
-    switch (this.options.store) {
-      case 'arango':
-        await this.arango.set(thing);
-        break;
-      default:
-        this.data.bucket(thing.type.toLocaleLowerCase()).set(thing);
-    }
+  async saveThings(input: Thing | Thing[], store?: string) {
+    const things = Array.isArray(input) ? input : [input]
+    return await Promise.all(things.map(t => this.saveThing(t, store)));
   }
 
-  async linkInStore(from: string | Thing, rel: string, to: string | Thing, extra?: Record<string, unknown>) {
-    switch (this.options.store) {
-      case 'arango':
-        if (extra) {
-          await this.arango.link(from, to, { ...extra, rel });
-        } else {
-          await this.arango.link(from, to, rel);
-        }
-        break;
-      default:
-        this.log.error('');
+  async saveThing(input: Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'markdown') {
+      const { text, ...frontmatter } = input;
+      const filename = this.makeFilename(frontmatter);
+      this.output.write(filename, { data: frontmatter, content: text });
+      this.log.debug(`Wrote ${input.id} to ${filename}`);
+    } else if (storage === 'arango') {
+      await this.arango.set(input);
+      this.log.debug(`Saved ${input.id}`);
+    } else {
+      this.data.bucket(input.type.toLocaleLowerCase()).set(input);
     }
+    return;
+  }
+
+  async mergeThings(input: Thing | Thing[], store?: string) {
+    const things = Array.isArray(input) ? input : [input]
+    return await Promise.all(things.map(t => this.mergeThing(t, store)));
+  }
+
+  async mergeThing(input: Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'arango') {
+      const ex = await this.arango.load(this.arango.getKey(input)) as Thing | undefined;
+      if ((ex?.date ?? 0) < (input.date ?? 0)) {
+        const nw = { ...emptyDeep(ex) as Thing, ...emptyDeep(input) as Thing }
+        await this.arango.set(nw);
+      } else {
+        const nw = { ...emptyDeep(input) as Thing, ...emptyDeep(ex) as Thing }
+        await this.arango.set(nw);
+      }
+    } else {
+      const b = input.type.toLocaleLowerCase();
+      const id = input.id;
+      const ex = this.data.bucket(b).get(id) as Thing | undefined;
+      if ((ex?.date ?? 0) < (input.date ?? 0)) {
+        const nw = { ...emptyDeep(ex) as Thing, ...emptyDeep(input) as Thing }
+        this.data.bucket(b).set(nw);
+      } else {
+        const nw = { ...emptyDeep(input) as Thing, ...emptyDeep(ex) as Thing }
+        this.data.bucket(b).set(nw);
+      }
+    }
+    this.log.debug(`Merged ${input.id}`);
+    return;
+  }
+
+  async linkThings(from: string | Thing, rel: string | Record<string, unknown>, to: string | Thing, store?: string) {
+    const storage = store ?? this.options.store;
+    if (storage === 'arango') {
+      await this.arango.link(from, to, rel);
+      this.log.debug(`Linked ${typeof from === 'string' ? from : from.id} to ${typeof to === 'string' ? to : to.id}`);
+    } else {
+      this.log.error(`Linking not supported with current storage mechanism (${storage})`)
+    }
+    return;
   }
 }

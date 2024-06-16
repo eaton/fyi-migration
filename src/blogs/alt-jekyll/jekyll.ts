@@ -101,7 +101,7 @@ export class AltJekyllMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('things').set(
+    await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
         id: 'alt',

@@ -3,7 +3,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface PinboardMigratorOptions extends MigratorOptions {
   deliciousDate?: Date;
@@ -93,9 +92,6 @@ export class PinboardMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     if (this.options.onlyShared) {
       this.links = this.links.filter(l => l.shared);
     }
@@ -118,11 +114,7 @@ export class PinboardMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const pinboard = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -131,8 +123,7 @@ export class PinboardMigrator extends Migrator {
       description: 'When de.licio.us died, Pinboard took up the slack.',
       url: 'https://pinboard.in',
     });
-    siteStore.set(pinboard);
-    if (this.options.store === 'arango') await this.arango.set(pinboard);
+    await this.saveThing(pinboard);
 
     if (this.options.deliciousDate) {
       const delicious = CreativeWorkSchema.parse({
@@ -144,8 +135,7 @@ export class PinboardMigrator extends Migrator {
         url: 'https://de.licio.us',
       });
 
-      siteStore.set(delicious);
-      if (this.options.store === 'arango') await this.arango.set(delicious);
+      await this.saveThing(delicious);
     }
   }
 }

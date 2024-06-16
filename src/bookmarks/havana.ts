@@ -4,7 +4,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface HavanaLinkMigratorOptions extends MigratorOptions {
   fakeStart?: Date;
@@ -50,8 +49,6 @@ export class HavanaLinkMigrator extends Migrator {
 
   override async finalize() {
     const tempDate = getMdbInfo(this.input.path('havana.mdb')).dateCreated;
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
 
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
@@ -64,12 +61,7 @@ export class HavanaLinkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const havana = CreativeWorkSchema.parse({
       type: 'WebSite',
@@ -77,8 +69,7 @@ export class HavanaLinkMigrator extends Migrator {
       name: this.options.label,
       url: 'https://havana-mod.com',
     });
-    siteStore.set(havana);
-    if (this.options.store === 'arango') await this.arango.set(havana);
+    await this.saveThing(havana);
   }
 }
 

@@ -119,35 +119,21 @@ export class TumblrMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-    const thingStore = this.data.bucket('things');
-
     for (const e of this.posts) {
-      const md = this.prepEntry(e);
-      const file = this.makeFilename(md);
-      const { text, ...frontmatter } = md;
-      this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store == 'arango') {
-        await this.arango.set({ ...frontmatter, text });
-      }
-      this.log.debug(`Wrote ${file}`);
+      const entry = this.prepEntry(e);
+      await this.saveThing(entry);
+      await this.saveThing(entry, 'markdown')
     }
 
     if (this.links && this.links.length) {
       for (const l of this.links.map(l => this.prepLink(l))) {
-        linkStore.set(l.id, l);
-        if (this.options.store == 'arango') {
-          await this.arango.set(l);
-        }
+        await this.saveThing(l);
       }
     }
 
     if (this.blogs && this.blogs.length) {
       for (const b of this.blogs.map(b => this.prepSite(b))) {
-        thingStore.set(b.id, b);
-        if (this.options.store == 'arango') {
-          await this.arango.set(b);
-        }
+        await this.saveThing(b);
       }
     }
 

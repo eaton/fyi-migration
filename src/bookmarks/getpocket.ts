@@ -4,7 +4,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface PocketMigratorOptions extends MigratorOptions {}
 
@@ -48,9 +47,6 @@ export class PocketMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url),
@@ -62,13 +58,8 @@ export class PocketMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
-
+    this.mergeThings(cws);
+    
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebApplication',
       id: 'getpocket',
@@ -76,8 +67,7 @@ export class PocketMigrator extends Migrator {
       description: 'One of the nicer read-it-later tools.',
       url: 'https://getpocket.com',
     });
-    siteStore.set(getpocket);
-    if (this.options.store === 'arango') await this.arango.set(getpocket);
+    await this.saveThing(getpocket);
   }
 }
 

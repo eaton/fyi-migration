@@ -39,7 +39,7 @@ export class TextJournalsMigrator extends Migrator {
         id: nanohash(txt.data),
         type: 'JournalEntry',
         date: txt.data.date,
-        ifPartOf: txtId,
+        isPartOf: txtId,
         text: txt.content,
       });
 

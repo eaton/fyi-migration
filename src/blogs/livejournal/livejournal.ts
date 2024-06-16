@@ -173,8 +173,7 @@ export class LivejournaMigrator extends BlogMigrator {
       hosting: 'Livejournal',
     });
 
-    this.data.bucket('things').set(lj);
-    if (this.options.store === 'arango') await this.arango.set(lj);
+    await this.saveThing(lj);
 
     await this.copyAssets('media/lj-photos', 'lj');
     return Promise.resolve();

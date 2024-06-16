@@ -9,7 +9,6 @@ import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {
   ignoreLinksToTweets?: boolean;
@@ -100,8 +99,6 @@ export class TwitterBookmarkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url),
@@ -113,12 +110,8 @@ export class TwitterBookmarkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
+    return;
   }
 
   processTweet(input: PartialTweet): TwitterLink[] {

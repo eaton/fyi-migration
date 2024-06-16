@@ -6,7 +6,6 @@ import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Thing } from '../schemas/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
@@ -75,9 +74,6 @@ export class BrowserBookmarkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     if (this.options.webOnly) {
       this.links = this.links.filter(l =>
         new URL(l.url).protocol.startsWith('http'),
@@ -113,25 +109,15 @@ export class BrowserBookmarkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
+    await this.mergeThings(cws);
 
-    this.log.info(`Saved ${cws.length} links.`);
-
-    if (this.options.browser) {
-      siteStore.set(CreativeWorkSchema.parse(this.options.browser));
-    } else {
-      const browser = CreativeWorkSchema.parse({
-        type: 'SoftwareApplication',
-        id: this.options.name,
-        name: this.options.label,
-        description: this.options.description,
-      });
-      siteStore.set(browser);
-      if (this.options.store === 'arango') await this.arango.set(browser);
-    }
+    const browser = this.options.browser ?? CreativeWorkSchema.parse({
+      type: 'SoftwareApplication',
+      id: this.options.name,
+      name: this.options.label,
+      description: this.options.description,
+    });
+    await this.saveThing(browser);
   }
 
   protected randomTimeStamp() {

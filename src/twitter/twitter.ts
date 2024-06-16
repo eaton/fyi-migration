@@ -226,8 +226,7 @@ export class TwitterMigrator extends Migrator {
 
     if (this.options.saveUsers) {
       for (const user of [...this.users.values()]) {
-        this.data.bucket('things').set(user);
-        if (this.options.store === 'arango') await this.arango.set(user);
+        await this.saveThing(user);
       }
     }
 

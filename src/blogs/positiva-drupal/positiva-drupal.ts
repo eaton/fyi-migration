@@ -109,34 +109,20 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const quoteStore = this.data.bucket('quotes');
-    const linkStore = this.data.bucket('links');
-    const commentStore = this.data.bucket('comments');
 
     for (const n of cache.nodes) {
       if (n.type === 'weblink' && n.link?.url !== undefined) {
         const link = this.prepLink(n);
-        linkStore.set(link.id, link);
-        this.log.debug(`Wrote link to ${link.url}`);
-        if (this.options.store == 'arango') {
-          await this.arango.set(link);
-        }
+        await this.saveThing(link);
       } else if (n.type === 'quotes') {
         const quote = this.prepQuote(n);
-        quoteStore.set(quote.id, quote);
-        if (this.options.store == 'arango') {
-          await this.arango.set(quote);
-        }
+        await this.saveThing(quote);
         this.log.debug(`Wrote quote by ${quote.spokenBy}`);
       } else if (n.type === 'blog' || n.type === 'review') {
-        // TODO: entries vs notes
-        const { text, ...frontmatter } = this.prepEntry(n);
-        const file = this.makeFilename(frontmatter);
-        this.output.write(file, { content: text, data: frontmatter });
-        if (this.options.store == 'arango') {
-          await this.arango.set({ ...frontmatter, text });
-        }
-
+        const entry = this.prepEntry(n);
+        await this.saveThing(entry);
+        await this.saveThing(entry, 'markdown');
+        
         // Handle comments
         const mappedComments = cache.comments
           .filter(c => c.nid === n.nid)
@@ -144,24 +130,16 @@ export class PositivaDrupalMigrator extends BlogMigrator {
 
         if (mappedComments.length) {
           sortByParents(mappedComments);
-          commentStore.set(frontmatter.id, mappedComments);
+          await this.saveThings(mappedComments);
           this.log.debug(
-            `Saved ${mappedComments.length} comments for ${frontmatter.id}`,
+            `Saved ${mappedComments.length} comments for ${entry.id}`,
           );
-          if (this.options.store === 'arango') {
-            for (const c of mappedComments) {
-              await this.arango.set(c);
-            }
-          }
         }
       }
     }
 
     const site = this.prepSite(cache.vars);
-    this.data.bucket('things').set(site.id, site);
-    if (this.options.store == 'arango') {
-      await this.arango.set(site);
-    }
+    await this.saveThing(site);
 
     this.copyAssets('files', 'positiva');
     return Promise.resolve();

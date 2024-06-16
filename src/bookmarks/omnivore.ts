@@ -4,7 +4,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface OmnivoreMigratorOptions extends MigratorOptions {
   apiKey?: string;
@@ -87,9 +86,6 @@ export class OmnivoreMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url),
@@ -111,11 +107,7 @@ export class OmnivoreMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const omnivore = CreativeWorkSchema.parse({
       type: 'WebApplication',
@@ -124,8 +116,7 @@ export class OmnivoreMigrator extends Migrator {
       description: 'A newer, slicker, self-hostable reading app.',
       url: 'https://omnivore.app',
     });
-    siteStore.set(omnivore);
-    if (this.options.store === 'arango') await this.arango.set(omnivore);
+    await this.saveThing(omnivore);
     return;
   }
 

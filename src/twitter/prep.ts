@@ -58,6 +58,7 @@ export function thread(tweets: Tweet[]) {
     about: first.aboutId
       ? tweetUrl(first.aboutId, first.aboutHandle)
       : undefined,
+    date: first.date,
     dates: {
       start: first.date,
       end: tweets
@@ -67,7 +68,7 @@ export function thread(tweets: Tweet[]) {
     },
     text,
     url: tweetUrl(first.id, first.handle),
-    hasPart: tweets.map(t => 'SocialMediaPost:' + t.id),
+    hasPart: tweets.map(t => tweetUrl(t.id, t.handle)),
     keywords: [...new Set(tweets.flatMap(t => t.hashtags ?? [])).values()],
     favorites: tweets
       .map(t => t.favorites)

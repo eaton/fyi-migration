@@ -244,7 +244,7 @@ export class BookMigrator extends Fetcher {
     );
     if (this.options.store === 'arango') {
       for (const book of Object.values(this.bookData)) {
-        const b = BookSchema.parse(book) as Thing;
+        const b = BookSchema.parse({ ...book, date: book.dates?.['obtained'] ?? book.dates?.['publish'] }) as Thing;
         await this.arango.set(b);
       } 
     }

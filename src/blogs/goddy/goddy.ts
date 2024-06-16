@@ -163,8 +163,6 @@ export class GoddyMigrator extends BlogMigrator {
 
   override async finalize(): Promise<void> {
     const cache = await this.readCache();
-    const commentStore = this.data.bucket('comments');
-    const linkStore = this.data.bucket('links');
 
     // Prep the comments first, so they're easier to attach to the nodes.
     const comments = cache.comments.map(c => this.prepComment(c));
@@ -172,7 +170,7 @@ export class GoddyMigrator extends BlogMigrator {
 
     for (const { text, ...frontmatter } of nodes) {
       if (frontmatter.type === 'Bookmark') {
-        linkStore.set(frontmatter);
+        await this.saveThing(frontmatter);
         if (this.options.store == 'arango') {
           await this.arango.set(frontmatter);
         }
@@ -188,15 +186,10 @@ export class GoddyMigrator extends BlogMigrator {
         const nodeComments = comments.filter(c => c.about === frontmatter.id);
         if (nodeComments.length) {
           sortByParents(nodeComments);
-          commentStore.set(frontmatter.id, nodeComments);
+          await this.saveThings(nodeComments);
           this.log.debug(
             `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
           );
-          if (this.options.store === 'arango') {
-            for (const c of nodeComments) {
-              await this.arango.set(c);
-            }
-          }
         }
       }
     }
@@ -210,10 +203,7 @@ export class GoddyMigrator extends BlogMigrator {
       software: 'Drupal 6',
       hosting: 'Linode',
     });
-    this.data.bucket('things').set(site);
-    if (this.options.store == 'arango') {
-      await this.arango.set(site);
-    }
+    await this.saveThing(site);
 
     this.copyAssets('files', 'goddy');
     return Promise.resolve();
@@ -229,6 +219,7 @@ export class GoddyMigrator extends BlogMigrator {
       return BookmarkSchema.parse({
         ...prepUrlForBookmark(input.link?.field_link_url),
         title: input.title,
+        isPartOf: this.name,
         description: toMarkdown(autop(input.summary ?? '')) || undefined,
         date: input.created,
       });

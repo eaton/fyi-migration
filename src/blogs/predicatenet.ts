@@ -39,7 +39,6 @@ export class PredicateNetMigrator extends BlogMigrator {
       .readAsync('links.xml')
       .then(xml => extract(xml ?? '', template, schema, { xml: true }));
 
-    const linkStore = this.data.bucket('links');
     for (const l of links ?? []) {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url),
@@ -48,8 +47,7 @@ export class PredicateNetMigrator extends BlogMigrator {
         description: l.description,
         isPartOf: this.name,
       });
-      linkStore.set(link);
-      if (this.options.store === 'arango') await this.arango.set(link);
+      await this.saveThing(link);
     }
   }
 
@@ -88,7 +86,7 @@ export class PredicateNetMigrator extends BlogMigrator {
       software: 'BBEdit',
     });
 
-    this.data.bucket('things').set(site);
+    await this.saveThing(site);
     if (this.options.store === 'arango') await this.arango.set(site);
 
     await this.writeLinks();

@@ -44,8 +44,7 @@ export class FuturismMigrator extends BlogMigrator {
       url: 'http://future.viapositiva.net',
       hosting: 'TypePad',
     });
-    this.data.bucket('things').set(site);
-    if (this.options.store === 'arango') await this.arango.set(site);
+    await this.saveThing(site);
 
     return;
   }

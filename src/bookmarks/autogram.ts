@@ -3,7 +3,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface AutogramLinkMigrationOptions extends MigratorOptions {}
 
@@ -45,9 +44,6 @@ export class AutogramLinkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const siteStore = this.data.bucket('things');
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.data.link),
@@ -59,12 +55,7 @@ export class AutogramLinkMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
 
     const autog = CreativeWorkSchema.parse({
       type: 'Organization',
@@ -72,8 +63,7 @@ export class AutogramLinkMigrator extends Migrator {
       name: 'Autogram',
       url: 'https://autogram.is',
     });
-    siteStore.set(autog);
-    if (this.options.store === 'arango') await this.arango.set(autog);
+    await this.saveThing(autog);
   }
 }
 const schema = z.object({

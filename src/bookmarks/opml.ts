@@ -4,7 +4,6 @@ import { BookmarkSchema } from '../schemas/bookmark.js';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { mergeWithLatestLink } from './merge-with-latest-link.js';
 
 export interface OpmlMigrationOptions extends MigratorOptions {
   date?: Date;
@@ -57,8 +56,6 @@ export class OpmlMigrator extends Migrator {
   }
 
   override async finalize() {
-    const linkStore = this.data.bucket('links');
-
     const cws = this.links.map(l => {
       const link = BookmarkSchema.parse({
         ...prepUrlForBookmark(l.url),
@@ -70,12 +67,7 @@ export class OpmlMigrator extends Migrator {
       return link;
     });
 
-    for (const cw of cws) {
-      linkStore.set(cw);
-      if (this.options.store === 'arango') await mergeWithLatestLink(this.arango, cw);
-    }
-
-    this.log.info(`Saved ${cws.length} links.`);
+    await this.mergeThings(cws);
   }
 }
 

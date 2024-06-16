@@ -208,8 +208,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       }
     }
 
-    this.data.bucket('things').set(
-      'alt',
+    await this.saveThing(
       CreativeWorkSchema.parse({
         id: 'alt',
         type: 'Blog',

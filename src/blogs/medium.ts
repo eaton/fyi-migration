@@ -16,8 +16,7 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    this.data.bucket('things').set(
-      'medium',
+    await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
         id: this.name,
