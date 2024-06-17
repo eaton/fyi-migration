@@ -1,2 +1,2 @@
-import { PositivaDrupalMigrator } from "./blogs/index.js";
-await new PositivaDrupalMigrator().run();
+import { PodcastMigrator } from "./work/podcasts.js";
+await new PodcastMigrator({ logger: { level: 'debug' }}).run();
