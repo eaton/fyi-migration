@@ -13,6 +13,7 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
   documentId: string,
   sheet?: string | number,
   schema?: T,
+  strict = false
 ): Promise<z.infer<T>[]> {
   const target = `https://docs.google.com/spreadsheets/d/${documentId}/gviz/tq`;
 
@@ -41,7 +42,15 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
   return unflattened
     .map(row => {
       const parsed = parsingSchema.safeParse(row);
-      return parsed.success ? parsed.data : undefined;
+      if (parsed.success) {
+        return parsed.data;
+      } else {
+        if (strict) {
+          throw new Error('Could not parse row', parsed.error)
+        } else {
+          return undefined;
+        }
+      }
     })
     .filter(row => row !== undefined);
 }

@@ -1,7 +1,7 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { nanohash } from '@eatonfyi/ids';
 import { NormalizedUrl } from '@eatonfyi/urls';
-import { emptyDeep, merge } from 'obby';
+import { emptyDeep, merge, set } from 'obby';
 import { parse as parsePath } from 'path';
 import { z } from 'zod';
 import {
@@ -14,7 +14,6 @@ import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
-import { Thing } from '../schemas/thing.js';
 
 export interface BookMigratorOptions extends FetcherOptions {
   documentId?: string;
@@ -33,9 +32,12 @@ const defaults: BookMigratorOptions = {
 
 export class BookMigrator extends Fetcher {
   declare options: BookMigratorOptions;
-  parsedBooks: Record<string, Book> = {};
   bookData: Record<string, Book> = {};
+
+  parsedBooks: Record<string, Book> = {};
   customBooks: Record<string, Book> = {};
+  skippedBooks: Record<string, Book> = {};
+
   notes: Record<string, string> = {};
   patterns: Record<string, string[]> = {};
 
@@ -83,6 +85,7 @@ export class BookMigrator extends Fetcher {
         this.options.documentId,
         this.options.sheetName,
         PartialBookSchema,
+        true
       );
 
       const helperSchema = z.object({ name: z.string() });
@@ -91,6 +94,7 @@ export class BookMigrator extends Fetcher {
           this.options.documentId,
           sh,
           helperSchema,
+          true
         );
         this.patterns[sh] = data.map(d => d.name);
       }
@@ -165,23 +169,12 @@ export class BookMigrator extends Fetcher {
         if (html) {
           const parsedData = await parser(html, this.patterns);
           if (!parsedData) {
-            this.log.error(`Empty parsed data for ${book.url}`);
+            this.log.error(`Empty parsed data for ${htmlFile}`);
           } else {
             const merged = this.populateIds(
               merge(parsedData, emptyDeep(book)) as Partial<Book>,
             );
-
-            // Our merges are duplicating array elements, that's no good.
-            // This is a quick and dirty fix for it.
-            for (const [creatorType, creators] of Object.entries(
-              merged.creator as Record<string, string[]>,
-            )) {
-              if (merged.creator && creators.length > 1) {
-                merged.creator[creatorType] = [
-                  ...new Set<string>(creators).values(),
-                ];
-              }
-            }
+            if (merged.creator) set(merged, 'creator', deDuplicateCreators(merged.creator));
 
             const final = BookSchema.parse(merged);
 
@@ -227,10 +220,10 @@ export class BookMigrator extends Fetcher {
 
   override async readCache(): Promise<unknown> {
     if (Object.values(this.bookData).length === 0) {
-      const data =
-        (this.cache.read('book-data.ndjson', 'auto') as Book[]) || undefined;
-      for (const b of data) {
-        this.bookData[b.id] = b;
+      const data = this.cache.read('book-data.ndjson', 'auto');
+      if (Array.isArray(data)) {
+        const ba = data.map(b => BookSchema.parse(b));
+        this.bookData = Object.fromEntries(ba.map(b => [b.id, b]));
       }
     }
     return this.bookData;
@@ -242,12 +235,10 @@ export class BookMigrator extends Fetcher {
       this.root.path('src/_data/books.ndjson'),
       { overwrite: true },
     );
-    if (this.options.store === 'arango') {
-      for (const book of Object.values(this.bookData)) {
-        const b = BookSchema.parse({ ...book, date: book.dates?.['obtained'] ?? book.dates?.['publish'] }) as Thing;
-        await this.arango.set(b);
-      } 
-    }
+
+    const books = Object.values(this.bookData);
+    await this.saveThings(books)
+
 
     this.copyAssets(this.cache.path('images'), 'books');
 
@@ -275,7 +266,7 @@ export class BookMigrator extends Fetcher {
   }
 
   protected populateIds(book: Partial<Book>) {
-    book.ids = expandIds(book.ids);
+    book.ids = expandIds(book.ids ?? {});
     const bestId = getBestId(book.ids);
     if (bestId) book.id = bestId;
     return book;
@@ -329,13 +320,13 @@ function makeFlattenedBook(book: Book) {
   return {
     id: '',
     category: book.category,
-    'ids.isbn10': book.ids.isbn10,
-    'ids.isbn13': book.ids.isbn13,
-    'ids.asin': book.ids.asin,
-    'ids.upc': book.ids.upc,
-    'ids.ddc': book.ids.ddc,
-    'ids.loc': book.ids.loc,
-    'ids.custom': book.ids.custom,
+    'ids.isbn10': book.ids?.isbn10,
+    'ids.isbn13': book.ids?.isbn13,
+    'ids.asin': book.ids?.asin,
+    'ids.upc': book.ids?.upc,
+    'ids.ddc': book.ids?.ddc,
+    'ids.loc': book.ids?.loc,
+    'ids.custom': book.ids?.custom,
     name: book.name,
     subtitle: book.subtitle,
     series: book.series,
@@ -361,9 +352,36 @@ function makeFlattenedBook(book: Book) {
       .join('x'),
     url: book.url,
     image: book.image,
-    'creator.author.0': book.creator?.author?.[0],
-    'creator.editor.0': book.creator?.editor?.[0],
-    'creator.illustrator.0': book.creator?.illustrator?.[0],
-    'creator.foreword.0': book.creator?.foreword?.[0],
+    ...getSimpleCreatorList(book)
   };
+
+  function getSimpleCreatorList(book: Book) {
+    const output: Record<string, string | undefined> = {
+      'creator.author.0': undefined,
+      'creator.editor.0': undefined,
+      'creator.illustrator.0': undefined,
+      'creator.foreword.0': undefined,
+    };
+    for (const [role, contributors] of Object.entries(book.creator ?? {})) {
+      const name = (typeof contributors === 'string') ? contributors : contributors[0];
+      if (['author', 'editor', 'illustrator', 'foreword'].includes(role) && name) {
+        output['creator.' + role + '.0'] = name;
+      }
+    }
+    return output;
+  }
+}
+
+function deDuplicateCreators(input: string | string[] | Record<string, string | string[]>) {
+  if (typeof input === 'string') {
+    return input;
+  } else if (Array.isArray(input)) {
+    return [...new Set<string>(input).values()];
+  } else {
+    // Loop through each key and deduplicate THEM
+    for (const [key, values] of Object.entries(input)) {
+      input[key] = deDuplicateCreators(values) as string | string[];
+    }
+    return input;
+  }
 }
