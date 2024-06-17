@@ -1,2 +1,2 @@
-import { PodcastMigrator } from "./work/podcasts.js";
-await new PodcastMigrator({ logger: { level: 'debug' }}).run();
+import { BookMigrator } from "./books/books.js";
+await new BookMigrator({ logger: { level: 'debug' } }).run();
