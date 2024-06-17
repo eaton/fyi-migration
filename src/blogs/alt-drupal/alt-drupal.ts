@@ -17,7 +17,7 @@ const defaults: BlogMigratorOptions = {
   description: 'Posts from the short-lived Drupal version of Angry Little Tree',
   input: 'input/blogs/angrylittletree-drupal',
   cache: 'cache/blogs/alt-drupal',
-  output: 'src/entries/alt-drupal',
+  output: 'src/entries/alt',
 };
 
 type drupalEntityData = {

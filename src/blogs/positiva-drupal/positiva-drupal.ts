@@ -19,7 +19,7 @@ const defaults: BlogMigratorOptions = {
   label: 'Via Positiva (Drupal)',
   input: 'input/blogs/viapositiva-drupal',
   cache: 'cache/blogs/vp-drupal',
-  output: 'src/entries/positiva-drupal',
+  output: 'src/entries/viapositiva',
 };
 
 export class PositivaDrupalMigrator extends BlogMigrator {

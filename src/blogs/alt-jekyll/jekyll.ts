@@ -18,7 +18,7 @@ const defaults: BlogMigratorOptions = {
     'Posts, comments, and images from the Jekyll version of angrylittletree.com',
   input: 'input/blogs/angrylittletree-jekyll',
   cache: 'cache/blogs/angrylittletree-jekyll',
-  output: 'src/entries/alt-jekyll',
+  output: 'src/entries/alt',
 };
 
 export class AltJekyllMigrator extends BlogMigrator {
