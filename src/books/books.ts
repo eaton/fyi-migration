@@ -80,7 +80,22 @@ export class BookMigrator extends Fetcher {
     let partialBooks: PartialBook[] = [];
 
     // Try the google doc first, if it's not available check for a CSV file in the input directory.
-    if (this.options.documentId) {
+    if (this.input.exists('books.csv')) {
+      const raw =
+        (this.input.read('books.csv', 'auto') as
+          | Record<string, unknown>[]
+          | undefined) ?? [];
+      partialBooks = raw.map(r => PartialBookSchema.parse(r));
+
+      for (const sh of ['imprints', 'publishers', 'editions', 'series']) {
+        if (this.input.exists(sh + '.txt')) {
+          const data = this.input.read(sh + '.txt', 'utf8');
+          if (data) {
+            this.patterns[sh] = data.split('\n');
+          }
+        }
+      }
+    } else if (this.options.documentId) {
       partialBooks = await fetchGoogleSheet(
         this.options.documentId,
         this.options.sheetName,
@@ -97,21 +112,6 @@ export class BookMigrator extends Fetcher {
           true
         );
         this.patterns[sh] = data.map(d => d.name);
-      }
-    } else if (this.input.exists('books.csv')) {
-      const raw =
-        (this.input.read('books.csv', 'auto') as
-          | Record<string, unknown>[]
-          | undefined) ?? [];
-      partialBooks = raw.map(r => PartialBookSchema.parse(r));
-
-      for (const sh of ['imprints', 'publishers', 'editions', 'series']) {
-        if (this.input.exists(sh + '.txt')) {
-          const data = this.input.read(sh + '.txt', 'utf8');
-          if (data) {
-            this.patterns[sh] = data.split('\n');
-          }
-        }
       }
     } else {
       this.log.error('No book list found');

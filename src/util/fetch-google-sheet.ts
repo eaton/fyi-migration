@@ -6,8 +6,7 @@ import QueryStringAddon from 'wretch/addons/queryString';
 import { z } from 'zod';
 
 /**
- * Fetches a publicly accessible Google Sheet table as CSV data, optionally
- * parsing each row using a Zod schema for type-safe data validation.
+ * Fetches a publicly accessible Google Sheet table as CSV data, optionally parsing each row using a Zod schema for type-safe data validation.
  */
 export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
   documentId: string,
@@ -46,7 +45,7 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
         return parsed.data;
       } else {
         if (strict) {
-          throw new Error('Could not parse row', parsed.error)
+          throw parsed.error;
         } else {
           return undefined;
         }
