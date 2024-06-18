@@ -14,6 +14,7 @@ export const CreativeWorkSchema = ThingSchema.extend({
   about: oneOrMany(z.string()).optional(),
   isPartOf: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
   hasPart: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
+  publisher: z.string().optional(),
   archivedAt: z.string().optional(),
   text: z.string().optional(),
 });

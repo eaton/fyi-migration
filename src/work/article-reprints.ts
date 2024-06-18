@@ -65,6 +65,6 @@ export class ArticleReprintMigrator extends Migrator {
       this.log.debug(`Wrote ${file}`);
     }
 
-    await this.copyAssets('images', 'articles');
+    await this.copyAssets('images', 'reprints');
   }
 }

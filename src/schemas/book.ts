@@ -6,7 +6,6 @@ export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
   subtitle: z.string().optional(),
   edition: z.string().optional(),
-  publisher: z.string().optional(),
   imprint: z.string().optional(),
   series: z.string().optional(),
   position: z.coerce.number().optional(),

@@ -1,2 +1,3 @@
-import { BookMigrator } from "./books/books.js";
-await new BookMigrator({ logger: { level: 'debug' } }).run();
+import { AllWorkMigrator } from "./work/all-work.js";
+
+await new AllWorkMigrator({ logger: { level: 'debug' } }).run();
