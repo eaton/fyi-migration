@@ -11,8 +11,12 @@ const defaults = {
 
 /**
  * Generate a JPEG file of the first page of a PDF, EPUB, CBR, or CBZ file.
+ * 
+ * This is a useful alternative to tracking down high-res art for weird obscure books
+ * that I happen to have digital versions of: just yoink the images straight, and 
+ * call it a day.
  */
-export async function renderCoverArt(input: string, output: string) {
+export async function getCoverArt(input: string, output: string) {
   const extension = parsePath(input).ext.toLocaleLowerCase();
 
   switch (extension) {

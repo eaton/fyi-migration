@@ -1,7 +1,7 @@
 // import { AllWorkMigrator } from "./work/all-work.js";
 // await new AllWorkMigrator({ logger: { level: 'debug' } }).run();
 import jetpack from "@eatonfyi/fs-jetpack";
-import { renderCoverArt } from "./util/render-cover-art.js";
+import { getCoverArt } from "./util/get-cover-art.js";
 import { toSlug } from "@eatonfyi/text";
 
 const downloads = {
@@ -187,27 +187,33 @@ const comics = {
   "1401202179": "comics/ By-Publisher/Vertigo/Transmetropolitan/TPBs/Transmetropolitan v10 - One More Time (2011) (Digital TPB) (Madvillain-DCP).cbr",
 };
 
+const games = {
+  "1963197003": "games/RPGs/The Gauntlet/Brindlewood Bay/Brindlewood Bay (Kickstarter Edition).pdf",
+  "1963197011": "games/RPGs/The Gauntlet/Brindlewood Bay/Nephews In Peril.pdf",
+  'pba-publicaccess': 'games/RPGs/The Gauntlet/Public Access.pdf'
+}
+
 const volDir = jetpack.dir('/Volumes');
 const dlDir = jetpack.dir('/Users/jeff/Library/Mobile Documents/com~apple~CloudDocs/Downloads');
 const outdir = jetpack.dir('/Volumes/migration/input/books/rendered');
 
-for (const [output, input] of Object.entries(comics)) {
+for (const [output, input] of Object.entries(games)) {
   const filename = toSlug(output) + '.jpg'
   if (!outdir.exists(filename)) {
-    await renderCoverArt(volDir.path(input), outdir.path(filename));
+    await getCoverArt(volDir.path(input), outdir.path(filename));
   }
 }
 
-for (const [output, input] of Object.entries(downloads)) {
-  const filename = toSlug(output) + '.jpg'
-  if (!outdir.exists(filename)) {
-    await renderCoverArt(dlDir.path(input), outdir.path(filename));
-  }
-}
+// for (const [output, input] of Object.entries(downloads)) {
+//   const filename = toSlug(output) + '.jpg'
+//   if (!outdir.exists(filename)) {
+//     await renderCoverArt(dlDir.path(input), outdir.path(filename));
+//   }
+// }
 
-for (const [output, input] of Object.entries(volumes)) {
-  const filename = toSlug(output) + '.jpg'
-  if (!outdir.exists(filename)) {
-    await renderCoverArt(volDir.path(input), outdir.path(filename));
-  }
-}
+// for (const [output, input] of Object.entries(volumes)) {
+//   const filename = toSlug(output) + '.jpg'
+//   if (!outdir.exists(filename)) {
+//     await renderCoverArt(volDir.path(input), outdir.path(filename));
+//   }
+// }
