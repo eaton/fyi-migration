@@ -50,7 +50,7 @@ These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entiti
 Places I've written, presented, been quoted, and so on.
 
 - [ ] Talks and presentations
-- [ ] Podcast appearances
+- [x] Podcast appearances
 - [ ] Citations and quotes
 - [x] Article reprints
   - [x] Lullabot
@@ -165,7 +165,7 @@ These will be used to populate 'on this day/week' and other contextual cues arou
 These are basically a database of supporting facts that can be used to populate Schema.org data and used to cross-link entris and other content that mentions them. `Books` in particular will be used to construct a reading room view of my library, and `People` will be used to deduplicate references to folks I know in tweets, old posts, and so on.
 
 - [x] Books
-  - [ ] TTRPG books
+  - [x] TTRPG books
   - [x] Comics/Graphic Novels
 - [ ] Games
 - [ ] Films

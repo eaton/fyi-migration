@@ -214,7 +214,7 @@ export class Migrator {
 
     this.log.debug(`Processing output`);
     await this.finalize();
-    return Promise.resolve();
+    return;
   }
 
   /**
@@ -230,19 +230,19 @@ export class Migrator {
   async populate(): Promise<unknown> {
     const full = await this.cacheIsFilled();
     if (!full) await this.fillCache();
-    return Promise.resolve();
+    return;
   }
 
   async cacheIsFilled(): Promise<boolean> {
-    return Promise.resolve(false);
+    return false;
   }
 
   async fillCache(): Promise<unknown> {
-    return Promise.resolve();
+    return;
   }
 
   async readCache(): Promise<unknown> {
-    return Promise.resolve();
+    return;
   }
 
   async clearCache() {
@@ -254,14 +254,14 @@ export class Migrator {
    */
   async process(): Promise<unknown> {
     await this.readCache();
-    return Promise.resolve();
+    return;
   }
 
   /**
    * Generates final data in the output directory, including merging data from multiple sources.
    */
   async finalize(): Promise<unknown> {
-    return Promise.resolve();
+    return;
   }
 
   async copyAssets(input?: string, output?: string, overwrite = true) {
