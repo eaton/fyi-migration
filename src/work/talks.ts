@@ -1,93 +1,56 @@
-// Read 'talks' tsv file, create a talk record for each one
-// Create an 'appearance' for each time a talk was presented
-// export Keynote data for flagged talks
-
 import { nanoid } from '@eatonfyi/ids';
 import { KeynoteApp, type KeynoteDeck } from '@eatonfyi/keynote-extractor';
 import { toSlug } from '@eatonfyi/text';
 import { emptyDeep, set, unflatten } from 'obby';
 import { z } from 'zod';
-import { Event, EventSchema } from '../schemas/event.js';
-import { Place, PlaceSchema } from '../schemas/place.js';
-import { Talk, TalkSchema } from '../schemas/talk.js';
+import { Talk, TalkEventSchema, TalkSchema } from '../schemas/talk.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface TalkMigratorOptions extends MigratorOptions {
-  googleSheetsUrl?: string;
+  documentId?: string;
+  sheetName?: string;
+  keynote?: string;
 }
 
 const defaults: TalkMigratorOptions = {
-  input: 'input/datasets',
+  input: 'input',
   cache: 'cache/talks',
   output: 'src/talks',
   assets: '_static/talks',
+  keynote: '/Users/jeff/Library/Mobile Documents/com~apple~Keynote/Documents',
+  documentId: process.env.GOOGLE_SHEET_WORK,
+  sheetName: 'talks',
 };
 
 export class TalkMigrator extends Migrator {
   declare options: TalkMigratorOptions;
-  talks: Record<string, Talk> = {};
-  events: Record<string, Event> = {};
-  places: Record<string, Place> = {};
+  talks: CustomSchemaItem[] = [];
 
   constructor(options: TalkMigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
 
   override async fillCache() {
-    const raw =
-      (this.input.read('talks.tsv', 'auto') as
-        | Record<string, unknown>[]
-        | undefined) ?? [];
-    const unflattened = raw.map(i => emptyDeep(unflatten(i)));
-    const parsed = unflattened.map(i => customSchema.parse(i));
-    this.cache.write('talks.ndjson', parsed);
-    this.log.debug(`Wrote talk index cache`);
-
-    for (const talk of parsed.filter(t => t.keynoteFile !== undefined)) {
-      if (this.cache.exists(talk.id) === 'dir') {
-        this.log.debug(`Skipping export for ${talk.id}; already cached`);
-      } else {
-        await this.exportKeynoteFile(talk.id, talk.keynoteFile!);
-        this.log.debug(`Cached Keynote slides for ${talk.id}`);
+    if (this.input.exists('talks.tsv')) {
+      const data = this.input.read('talks.tsv', 'auto') as object[] | undefined;
+      if (data) {
+        this.talks = data.map(i => schema.parse(unflatten(i)));
       }
+    } else if (this.options.documentId) {
+      this.talks = await fetchGoogleSheet(this.options.documentId, this.options.sheetName, schema);
     }
-
+    if (this.talks.length) {
+      this.cache.write('podcast-episodes.ndjson', this.talks);
+    }
     return;
   }
 
   override async readCache() {
-    const data =
-      (this.cache.read('talks.ndjson', 'auto') as Record<string, unknown>[]) ??
-      [];
-    const rawTalks = data.map(t => customSchema.parse(t));
-    for (const t of rawTalks) {
-      // For now, let's use `date: yyyy-MM-dd` to store the first time the talk was given,
-      // and `dates[eventId]: yyyy-MM-dd to store the individual places it was presented
-      // at. That means we can ONLY store the date at the intersection, but for now, meh
-
-      const tmpTalk = this.prepTalk(t);
-      const tmpEvent = this.prepEvent(t);
-      const tmpPlace = this.prepPlace(t);
-
-      const talkId = tmpTalk.id;
-      const eventId = tmpEvent?.id;
-      const placeId = tmpPlace?.id;
-
-      if (placeId) {
-        this.places[placeId] ??= tmpPlace;
-      }
-
-      if (eventId) {
-        this.events[eventId] ??= tmpEvent;
-        set(this.events[eventId], 'places.venue', placeId);
-      }
-
-      if (talkId) {
-        this.talks[talkId] ??= tmpTalk;
-        set(this.talks[talkId], `dates.${eventId}`, tmpTalk.date);
-      }
+    const data = this.cache.read('talks.ndjson', 'auto');
+    if (data && Array.isArray(data)) {
+      this.talks = data.map(i => schema.parse(i));
     }
-
     return;
   }
 
@@ -113,26 +76,12 @@ export class TalkMigrator extends Migrator {
   }
 
   override async finalize() {
-    const placeStore = this.data.bucket('places');
-    const eventStore = this.data.bucket('events');
-
     for (const t of Object.values(this.talks)) {
       const file = this.makeFilename(t);
       const { text, ...frontmatter } = t;
       this.output.write(file, { content: text ?? '', data: frontmatter });
       this.log.debug(`Wrote ${file}`);
     }
-
-    for (const e of Object.values(this.events)) {
-      eventStore.set(e);
-      this.log.debug(`Wrote ${e.name}`);
-    }
-
-    for (const p of Object.values(this.places)) {
-      placeStore.set(p);
-      this.log.debug(`Wrote ${p.name}`);
-    }
-
     return;
   }
 
@@ -144,32 +93,22 @@ export class TalkMigrator extends Migrator {
     return t;
   }
 
-  protected prepEvent(input: CustomSchemaItem): Event | undefined {
-    if (input.event === undefined) {
-      return undefined;
-    }
-    const e = EventSchema.parse({
-      id: input.event.id,
-      name: input.event.name,
-      dates: input.event.dates,
+  protected prepTalkEvent(input: CustomSchemaItem) {
+    return TalkEventSchema.parse({
+      event: input.presentedAt,
+      date: input.date,
+      withTitle: input.name,
+      isFeaturedVersion: input.feature,
+      url: input.url
     });
-    return e;
   }
 
-  protected prepPlace(input: CustomSchemaItem): Place | undefined {
-    if (input.event?.city === undefined && input.event?.country === undefined) {
-      return undefined;
-    }
-    const p = PlaceSchema.parse({
-      id: nanoid(),
-      name: input.event.city ?? input.event.country ?? 'Online',
-      isPartOf: input.event?.country ? toSlug(input.event?.country) : undefined,
-      isVirtual:
-        !emptyDeep([input.event.city, input.event.country]) ?? undefined,
-    });
-    p.id = toSlug([p.name, p.isPartOf].filter(p => !!p).join(', '));
-
-    return p;
+  protected async handleKeynote(input: CustomSchemaItem) {
+    const id = input.id;
+    const deck = input.keynoteFile;
+    const isFeaturedVersion = input.feature;
+    const event = input.presentedAt;
+    await exportKeynoteFile()
   }
 
   protected async exportKeynoteFile(id: string, path: string) {
@@ -213,30 +152,16 @@ export class TalkMigrator extends Migrator {
   }
 }
 
-const customSchema = z.object({
+const schema = z.object({
   id: z.string(),
   name: z.string(),
   date: z.coerce.date().optional(),
-  event: z
-    .object({
-      id: z.string().optional(),
-      name: z.string().optional(),
-      url: z.string().optional(),
-      city: z.string().optional(),
-      country: z.string().optional(),
-      dates: z
-        .object({
-          start: z.coerce.date().optional(),
-          end: z.coerce.date().optional(),
-        })
-        .optional(),
-    })
-    .optional(),
-
+  presentedAt: z.string(),
   url: z.string().optional(),
   videoUrl: z.string().optional(),
   keynoteFile: z.string().optional(),
+  pdf: z.string().optional(),
   feature: z.coerce.boolean().default(false),
 });
 
-type CustomSchemaItem = z.infer<typeof customSchema>;
+type CustomSchemaItem = z.infer<typeof schema>;
