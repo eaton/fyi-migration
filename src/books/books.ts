@@ -380,7 +380,9 @@ function deDuplicateCreators(input: string | string[] | Record<string, string | 
   } else {
     // Loop through each key and deduplicate THEM
     for (const [key, values] of Object.entries(input)) {
-      input[key] = deDuplicateCreators(values) as string | string[];
+      let names = Array.isArray(values) ? values : [values];
+      names = names.map(n => n.replaceAll(/\s+/, ' ').trim());
+      input[key] = deDuplicateCreators(names) as string | string[];
     }
     return input;
   }
