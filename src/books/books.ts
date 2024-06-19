@@ -1,7 +1,7 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { nanohash } from '@eatonfyi/ids';
-import { NormalizedUrl } from '@eatonfyi/urls';
-import { emptyDeep, merge, set } from 'obby';
+import { canParse, NormalizedUrl } from '@eatonfyi/urls';
+import { emptyDeep, merge, set, unflatten } from 'obby';
 import { parse as parsePath } from 'path';
 import { z } from 'zod';
 import {
@@ -85,13 +85,13 @@ export class BookMigrator extends Fetcher {
         (this.input.read('books.csv', 'auto') as
           | Record<string, unknown>[]
           | undefined) ?? [];
-      partialBooks = raw.map(r => PartialBookSchema.parse(r));
+      partialBooks = raw.map(r => PartialBookSchema.parse(emptyDeep(unflatten(r))));
 
       for (const sh of ['imprints', 'publishers', 'editions', 'series']) {
         if (this.input.exists(sh + '.txt')) {
-          const data = this.input.read(sh + '.txt', 'utf8');
+          const data = this.input.read(sh + '.csv', 'auto') as Record<string, string>[] | undefined;
           if (data) {
-            this.patterns[sh] = data.split('\n');
+            this.patterns[sh] = data.map(r => r.name);
           }
         }
       }
@@ -274,7 +274,7 @@ export class BookMigrator extends Fetcher {
 
   protected async fetchBookCover(book: Book) {
     const file = this.getCoverFilename(book);
-    if (book.image && file) {
+    if (file && book.image && canParse(book.image)) {
       await this.covers.downloadAsync(file, book.image);
       return file;
     }
@@ -381,7 +381,7 @@ function deDuplicateCreators(input: string | string[] | Record<string, string | 
     // Loop through each key and deduplicate THEM
     for (const [key, values] of Object.entries(input)) {
       let names = Array.isArray(values) ? values : [values];
-      names = names.map(n => n.replaceAll(/\s+/, ' ').trim());
+      names = names.map(n => n.replaceAll(/\s+/g, ' ').trim());
       input[key] = deDuplicateCreators(names) as string | string[];
     }
     return input;

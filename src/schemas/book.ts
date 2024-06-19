@@ -7,10 +7,10 @@ export const BookSchema = CreativeWorkSchema.extend({
   subtitle: z.string().optional(),
   edition: z.string().optional(),
   imprint: z.string().optional(),
+  format: z.string().optional(),
   series: z.string().optional(),
   position: z.coerce.number().optional(),
-  format: z.string().optional(),
-  pages: z.number().optional(),
+  pages: z.coerce.number().optional(),
 
   // Personal properties
   owned: z.string().optional(),
