@@ -37,7 +37,7 @@ export class OpmlMigrator extends Migrator {
         z.array(schema),
       );
       for (const l of links) {
-        map.set(l.url.toString(), l);
+        if (l.url) map.set(l.url.toString(), l);
       }
     }
     this.links = [...map.values()];
@@ -68,6 +68,7 @@ export class OpmlMigrator extends Migrator {
     });
 
     await this.mergeThings(cws);
+    return;
   }
 }
 

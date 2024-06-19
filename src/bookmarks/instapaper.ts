@@ -65,6 +65,7 @@ export class InstapaperMigrator extends Migrator {
       url: 'https://instapaper.com',
     });
     await this.saveThing(insta);
+    return;
   }
 }
 

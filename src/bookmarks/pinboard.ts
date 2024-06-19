@@ -137,5 +137,6 @@ export class PinboardMigrator extends Migrator {
 
       await this.saveThing(delicious);
     }
+    return;
   }
 }

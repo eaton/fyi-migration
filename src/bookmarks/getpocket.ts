@@ -68,6 +68,7 @@ export class PocketMigrator extends Migrator {
       url: 'https://getpocket.com',
     });
     await this.saveThing(getpocket);
+    return;
   }
 }
 

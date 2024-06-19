@@ -93,6 +93,7 @@ export class StaticLinkMigrator extends Migrator {
     });
 
     await this.mergeThings(cws);
+    return;
   }
 }
 

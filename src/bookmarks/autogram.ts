@@ -64,6 +64,7 @@ export class AutogramLinkMigrator extends Migrator {
       url: 'https://autogram.is',
     });
     await this.saveThing(autog);
+    return;
   }
 }
 const schema = z.object({

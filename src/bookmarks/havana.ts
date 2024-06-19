@@ -70,6 +70,7 @@ export class HavanaLinkMigrator extends Migrator {
       url: 'https://havana-mod.com',
     });
     await this.saveThing(havana);
+    return;
   }
 }
 

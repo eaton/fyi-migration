@@ -118,6 +118,7 @@ export class BrowserBookmarkMigrator extends Migrator {
       description: this.options.description,
     });
     await this.saveThing(browser);
+    return;
   }
 
   protected randomTimeStamp() {

@@ -63,6 +63,7 @@ export class PredicateLinkMigrator extends Migrator {
     });
 
     await this.mergeThings(cws);
+    return;
   }
 }
 
