@@ -12,6 +12,14 @@ import { AllDatasetsMigrator } from './datasets/all-datasets.js';
 export class MigrateEverything extends Migrator {
   override async run() {
     await this.arango.initialize();
+
+    await this.arango.collection('thing').truncate();
+    await this.arango.collection('link').truncate();
+    await this.arango.collection('role').truncate();
+    await this.arango.collection('text').truncate();
+    await this.arango.collection('url').truncate();
+    await this.arango.collection('media').truncate();
+
     await new AllTextFilesMigrator({ logger: this.log }).run();
     await new AllBlogMigrator({ logger: this.log }).run();
     await new ArticleReprintMigrator({ logger: this.log }).run();

@@ -11,11 +11,16 @@ export const SlideSchema = z.object({
 export type Slide = z.infer<typeof SlideSchema>;
 
 export const TalkEventSchema = z.object({
-  event: z.string().optional(),
+  event: z.string(),
   date: z.coerce.date().optional(),
   withTitle: z.string().optional(),
   isFeaturedVersion: z.coerce.boolean().optional(),
   description: z.string().optional(),
+  recording: urlSchema.optional(),
+  transcript: z.string().optional(),
+  pdf: z.string().optional(),
+  cuesheet: z.string().optional(),
+  keynoteFile: z.string().optional(),
   url: z.string().optional(),
 });
 export type TalkInstance = z.infer<typeof TalkEventSchema>;
@@ -24,12 +29,6 @@ export const TalkSchema = CreativeWorkSchema.extend({
   type: z.string().default('Talk'),
   performances: z.array(TalkEventSchema).optional(),
   keySlide: z.number().optional(),
-  video: urlSchema.optional(),
-  audio: urlSchema.optional(),
-  slide: z.array(SlideSchema).optional(),
-  pdf: urlSchema.optional(),
-  cuesheet: urlSchema.optional(),
-  transcript: urlSchema.optional(),
-  featured: z.string().optional(),
+  slides: z.array(SlideSchema).optional(),
 });
 export type Talk = z.infer<typeof TalkSchema>;
