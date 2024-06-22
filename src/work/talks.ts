@@ -16,7 +16,7 @@ const defaults: TalkMigratorOptions = {
   input: 'input',
   cache: 'cache/talks',
   output: 'src/talks',
-  assets: '_static/talks',
+  assets: 'src/_static/talks',
   keynote: '/Users/jeff/Library/Mobile Documents/com~apple~Keynote/Documents',
   documentId: process.env.GOOGLE_SHEET_WORK,
   sheetName: 'talks',
@@ -92,7 +92,7 @@ export class TalkMigrator extends Migrator {
     if (Object.values(this.decks).length === 0) {
       this.decks = {};
       for (const talkId of this.cache.find({ files: false, directories: true })) {
-        for (const eventId of this.cache.dir(talkId).find({ files: true, directories: true })) {
+        for (const eventId of this.cache.dir(talkId).find({ files: false, directories: true })) {
           if (this.cache.dir(talkId).dir(eventId).exists('deck.json')) {
             const deck = this.cache.dir(talkId).dir(eventId).read('deck.json', 'auto') as KeynoteDeck | undefined;
             if (deck) {
@@ -110,14 +110,40 @@ export class TalkMigrator extends Migrator {
   override async finalize() {
     for (const talk of this.talks) {
       for (const perf of talk.performances ?? []) {
+        let saved = false;
+        // If the talk doesn't have a title or date yet, set it.
+        talk.name ??= perf.withTitle;
+        talk.date ??= perf.date;
+
+
+        // Only copy over the slide assets if... we had a deck to copy
         if (perf.isFeaturedVersion) {
-          const deck = this.decks[talk.id][perf.event];
+
+          // If this performance of the talk is the featured one, overwrite the name/date.
           talk.name = perf.withTitle;
           talk.date = perf.date;
-          talk.text = this.keynoteToMarkdown(talk, deck.slides);
-          await this.saveThing(talk);
-          this.cache.dir(talk.id).dir(perf.event).copy('.', this.assets.dir('talks').dir(talk.id).path(), { overwrite: true });
+
+          // If there's a deck for the talk, copy over its supporting assets and generate
+          // the talk's markdown text from the slide notes.
+          if (this.decks[talk.id]) {
+            const deck = this.decks[talk.id][perf.event];
+            if (deck && deck.slides) {
+              talk.text = this.keynoteToMarkdown(talk, deck.slides);
+            }
+            this.cache.dir(talk.id).dir(perf.event).copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
+          }
+
+          await this.saveThing(talk, 'markdown');
+          await this.mergeThing(talk);
+          saved = true;
         }
+
+        if (!saved) {
+          await this.saveThing(talk, 'markdown');
+          await this.saveThing(talk);
+          saved = true;
+        }
+
         const rel = {
           rel: 'performedAt',
           name: perf.withTitle,

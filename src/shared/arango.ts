@@ -85,8 +85,8 @@ export class ArangoDB extends Database {
     rel?: string | Record<string, unknown>,
   ): Promise<boolean> {
     const _from =
-      typeof from === 'string' ? this.getKey(from) : this.getKey(from);
-    const _to = typeof to === 'string' ? this.getKey(to) : this.getKey(to);
+      typeof from === 'string' ? this.getId(from) : this.getId(from);
+    const _to = typeof to === 'string' ? this.getId(to) : this.getId(to);
 
     let otherProps: Record<string, unknown> = {};
     if (rel === undefined) {
@@ -110,8 +110,8 @@ export class ArangoDB extends Database {
     rel?: string,
   ): Promise<void> {
     const _from =
-      typeof from === 'string' ? this.getKey(from) : this.getKey(from);
-    const _to = typeof to === 'string' ? this.getKey(to) : this.getKey(to);
+      typeof from === 'string' ? this.getId(from) : this.getId(from);
+    const _to = typeof to === 'string' ? this.getId(to) : this.getId(to);
 
     if (rel) {
       const _key = uuid({ _from, _to, rel: rel });
@@ -185,10 +185,19 @@ export class ArangoDB extends Database {
 
   getKey(item: string | Thing, type: string = 'thing'): string {
     if (typeof item === 'string') {
-      if (item.indexOf(':') > -1) return `${type}/${item}`;
-      return `${type}:${item}`;
+      if (item.indexOf(':') > -1) return `${item}`;
+      return `${type.toLocaleLowerCase()}:${item}`;
     } else {
-      return `${item.type}:${item.id}`;
+      return `${item.type.toLocaleLowerCase()}:${item.id}`;
+    }
+  }
+
+  getId(item: string | Thing, type: string = 'thing'): string {
+    if (typeof item === 'string') {
+      if (item.indexOf(':') > -1) return `thing/${item}`;
+      return `thing/${type.toLocaleLowerCase()}:${item}`;
+    } else {
+      return `thing/${item.type.toLocaleLowerCase()}:${item.id}`;
     }
   }
 }

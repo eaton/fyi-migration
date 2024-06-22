@@ -355,10 +355,15 @@ export class Migrator {
     const storage = store ?? this.options.store;
     if (storage === 'arango') {
       await this.arango.link(from, to, rel);
-      this.log.debug(`Linked ${typeof from === 'string' ? from : from.id} to ${typeof to === 'string' ? to : to.id}`);
+      this.log.debug(`Linked ${this.getId(from)} to ${this.getId(to)}`);
     } else {
       this.log.error(`Linking not supported with current storage mechanism (${storage})`)
     }
     return;
+  }
+
+  protected getId(input: string | Thing) {
+    if (typeof input === 'string') return input;
+    return input.type.toLocaleLowerCase() + ':' + input.id;
   }
 }
