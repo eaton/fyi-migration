@@ -17,3 +17,4 @@ export * from './schema-org/CreativeWork/social-media-post.js';
 
 export * from './custom/bookmark.js';
 export * from './custom/talk.js';
+export * from './custom/device.js';

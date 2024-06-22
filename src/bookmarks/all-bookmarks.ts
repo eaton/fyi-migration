@@ -57,5 +57,6 @@ export class AllBookmarksMigrator extends Migrator {
     await new PocketMigrator({ logger: this.log }).run();
     await new AutogramLinkMigrator({ logger: this.log }).run();
     await new OmnivoreMigrator({ logger: this.log }).run();
+    return;
   }
 }

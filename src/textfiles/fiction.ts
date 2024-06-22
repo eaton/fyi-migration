@@ -51,6 +51,7 @@ export class TextFictionMigrator extends Migrator {
         this.log.debug(`Skipped ${f}`);
       }
     }
+    return;
   }
 
   override async finalize() {
@@ -65,6 +66,7 @@ export class TextFictionMigrator extends Migrator {
         this.log.debug(`Couldn't write ${frontmatter}`);
       }
     }
+    return;
   }
 
   protected prepStory(input: object) {

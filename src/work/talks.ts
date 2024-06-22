@@ -244,6 +244,7 @@ export class TalkMigrator extends Migrator {
     });
 
     await app.close();
+    return;
   }
 
   keynoteToMarkdown(

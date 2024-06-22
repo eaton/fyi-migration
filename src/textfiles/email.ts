@@ -53,6 +53,7 @@ export class TextEmailMigrator extends Migrator {
         mb.parse(f);
       }
     }
+    return;
   }
 
   protected async processMail(input: ParsedMail, raw?: string) {

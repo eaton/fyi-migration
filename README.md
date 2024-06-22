@@ -44,12 +44,13 @@ These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entiti
 - [ ] Facebook
 - [ ] Usenet
 - [ ] Metafilter
+- [x] Linkedin
 
 ## Appearances
 
 Places I've written, presented, been quoted, and so on.
 
-- [ ] Talks and presentations
+- [x] Talks and presentations
 - [x] Podcast appearances
 - [ ] Citations and quotes
 - [x] Article reprints
@@ -80,7 +81,7 @@ This is a very, very wacky grab bag and covers things I've done for funsies as w
   - [ ] Eclipse Phase
 - [ ] Brambleberry Workshop
 
-## Work History
+## Work / Role History
 
 Employment timeline; this is less of a primary focus and more splashover data from the project archive. Each of these will also be exposed as one or more Schema.org `Role` entities, linking me to a particular `Organization`.
 
@@ -92,7 +93,8 @@ Employment timeline; this is less of a primary focus and more splashover data fr
 - [ ] Geneer
 - [ ] Retail Vision Systems
 - [ ] Lullabot
-  - [ ] Buzzr (AKA Project Codename)
+- [ ] Drupal Association
+- [ ] Buzzr (AKA Project Codename)
 - [ ] Nerdhaus
 - [ ] Eaton FYI
 - [ ] Autogram
@@ -105,13 +107,14 @@ Saved and shared links over the years. Accurately capturing the dates/times, and
 - [x] Old sites (MDB files & HTML extraction)
 - [x] Delicious
 - [x] Pinboard
-- [x] Twitter (Restricted to single-link posts to URLs that aren't tweets)
+- [x] Twitter (Restricted to single-link non-reply posts with URLs that aren't tweets)
 - [x] Instapaper
 - [x] Blogrolls
 - [x] Autogram Links
 - [x] Omnivore
 - [ ] Links *mentioned in blog posts*, which might necessitate separate storage from the 'Bookmark' concept.
-- [ ] Link deduplication, 404/30x/dead-domain handling
+- [ ] Link deduplication, 404/30x/dead-domain handling. This is the big one.
+- [ ] Media indirection. I'm centralizing my shit and changing all links to my own media to `media://` urls, which I can either transform into local URLs or map to an S3 bucket as desired. We'll see how monstrously huge it all gets; Right now the 'static' directory weighs in around 10 gigs, though that's inflated by the six jillion permutations of each presentation.
 
 ## Photos
 
@@ -123,6 +126,8 @@ Whenever possible I'll lean on hotlinking to Flickr for the large photos; keepin
 - [ ] iCloud Photo selections
 
 ## Weird Oldschool Stuff
+
+A number of these will most likely be manual; interesting Kidstuff articles can be extracted and turned into reprints, for example, but most others don't lend themselves to atomic content elements and should just be treated as opaque `WebSite` wrappers with a pointer to my cold storage subsite.
 
 - [x] Textfiles covering the mid-late 90s
   - [x] Including a cluster of very bad fiction
@@ -157,6 +162,7 @@ These will be used to populate 'on this day/week' and other contextual cues arou
 - [ ] Technology
 - [ ] Politics
 - [ ] Content management
+- [ ] Content encoding and transmission
 - [ ] Personal hardware
 - [ ] Rapture media
 
@@ -167,9 +173,10 @@ These are basically a database of supporting facts that can be used to populate 
 - [x] Books
   - [x] TTRPG books
   - [x] Comics/Graphic Novels
-- [ ] Games
-- [ ] Films
-- [ ] People
-- [ ] Organizations
-- [ ] Places
-- [ ] Events
+- [ ] Games (Sparse ATM, but should probably resemble the Books system)
+- [ ] Films (Sparse ATM, but should probably resemble the Books system)
+- [ ] Music (Sparse ATM, but should probably resemble the Books system)
+- [ ] People (currently being populated via book creator data; nothing else feeds into it yet)
+- [ ] Organizations (Need to revisit this and distinguish organizations from web sites they live it)
+- [x] Events
+- [x] Places (Currently only contains Event Locations)

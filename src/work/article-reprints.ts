@@ -53,6 +53,7 @@ export class ArticleReprintMigrator extends Migrator {
         await this.saveThings(things);
       }
     }
+    return;
   }
 
   override async finalize(): Promise<void> {
@@ -66,5 +67,6 @@ export class ArticleReprintMigrator extends Migrator {
     }
 
     await this.copyAssets('images', 'reprints');
+    return;
   }
 }

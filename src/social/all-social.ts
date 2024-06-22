@@ -9,5 +9,6 @@ export class AllSocialMigrator extends Migrator {
     await new LinkedInMigrator({ logger: this.log }).run();
     await new SkitchMigrator({ logger: this.log }).run();
     await new TwitterMigrator({ logger: this.log }).run();
+    return;
   }
 }

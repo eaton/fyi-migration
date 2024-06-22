@@ -23,5 +23,6 @@ export class AllBlogMigrator extends Migrator {
     await new MediumMigrator({ logger: this.log }).run();
     await new TumblrMigrator({ logger: this.log }).run();
     await new AltJekyllMigrator({ logger: this.log }).run();
+    return;
   }
 }
