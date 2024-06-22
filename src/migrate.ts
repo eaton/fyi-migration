@@ -15,7 +15,6 @@ export class MigrateEverything extends Migrator {
 
     await this.arango.collection('thing').truncate();
     await this.arango.collection('link').truncate();
-    await this.arango.collection('role').truncate();
     await this.arango.collection('text').truncate();
     await this.arango.collection('url').truncate();
     await this.arango.collection('media').truncate();

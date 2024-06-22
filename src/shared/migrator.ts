@@ -378,7 +378,7 @@ export class Migrator {
   async linkThings(from: string | Thing, rel: string | Record<string, unknown>, to: string | Thing, store?: string) {
     const storage = store ?? this.options.store;
     if (storage === 'arango') {
-      await this.arango.link(from, to, rel);
+      await this.arango.link(from, to, rel).catch((err: Error) => { throw new Error(err.message, { cause: { from, rel, to } }) });
       this.log.debug(`Linked ${this.getId(from)} to ${this.getId(to)}`);
     } else {
       this.log.error(`Linking not supported with current storage mechanism (${storage})`)
@@ -411,7 +411,7 @@ export class Migrator {
         const crs = Array.isArray(cr) ? cr : [cr];
         for (const creator of crs) {
           await this.saveThing({ id: toSlug(creator), type: 'Person', name: creator })
-          await this.linkThings(creator, r, to);
+          await this.linkThings('person:' + toSlug(creator), r, to);
         }
       }
     }
