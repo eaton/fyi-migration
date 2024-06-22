@@ -1,8 +1,9 @@
-import { uuid } from '@eatonfyi/ids';
+import { nanohash, uuid } from '@eatonfyi/ids';
 import { aql, Database } from 'arangojs';
 import { Config } from 'arangojs/connection.js';
 import { z } from 'zod';
 import { Thing } from '../schemas/thing.js';
+import { NormalizedUrl } from '@eatonfyi/urls';
 
 export class ArangoDB extends Database {
   constructor(config?: Config) {
@@ -49,6 +50,20 @@ export class ArangoDB extends Database {
       .save({ ...item, _id, _key }, { overwriteMode: 'update' })
       .then(() => true);
   }
+
+  /**
+   * Push push the record for a URL to ArangoDB.
+   */
+  async setUrl(item: string | URL, data: Record<string, unknown> = {}): Promise<boolean> {
+    const normalized = new NormalizedUrl(item);
+    const _key = nanohash(normalized.href);
+    const _id = `url/${_key}`;
+
+    return await this.collection('url')
+      .save({ ...data, href: normalized.href, parsed: normalized.properties, _id, _key }, { overwriteMode: 'update' })
+      .then(() => true);
+  }
+
 
   /**
    * Push data to ArangoDB, and attempt to intuit the id/key/collection if possible.
@@ -168,16 +183,14 @@ export class ArangoDB extends Database {
   }
 
   async initialize() {
-    await this.ensureCollection('thing');
     // await this.ensureCollection('person');
     // await this.ensureCollection('organization');
     // await this.ensureCollection('creativework');
     // await this.ensureCollection('place');
     // await this.ensureCollection('event');
 
+    await this.ensureCollection('thing');
     await this.ensureEdgeCollection('link');
-    await this.ensureEdgeCollection('role');
-
     await this.ensureCollection('text');
     await this.ensureCollection('url');
     await this.ensureCollection('media');
