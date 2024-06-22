@@ -1,7 +1,7 @@
 import { Migrator, MigratorOptions } from "../shared/index.js";
 
 const defaults: MigratorOptions = {
-  input: 'media/skitch',
+  input: 'input/social/skitch',
   assets: 'src/_static/skitch'
 };
 
