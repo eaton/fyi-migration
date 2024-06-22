@@ -4,6 +4,7 @@ import { DimensionsSchema } from './fragments/dimensions.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),
+  ids: z.record(z.coerce.string()).optional(),
   subtitle: z.string().optional(),
   edition: z.string().optional(),
   imprint: z.string().optional(),
@@ -12,7 +13,7 @@ export const BookSchema = CreativeWorkSchema.extend({
   position: z.coerce.number().optional(),
   pages: z.coerce.number().optional(),
 
-  // Personal properties
+  // Personal propertieså
   owned: z.string().optional(),
   source: z.string().optional(),
   category: z.string().optional(),

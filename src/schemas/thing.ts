@@ -5,7 +5,6 @@ export const ThingSchema = z
   .object({
     id: z.coerce.string(),
     url: urlSchema.optional(),
-    ids: z.record(z.coerce.string()).optional(),
     type: z.string().default('Thing'),
     name: z.string().optional(),
     importance: z.number().min(1).max(5).optional(),
