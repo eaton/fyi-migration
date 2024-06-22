@@ -3,7 +3,7 @@ import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
 import is from '@sindresorhus/is';
 import { ZodTypeAny, z } from 'zod';
-import { BookmarkSchema } from '../../schemas/Custom/bookmark.js';
+import { BookmarkSchema } from '../../schemas/custom/bookmark.js';
 import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,

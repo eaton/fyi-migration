@@ -1,5 +1,5 @@
 import { Pinboard, type PinboardLink } from '../apis/pinboard.js';
-import { BookmarkSchema } from '../schemas/Custom/bookmark.js';
+import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';

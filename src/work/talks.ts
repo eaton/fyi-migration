@@ -1,7 +1,7 @@
 import { KeynoteApp, type KeynoteSlide, type KeynoteDeck } from '@eatonfyi/keynote-extractor';
 import { unflatten } from 'obby';
 import { z } from 'zod';
-import { Talk, TalkEventSchema, TalkInstance, TalkSchema } from '../schemas/Custom/talk.js';
+import { Talk, TalkEventSchema, TalkInstance, TalkSchema } from '../schemas/custom/talk.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import jetpack from '@eatonfyi/fs-jetpack';

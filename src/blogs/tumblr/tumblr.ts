@@ -1,7 +1,7 @@
 import { toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { Client } from '@serguun42/tumblr.js';
-import { BookmarkSchema } from '../../schemas/Custom/bookmark.js';
+import { BookmarkSchema } from '../../schemas/custom/bookmark.js';
 import {
   CreativeWorkInput,
   CreativeWorkSchema,

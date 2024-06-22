@@ -15,5 +15,5 @@ export * from './schema-org/CreativeWork/episode.js';
 export * from './schema-org/CreativeWork/message.js';
 export * from './schema-org/CreativeWork/social-media-post.js';
 
-export * from './Custom/bookmark.js';
-export * from './Custom/talk.js';
+export * from './custom/bookmark.js';
+export * from './custom/talk.js';

@@ -1,7 +1,7 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
-import { Bookmark } from '../../schemas/Custom/bookmark.js';
+import { Bookmark } from '../../schemas/custom/bookmark.js';
 import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,
