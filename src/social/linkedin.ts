@@ -7,9 +7,9 @@ import { z } from 'zod';
 const defaults: MigratorOptions = {
   name: 'linkedin',
   label: 'LinkedIn',
-  input: 'social/linkedin',
+  input: 'input/social/linkedin',
   cache: 'cache/social',
-  output: 'entries/linked',
+  output: 'src/entries/linked',
   assets: 'src/_static/linkedin'
 };
 
@@ -44,18 +44,20 @@ export class LinkedInMigrator extends Migrator {
   }
 
   prepPost(input: LinkedInPost) {
-    const id = input.ShareLink?.searchParams.get('share') ??
-      input.ShareLink?.searchParams.get('ugcPost') ??
-      nanohash(input);
-    
+    let id = nanohash(input);
+    if (input.ShareLink) {
+      input.ShareLink.href = input.ShareLink.href.replaceAll('%3A', ':');
+      id = input.ShareLink.href.split(':').pop()?.replace('/', '') ?? id;
+    };
+        
     return SocialMediaPostingSchema.parse({
       id: `li-${id}`,
       date: input.Date,
-      url: input.ShareLink?.href,
+      url: input.ShareLink?.href || undefined,
       isPartOf: this.name,
-      text: input.ShareCommentary,
-      sharedContent: input.SharedUrl,
-      image: input.MediaUrl,
+      text: input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(/\n\n+/g, '\n\n') || undefined,
+      sharedContent: input.SharedUrl || undefined,
+      image: input.MediaUrl || undefined,
     })
   }
 }
