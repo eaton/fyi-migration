@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from '../schemas/CreativeWork/creative-work.js';
+import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';

@@ -2,8 +2,8 @@ import { z } from 'zod';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../schemas/CreativeWork/creative-work.js';
-import { Episode, EpisodeSchema } from '../schemas/CreativeWork/episode.js';
+} from '../schemas/schema-org/creative-work.js';
+import { Episode, EpisodeSchema } from '../schemas/schema-org/CreativeWork/episode.js';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
