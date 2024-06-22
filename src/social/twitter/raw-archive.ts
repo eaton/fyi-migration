@@ -2,7 +2,7 @@ import jetpack from '@eatonfyi/fs-jetpack';
 import { toText } from '@eatonfyi/html';
 import { parse as parsePath } from 'path';
 import { z } from 'zod'; // This is for reading the raw twitter archive data files, a thing that is horrifyingly necessary because the world is full of pain.
-import { TweetSchema } from '../schemas/index.js';
+import { TweetSchema } from './schema.js';
 
 export async function parseRawArchive(archivePath: string) {
   const archive = jetpack.dir(archivePath);

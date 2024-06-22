@@ -109,17 +109,10 @@ export class TalkMigrator extends Migrator {
 
   override async finalize() {
     for (const talk of this.talks) {
+      const timesPerformed = talk.performances?.length;
+      const featuredPerformance = talk.performances?.find(p => p.isFeaturedVersion);
       for (const perf of talk.performances ?? []) {
-        let saved = false;
-        // If the talk doesn't have a title or date yet, set it.
-        talk.name ??= perf.withTitle;
-        talk.date ??= perf.date;
-
-
-        // Only copy over the slide assets if... we had a deck to copy
-        if (perf.isFeaturedVersion) {
-
-          // If this performance of the talk is the featured one, overwrite the name/date.
+        if (timesPerformed === 1 || perf.event === featuredPerformance?.event) {
           talk.name = perf.withTitle;
           talk.date = perf.date;
 
@@ -132,16 +125,7 @@ export class TalkMigrator extends Migrator {
             }
             this.cache.dir(talk.id).dir(perf.event).copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
           }
-
           await this.saveThing(talk, 'markdown');
-          await this.mergeThing(talk);
-          saved = true;
-        }
-
-        if (!saved) {
-          await this.saveThing(talk, 'markdown');
-          await this.saveThing(talk);
-          saved = true;
         }
 
         const rel = {
@@ -235,12 +219,10 @@ export class TalkMigrator extends Migrator {
   keynoteToMarkdown(talk: Talk, slides: KeynoteSlide[], includeSkipped = false, useTitles = true) {
     return slides.map(slide => {
       const text: string[] = [];
-      if (slide.title.trim().length) {
-        if (slide.skipped === false || (slide.skipped && includeSkipped)) {
-          if (useTitles) text.push('## ' + slide.title.replaceAll(/[\s\n]/g, ' '));
-          text.push(`![Slide ${slide.number}](${fixImage(slide.image ?? '')})`);
-          text.push(slide.notes)
-        }
+      if (slide.skipped === false || (slide.skipped && includeSkipped)) {
+        if (useTitles && slide.title.trim().length) text.push('## ' + slide.title.replaceAll(/[\s\n]/g, ' '));
+        text.push(`![Slide ${slide.number}](${fixImage(slide.image ?? '')})`);
+        text.push(slide.notes)
       }
       return text.join('\n\n');
     })

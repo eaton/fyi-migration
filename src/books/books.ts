@@ -237,8 +237,10 @@ export class BookMigrator extends Fetcher {
     );
 
     const books = Object.values(this.bookData);
-    await this.saveThings(books)
-
+    for (const book of books) {
+      await this.saveThing(book);
+      await this.linkCreators(book);
+    }
 
     this.copyAssets(this.cache.path('images'), 'books');
 
