@@ -201,9 +201,11 @@ export class TwitterMigrator extends Migrator {
       }
     }
 
+    // Save all posts, but only save markdown data for threads —
+    // at least for now.
     for (const smp of toExport) {
       await this.saveThing(smp);
-      await this.saveThing(smp, 'markdown');
+      if (smp.type === 'SocialMediaThread') await this.saveThing(smp, 'markdown');
     }
 
     if (this.options.saveUsers) {

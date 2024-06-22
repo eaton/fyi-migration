@@ -1,6 +1,6 @@
 import { TwitterArchive } from 'twitter-archive-reader';
-import { CreativeWorkSchema } from '../schemas/index.js';
-import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
+import { CreativeWorkSchema } from '../../schemas/index.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
 import { Tweet } from './schema.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {
@@ -89,9 +89,7 @@ export function tweetToMarkdown(tweet: Tweet) {
   // Later, we can wrap them in something.
   for (const [short, mediaFiles] of Object.entries(tweet.media ?? {})) {
     output = output.replaceAll(short, '');
-    output += mediaFiles.map(
-      m => `\n\n![](media://${m.replace('media', 'twitter')})`,
-    );
+    output += mediaFiles.map(m => `\n\n![](${m})`);
   }
 
   // Humanize URLs; deal with expanding link shorteners later.
