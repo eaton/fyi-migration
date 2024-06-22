@@ -85,11 +85,15 @@ export class BookMigrator extends Fetcher {
         (this.input.read('books.csv', 'auto') as
           | Record<string, unknown>[]
           | undefined) ?? [];
-      partialBooks = raw.map(r => PartialBookSchema.parse(emptyDeep(unflatten(r))));
+      partialBooks = raw.map(r =>
+        PartialBookSchema.parse(emptyDeep(unflatten(r))),
+      );
 
       for (const sh of ['imprints', 'publishers', 'editions', 'series']) {
         if (this.input.exists(sh + '.txt')) {
-          const data = this.input.read(sh + '.csv', 'auto') as Record<string, string>[] | undefined;
+          const data = this.input.read(sh + '.csv', 'auto') as
+            | Record<string, string>[]
+            | undefined;
           if (data) {
             this.patterns[sh] = data.map(r => r.name);
           }
@@ -100,7 +104,7 @@ export class BookMigrator extends Fetcher {
         this.options.documentId,
         this.options.sheetName,
         PartialBookSchema,
-        true
+        true,
       );
 
       const helperSchema = z.object({ name: z.string() });
@@ -109,7 +113,7 @@ export class BookMigrator extends Fetcher {
           this.options.documentId,
           sh,
           helperSchema,
-          true
+          true,
         );
         this.patterns[sh] = data.map(d => d.name);
       }
@@ -174,7 +178,8 @@ export class BookMigrator extends Fetcher {
             const merged = this.populateIds(
               merge(parsedData, emptyDeep(book)) as Partial<Book>,
             );
-            if (merged.creator) set(merged, 'creator', deDuplicateCreators(merged.creator));
+            if (merged.creator)
+              set(merged, 'creator', deDuplicateCreators(merged.creator));
 
             const final = BookSchema.parse(merged);
 
@@ -354,7 +359,7 @@ function makeFlattenedBook(book: Book) {
       .join('x'),
     url: book.url,
     image: book.image,
-    ...getSimpleCreatorList(book)
+    ...getSimpleCreatorList(book),
   };
 
   function getSimpleCreatorList(book: Book) {
@@ -365,8 +370,12 @@ function makeFlattenedBook(book: Book) {
       'creator.foreword.0': undefined,
     };
     for (const [role, contributors] of Object.entries(book.creator ?? {})) {
-      const name = (typeof contributors === 'string') ? contributors : contributors[0];
-      if (['author', 'editor', 'illustrator', 'foreword'].includes(role) && name) {
+      const name =
+        typeof contributors === 'string' ? contributors : contributors[0];
+      if (
+        ['author', 'editor', 'illustrator', 'foreword'].includes(role) &&
+        name
+      ) {
         output['creator.' + role + '.0'] = name;
       }
     }
@@ -374,7 +383,9 @@ function makeFlattenedBook(book: Book) {
   }
 }
 
-function deDuplicateCreators(input: string | string[] | Record<string, string | string[]>) {
+function deDuplicateCreators(
+  input: string | string[] | Record<string, string | string[]>,
+) {
   if (typeof input === 'string') {
     return input;
   } else if (Array.isArray(input)) {

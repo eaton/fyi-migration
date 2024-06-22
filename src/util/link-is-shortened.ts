@@ -9,7 +9,7 @@ const knownShorteners = [
   't.co',
   'nyti.ms',
   'short.io',
-  'lnkd.in' // doesn't redirect, must check $(a[data-tracking-control-name="external_url_click"]).attr('href')
+  'lnkd.in', // doesn't redirect, must check $(a[data-tracking-control-name="external_url_click"]).attr('href')
 ];
 
 export function linkIsShortened(input: string | URL) {

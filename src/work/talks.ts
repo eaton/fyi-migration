@@ -1,10 +1,19 @@
-import { KeynoteApp, type KeynoteSlide, type KeynoteDeck } from '@eatonfyi/keynote-extractor';
+import jetpack from '@eatonfyi/fs-jetpack';
+import {
+  KeynoteApp,
+  type KeynoteDeck,
+  type KeynoteSlide,
+} from '@eatonfyi/keynote-extractor';
 import { unflatten } from 'obby';
 import { z } from 'zod';
-import { Talk, TalkEventSchema, TalkInstance, TalkSchema } from '../schemas/custom/talk.js';
+import {
+  Talk,
+  TalkEventSchema,
+  TalkInstance,
+  TalkSchema,
+} from '../schemas/custom/talk.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
-import jetpack from '@eatonfyi/fs-jetpack';
 
 export interface TalkMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -46,7 +55,11 @@ export class TalkMigrator extends Migrator {
         this.rawTalks = data.map(i => schema.parse(unflatten(i)));
       }
     } else if (this.options.documentId) {
-      this.rawTalks = await fetchGoogleSheet(this.options.documentId, this.options.sheetName, schema);
+      this.rawTalks = await fetchGoogleSheet(
+        this.options.documentId,
+        this.options.sheetName,
+        schema,
+      );
     }
     if (this.rawTalks.length) {
       this.cache.write('raw-talks.ndjson', this.rawTalks);
@@ -74,7 +87,9 @@ export class TalkMigrator extends Migrator {
     for (const talk of this.talks) {
       for (const performance of talk.performances ?? []) {
         await this.exportKeynoteFile(talk, performance);
-        this.log.debug(`Exported deck for ${performance.withTitle} at ${performance.event}`);
+        this.log.debug(
+          `Exported deck for ${performance.withTitle} at ${performance.event}`,
+        );
       }
     }
 
@@ -91,13 +106,21 @@ export class TalkMigrator extends Migrator {
 
     if (Object.values(this.decks).length === 0) {
       this.decks = {};
-      for (const talkId of this.cache.find({ files: false, directories: true })) {
-        for (const eventId of this.cache.dir(talkId).find({ files: false, directories: true })) {
+      for (const talkId of this.cache.find({
+        files: false,
+        directories: true,
+      })) {
+        for (const eventId of this.cache
+          .dir(talkId)
+          .find({ files: false, directories: true })) {
           if (this.cache.dir(talkId).dir(eventId).exists('deck.json')) {
-            const deck = this.cache.dir(talkId).dir(eventId).read('deck.json', 'auto') as KeynoteDeck | undefined;
+            const deck = this.cache
+              .dir(talkId)
+              .dir(eventId)
+              .read('deck.json', 'auto') as KeynoteDeck | undefined;
             if (deck) {
               this.decks[talkId] ??= {};
-              this.decks[talkId][eventId] = deck
+              this.decks[talkId][eventId] = deck;
             }
           }
         }
@@ -110,7 +133,9 @@ export class TalkMigrator extends Migrator {
   override async finalize() {
     for (const talk of this.talks) {
       const timesPerformed = talk.performances?.length;
-      const featuredPerformance = talk.performances?.find(p => p.isFeaturedVersion);
+      const featuredPerformance = talk.performances?.find(
+        p => p.isFeaturedVersion,
+      );
       for (const perf of talk.performances ?? []) {
         if (timesPerformed === 1 || perf.event === featuredPerformance?.event) {
           talk.name = perf.withTitle;
@@ -123,7 +148,10 @@ export class TalkMigrator extends Migrator {
             if (deck && deck.slides) {
               talk.text = this.keynoteToMarkdown(talk, deck.slides);
             }
-            this.cache.dir(talk.id).dir(perf.event).copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
+            this.cache
+              .dir(talk.id)
+              .dir(perf.event)
+              .copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
           }
           await this.saveThing(talk, 'markdown');
         }
@@ -135,7 +163,7 @@ export class TalkMigrator extends Migrator {
           recording: perf.recording,
           description: perf.description,
           url: perf.url,
-        }
+        };
         await this.linkThings(talk, rel, 'event:' + perf.event);
       }
     }
@@ -156,7 +184,7 @@ export class TalkMigrator extends Migrator {
       url: input.url,
       recording: input.recording,
       pdf: input.pdf,
-      keynoteFile: input.keynote
+      keynoteFile: input.keynote,
     });
   }
 
@@ -168,7 +196,9 @@ export class TalkMigrator extends Migrator {
     if (deckDir.exists('deck.json')) return;
 
     const path = deckDir.path();
-    const app = await KeynoteApp.open(this.keynotes.path(performance.keynoteFile));
+    const app = await KeynoteApp.open(
+      this.keynotes.path(performance.keynoteFile),
+    );
 
     // Generate a JSON file with presentation metadata, and title / body / notes
     // text for each slide. Most of it is trash but in some cases things are
@@ -203,8 +233,8 @@ export class TalkMigrator extends Migrator {
     // Generate an mp4 video of the presentation, including all transitions and
     // animations. It will be enormous and annoying, and export options can't be
     // controlled via the Applescript call.
-    // However, when there slides we need animated data from, it's handy. 
-    
+    // However, when there slides we need animated data from, it's handy.
+
     await app.export({
       format: 'QuickTime movie',
       movieFormat: 'format720p',
@@ -216,19 +246,26 @@ export class TalkMigrator extends Migrator {
     await app.close();
   }
 
-  keynoteToMarkdown(talk: Talk, slides: KeynoteSlide[], includeSkipped = false, useTitles = true) {
-    return slides.map(slide => {
-      const text: string[] = [];
-      if (slide.skipped === false || (slide.skipped && includeSkipped)) {
-        if (useTitles && slide.title.trim().length) text.push('## ' + slide.title.replaceAll(/[\s\n]/g, ' '));
-        text.push(`![Slide ${slide.number}](${fixImage(slide.image ?? '')})`);
-        text.push(slide.notes)
-      }
-      return text.join('\n\n');
-    })
-    .filter(s => s.trim().length)
+  keynoteToMarkdown(
+    talk: Talk,
+    slides: KeynoteSlide[],
+    includeSkipped = false,
+    useTitles = true,
+  ) {
+    return slides
+      .map(slide => {
+        const text: string[] = [];
+        if (slide.skipped === false || (slide.skipped && includeSkipped)) {
+          if (useTitles && slide.title.trim().length)
+            text.push('## ' + slide.title.replaceAll(/[\s\n]/g, ' '));
+          text.push(`![Slide ${slide.number}](${fixImage(slide.image ?? '')})`);
+          text.push(slide.notes);
+        }
+        return text.join('\n\n');
+      })
+      .filter(s => s.trim().length)
       .join('\n\n---\n\n');
-    
+
     function fixImage(input: string) {
       return input.replace('./images/', `media://talks/${talk.id}/`);
     }

@@ -111,12 +111,14 @@ export class BrowserBookmarkMigrator extends Migrator {
 
     await this.mergeThings(cws);
 
-    const browser = this.options.browser ?? CreativeWorkSchema.parse({
-      type: 'SoftwareApplication',
-      id: this.options.name,
-      name: this.options.label,
-      description: this.options.description,
-    });
+    const browser =
+      this.options.browser ??
+      CreativeWorkSchema.parse({
+        type: 'SoftwareApplication',
+        id: this.options.name,
+        name: this.options.label,
+        description: this.options.description,
+      });
     await this.saveThing(browser);
     return;
   }
@@ -146,7 +148,13 @@ const schema = z.object({
     .number()
     .optional()
     .or(z.coerce.date())
-    .transform(d => (typeof d === 'number' ? (d < 10_000_000_000 ? new Date(d * 1000) : new Date(d)) : d)),
+    .transform(d =>
+      typeof d === 'number'
+        ? d < 10_000_000_000
+          ? new Date(d * 1000)
+          : new Date(d)
+        : d,
+    ),
 });
 
 type BrowserBookmark = z.infer<typeof schema>;

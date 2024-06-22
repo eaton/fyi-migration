@@ -32,7 +32,8 @@ export class FuturismMigrator extends BlogMigrator {
 
       const file = this.makeFilename(frontmatter);
       this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store === 'arango') await this.arango.set({ ...frontmatter, text });
+      if (this.options.store === 'arango')
+        await this.arango.set({ ...frontmatter, text });
       this.log.debug(`'Wrote ${file}`);
     }
 

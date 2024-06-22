@@ -122,7 +122,7 @@ export class TumblrMigrator extends BlogMigrator {
     for (const e of this.posts) {
       const entry = this.prepEntry(e);
       await this.saveThing(entry);
-      await this.saveThing(entry, 'markdown')
+      await this.saveThing(entry, 'markdown');
     }
 
     if (this.links && this.links.length) {

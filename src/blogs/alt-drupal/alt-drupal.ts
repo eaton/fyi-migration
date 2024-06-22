@@ -1,13 +1,19 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { z } from 'zod';
-import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import {
+  Comment,
+  CommentSchema,
+} from '../../schemas/schema-org/CreativeWork/comment.js';
+import {
+  SocialMediaPosting,
+  SocialMediaPostingSchema,
+} from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
 import { Thing } from '../../schemas/schema-org/thing.js';
+import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPosting, SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -179,9 +185,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       await this.saveThing(e);
       await this.saveThing(e, 'markdown');
 
-      const entryComments = this.comments.filter(
-        c => c.about === e.id,
-      );
+      const entryComments = this.comments.filter(c => c.about === e.id);
       if (entryComments.length) {
         sortByParents(entryComments);
         await this.saveThings(entryComments);

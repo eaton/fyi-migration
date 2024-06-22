@@ -2,13 +2,13 @@ import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
 import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -110,7 +110,11 @@ export class MovableTypeMigrator extends BlogMigrator {
     }
 
     for (const e of entries) {
-      e.comments = comments.filter(c => c.comment_entry_id === e.entry_id && c.comment_blog_id == e.entry_blog_id);
+      e.comments = comments.filter(
+        c =>
+          c.comment_entry_id === e.entry_id &&
+          c.comment_blog_id == e.entry_blog_id,
+      );
     }
 
     for (const b of blogs) {

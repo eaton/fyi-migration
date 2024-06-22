@@ -1,16 +1,19 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
-import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import {
+  Comment,
+  CommentSchema,
+} from '../../schemas/schema-org/CreativeWork/comment.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
-import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -62,7 +65,7 @@ export class AltJekyllMigrator extends BlogMigrator {
         for (const comment of thread.posts) {
           this.comments[identifier].push(this.prepComment(comment));
         }
-        
+
         // Add threading. Why not.
         sortByParents(this.comments[identifier]);
       }
@@ -100,8 +103,7 @@ export class AltJekyllMigrator extends BlogMigrator {
   }
 
   protected prepEntry(input: JekyllPost): CreativeWork {
-
-    const cw= SocialMediaPostingSchema.parse({
+    const cw = SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
       id: 'tmp',
       date: input.data.date,

@@ -1,6 +1,6 @@
 /**
  * Bookmark
- * 
+ *
  * - Bookmarking services
  *   - Shouldn't be private/local-only sites, or registration-walled
  *   - Should be de-duplicated across services when those services were

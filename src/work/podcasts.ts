@@ -1,9 +1,12 @@
-import { urlSchema } from "../schemas/fragments/index.js";
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { Episode, EpisodeSchema } from "../schemas/CreativeWork/episode.js";
-import { CreativeWork, CreativeWorkSchema } from "../schemas/CreativeWork/creative-work.js";
-import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
 import { z } from 'zod';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../schemas/CreativeWork/creative-work.js';
+import { Episode, EpisodeSchema } from '../schemas/CreativeWork/episode.js';
+import { urlSchema } from '../schemas/fragments/index.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface PodcastMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -31,7 +34,11 @@ export class PodcastMigrator extends Migrator {
 
   override async fillCache() {
     if (this.options.documentId) {
-      const items = await fetchGoogleSheet(this.options.documentId, this.options.sheetName, schema);
+      const items = await fetchGoogleSheet(
+        this.options.documentId,
+        this.options.sheetName,
+        schema,
+      );
       this.cache.write('podcast-episodes.ndjson', items);
     }
     return;
@@ -75,9 +82,9 @@ export class PodcastMigrator extends Migrator {
         id: item.isPartOf,
         type: 'PodcastSeries',
         name: item.podcast.name,
-        url: item.podcast.url
-      })
-    } else { 
+        url: item.podcast.url,
+      });
+    } else {
       return undefined;
     }
   }
@@ -90,10 +97,12 @@ const schema = z.object({
   name: z.string(),
   description: z.string(),
   url: urlSchema.optional(),
-  podcast: z.object({
-    name: z.string(),
-    url: urlSchema
-  }).optional()
+  podcast: z
+    .object({
+      name: z.string(),
+      url: urlSchema,
+    })
+    .optional(),
 });
 
 type ImportType = z.infer<typeof schema>;

@@ -1,9 +1,9 @@
 import { nanohash, uuid } from '@eatonfyi/ids';
-import { aql, Database } from 'arangojs';
+import { NormalizedUrl } from '@eatonfyi/urls';
+import { Database, aql } from 'arangojs';
 import { Config } from 'arangojs/connection.js';
 import { z } from 'zod';
 import { Thing } from '../schemas/schema-org/thing.js';
-import { NormalizedUrl } from '@eatonfyi/urls';
 
 export class ArangoDB extends Database {
   constructor(config?: Config) {
@@ -36,7 +36,7 @@ export class ArangoDB extends Database {
       id.indexOf(':') > 0 ? id : `${type?.toLocaleLowerCase()}:${id}`;
     return await this.collection('thing')
       .document(_key, { graceful: true })
-      .then(d => d ? (schema ? schema.parse(d) : d) : undefined);
+      .then(d => (d ? (schema ? schema.parse(d) : d) : undefined));
   }
 
   /**
@@ -54,16 +54,27 @@ export class ArangoDB extends Database {
   /**
    * Push push the record for a URL to ArangoDB.
    */
-  async setUrl(item: string | URL, data: Record<string, unknown> = {}): Promise<boolean> {
+  async setUrl(
+    item: string | URL,
+    data: Record<string, unknown> = {},
+  ): Promise<boolean> {
     const normalized = new NormalizedUrl(item);
     const _key = nanohash(normalized.href);
     const _id = `url/${_key}`;
 
     return await this.collection('url')
-      .save({ ...data, href: normalized.href, parsed: normalized.properties, _id, _key }, { overwriteMode: 'update' })
+      .save(
+        {
+          ...data,
+          href: normalized.href,
+          parsed: normalized.properties,
+          _id,
+          _key,
+        },
+        { overwriteMode: 'update' },
+      )
       .then(() => true);
   }
-
 
   /**
    * Push data to ArangoDB, and attempt to intuit the id/key/collection if possible.

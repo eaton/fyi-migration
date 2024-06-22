@@ -7,13 +7,13 @@ export type ParentSortableItem = {
 /**
  * Given any items with `id`, `parent`, and `thread`, properties, build thread-sensitive
  * sort properties that keep you from having to rebuild the whole tree every time.
- * 
+ *
  * Note that the top-level comments in the thread will remain in the same overall order
  * they were sorted in when the function is called; only the sort order of child items
  * is changed. So: sort the in the 'correct' order (by date, popularity, etc) then pass
  * them into this function to be thread-ified.
- * 
- * @see {@link https://git.drupalcode.org/project/drupal/-/blob/11.x/core/modules/comment/src/Entity/Comment.php | Drupal's comment module } 
+ *
+ * @see {@link https://git.drupalcode.org/project/drupal/-/blob/11.x/core/modules/comment/src/Entity/Comment.php | Drupal's comment module }
  */
 export function sortByParents(items: ParentSortableItem[]) {
   const dlm = '/';
@@ -23,7 +23,7 @@ export function sortByParents(items: ParentSortableItem[]) {
   for (const c of items) {
     populateThreadForItem(c);
   }
-  
+
   return items.sort(compareThread);
 
   function populateThreadForItem(c: ParentSortableItem) {
@@ -41,7 +41,6 @@ export function sortByParents(items: ParentSortableItem[]) {
         parts = max?.split(dlm) ?? [];
         n = max ? Number.parseInt(parts[0], 36) : startNum;
         prefix = '';
-
       } else {
         // This is a comment with a parent comment, so grab its parent's
         // thread calue to use as a prefix, then increment the largest existing
@@ -49,7 +48,7 @@ export function sortByParents(items: ParentSortableItem[]) {
 
         // Get the parent comment:
         const parent = items.find(i => i.id == c.parent);
-      
+
         if (!parent) {
           throw new Error('Comment parent not found');
         }
@@ -67,8 +66,7 @@ export function sortByParents(items: ParentSortableItem[]) {
           // increment of the thread number before creating the thread
           // string set this to 0 so it requires an increment too.
           n = startNum;
-        }
-        else {
+        } else {
           // Strip the "/" at the end of the thread.
           max = stripEor(max);
 
@@ -76,7 +74,7 @@ export function sortByParents(items: ParentSortableItem[]) {
           parts = max?.split(dlm) ?? [];
 
           const parent_depth = (parts ?? []).length;
-          n = Number.parseInt(parts[parent_depth-1], 36);
+          n = Number.parseInt(parts[parent_depth - 1], 36);
         }
       }
 
@@ -84,7 +82,7 @@ export function sortByParents(items: ParentSortableItem[]) {
       setThread(c, thread);
     }
   }
-  
+
   function stripEor(thread?: string) {
     if (thread && thread.endsWith(eor)) {
       return thread.slice(0, -1);
@@ -106,7 +104,10 @@ export function sortByParents(items: ParentSortableItem[]) {
    * no comments.
    */
   function getMaxThread() {
-    return items.filter(t => !!t.thread).toSorted(compareThread).pop()?.thread;
+    return items
+      .filter(t => !!t.thread)
+      .toSorted(compareThread)
+      .pop()?.thread;
   }
 
   /*
@@ -114,24 +115,30 @@ export function sortByParents(items: ParentSortableItem[]) {
    * returned when the commented entity has no comments.
    */
   function getMaxThreadPerThread(id: string) {
-    const justChildren = items.filter(i => i.parent === id && !!i.thread).toSorted(compareThread);
-    return justChildren.pop()?.thread
+    const justChildren = items
+      .filter(i => i.parent === id && !!i.thread)
+      .toSorted(compareThread);
+    return justChildren.pop()?.thread;
   }
-  
+
   function compareThread(a: ParentSortableItem, b: ParentSortableItem) {
     if (a.thread !== undefined && b.thread !== undefined) {
-      return a.thread.localeCompare(b.thread)
+      return a.thread.localeCompare(b.thread);
     } else {
       return 0;
     }
   }
 }
 
-
 /**
  * Return a simple string representation of the item tree
  */
 export function formatThread(items: ParentSortableItem[]) {
-  const indented = items.map(i => '  '.repeat((i.thread?.split('/')?.length ?? 1) - 1) + ' - item ' + i.id.toString());
-  return indented.join('\n')
+  const indented = items.map(
+    i =>
+      '  '.repeat((i.thread?.split('/')?.length ?? 1) - 1) +
+      ' - item ' +
+      i.id.toString(),
+  );
+  return indented.join('\n');
 }

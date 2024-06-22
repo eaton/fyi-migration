@@ -1,9 +1,9 @@
-import { urlSchema } from "../schemas/fragments/index.js";
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { CreativeWorkSchema } from "../schemas/CreativeWork/creative-work.js";
-import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
 import { z } from 'zod';
-import { Thing } from "../schemas/schema-org/thing.js";
+import { CreativeWorkSchema } from '../schemas/CreativeWork/creative-work.js';
+import { urlSchema } from '../schemas/fragments/index.js';
+import { Thing } from '../schemas/schema-org/thing.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface AppearanceMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -29,7 +29,12 @@ export class AppearanceMigrator extends Migrator {
 
   override async fillCache() {
     if (this.options.documentId) {
-      const items = await fetchGoogleSheet(this.options.documentId, this.options.sheetName, schema, true);
+      const items = await fetchGoogleSheet(
+        this.options.documentId,
+        this.options.sheetName,
+        schema,
+        true,
+      );
       this.cache.write('appearances.ndjson', items);
     }
     return;
@@ -56,7 +61,7 @@ export class AppearanceMigrator extends Migrator {
 
   prepVenue(item: ImportType) {
     if (item.venue?.name) {
-       return CreativeWorkSchema.parse(item.venue);
+      return CreativeWorkSchema.parse(item.venue);
     }
   }
 
@@ -87,12 +92,14 @@ const schema = z.object({
   date: z.coerce.date().optional(),
   url: urlSchema.optional(),
   role: z.string().optional(),
-  venue: z.object({
-    id: z.string().optional(),
-    name: z.string().optional(),
-    type: z.string().optional(),
-    url: urlSchema.optional()
-  }).optional()
+  venue: z
+    .object({
+      id: z.string().optional(),
+      name: z.string().optional(),
+      type: z.string().optional(),
+      url: urlSchema.optional(),
+    })
+    .optional(),
 });
 
 type ImportType = z.infer<typeof schema>;

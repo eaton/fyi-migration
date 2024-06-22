@@ -1,10 +1,9 @@
-import { nanohash } from "@eatonfyi/ids";
-import { CreativeWorkSchema, urlSchema } from "../schemas/index.js";
-import { SocialMediaPostingSchema } from "../schemas/schema-org/CreativeWork/social-media-post.js";
-import { Migrator, MigratorOptions } from "../shared/index.js";
+import { nanohash } from '@eatonfyi/ids';
 import { z } from 'zod';
-import { findLinks } from "../util/find-links.js";
-
+import { CreativeWorkSchema, urlSchema } from '../schemas/index.js';
+import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
+import { findLinks } from '../util/find-links.js';
 
 const defaults: MigratorOptions = {
   name: 'linkedin',
@@ -12,7 +11,7 @@ const defaults: MigratorOptions = {
   input: 'input/social/linkedin',
   cache: 'cache/social',
   output: 'src/entries/linked',
-  assets: 'src/_static/linkedin'
+  assets: 'src/_static/linkedin',
 };
 
 export class LinkedInMigrator extends Migrator {
@@ -37,7 +36,7 @@ export class LinkedInMigrator extends Migrator {
       id: this.name,
       type: 'Blog',
       name: this.label,
-      url: 'https://www.linkedin.com/in/jeffeaton/'
+      url: 'https://www.linkedin.com/in/jeffeaton/',
     });
     await this.saveThing(linkedIn);
 
@@ -50,17 +49,23 @@ export class LinkedInMigrator extends Migrator {
     if (input.ShareLink) {
       input.ShareLink.href = input.ShareLink.href.replaceAll('%3A', ':');
       id = input.ShareLink.href.split(':').pop()?.replace('/', '') ?? id;
-    };
-        
+    }
+
     return SocialMediaPostingSchema.parse({
       id: `li-${id}`,
       date: input.Date,
       url: input.ShareLink?.href || undefined,
       isPartOf: this.name,
-      text: input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(/\n\n+/g, '\n\n') || undefined,
-      sharedContent: input.SharedUrl || findLinks(input.ShareCommentary ?? '', 'url').map(l => l.href),
+      text:
+        input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(
+          /\n\n+/g,
+          '\n\n',
+        ) || undefined,
+      sharedContent:
+        input.SharedUrl ||
+        findLinks(input.ShareCommentary ?? '', 'url').map(l => l.href),
       image: input.MediaUrl || undefined,
-    })
+    });
   }
 }
 

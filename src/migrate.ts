@@ -3,11 +3,11 @@ import { Migrator } from './shared/migrator.js';
 import { AllBlogMigrator } from './blogs/all-blogs.js';
 import { AllBookmarksMigrator } from './bookmarks/all-bookmarks.js';
 import { BookMigrator } from './books/books.js';
-import { AllTextFilesMigrator } from './textfiles/all-textfiles.js';
-import { AllSocialMigrator } from './social/all-social.js';
-import { ArticleReprintMigrator } from './work/article-reprints.js';
-import { AllWorkMigrator } from './work/all-work.js';
 import { AllDatasetsMigrator } from './datasets/all-datasets.js';
+import { AllSocialMigrator } from './social/all-social.js';
+import { AllTextFilesMigrator } from './textfiles/all-textfiles.js';
+import { AllWorkMigrator } from './work/all-work.js';
+import { ArticleReprintMigrator } from './work/article-reprints.js';
 
 export class MigrateEverything extends Migrator {
   override async run() {

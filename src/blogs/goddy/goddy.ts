@@ -3,15 +3,15 @@ import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
 import { Bookmark } from '../../schemas/custom/bookmark.js';
 import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
+import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;

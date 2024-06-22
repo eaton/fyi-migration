@@ -1,10 +1,10 @@
-import { urlSchema } from "../schemas/fragments/index.js";
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
+import { toCase } from '@eatonfyi/text';
 import { z } from 'zod';
-import { Event, EventSchema } from "../schemas/schema-org/event.js";
-import { Place, PlaceSchema } from "../schemas/schema-org/place.js";
-import { toCase } from "@eatonfyi/text";
+import { urlSchema } from '../schemas/fragments/index.js';
+import { Event, EventSchema } from '../schemas/schema-org/event.js';
+import { Place, PlaceSchema } from '../schemas/schema-org/place.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface ConferenceMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -35,7 +35,11 @@ export class ConferenceMigrator extends Migrator {
 
   override async fillCache() {
     if (this.options.documentId) {
-      const items = await fetchGoogleSheet(this.options.documentId, this.options.sheetName, schema);
+      const items = await fetchGoogleSheet(
+        this.options.documentId,
+        this.options.sheetName,
+        schema,
+      );
       this.cache.write('conferences.ndjson', items);
     }
     return;
@@ -75,7 +79,7 @@ export class ConferenceMigrator extends Migrator {
       location: item.place.id,
       date: item.dates?.start,
       dates: item.dates,
-      attendees: item.attendees
+      attendees: item.attendees,
     });
   }
 
@@ -85,7 +89,7 @@ export class ConferenceMigrator extends Migrator {
         id: item.isPartOf,
         type: 'EventSeries',
         name: toCase.title(item.isPartOf),
-      })
+      });
     } else {
       return undefined;
     }
@@ -113,10 +117,12 @@ const schema = z.object({
     name: z.string().optional(),
     isPartOf: z.string().optional(),
   }),
-  dates: z.object({
-    start: z.coerce.date().optional(),
-    end: z.coerce.date().optional()
-  }).optional(),
+  dates: z
+    .object({
+      start: z.coerce.date().optional(),
+      end: z.coerce.date().optional(),
+    })
+    .optional(),
   url: urlSchema.optional(),
   attendees: z.coerce.number().optional(),
 });

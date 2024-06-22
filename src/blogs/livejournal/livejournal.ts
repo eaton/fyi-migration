@@ -1,10 +1,15 @@
 import { isAfter, isBefore } from '@eatonfyi/dates';
 import { autop, extract, fromLivejournal, toMarkdown } from '@eatonfyi/html';
-import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import {
+  Comment,
+  CommentSchema,
+} from '../../schemas/schema-org/CreativeWork/comment.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
   LivejournalComment,
@@ -13,8 +18,6 @@ import {
   type LivejournalEntry,
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
-import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -124,7 +127,9 @@ export class LivejournaMigrator extends BlogMigrator {
       if (entry.comments && entry.comments.length) {
         this.comments[cw.id] ??= [];
         for (const comment of entry.comments) {
-          this.comments[cw.id].push(this.prepComment({ entry: entry.id, ...comment }));
+          this.comments[cw.id].push(
+            this.prepComment({ entry: entry.id, ...comment }),
+          );
         }
         if (this.comments[cw.id].length) sortByParents(this.comments[cw.id]);
       }
@@ -137,11 +142,8 @@ export class LivejournaMigrator extends BlogMigrator {
       await this.saveThing(e);
       await this.saveThing(e, 'markdown');
 
-      if (
-        this.comments[e.id] &&
-        this.comments[e.id].length
-      ) {
-        await this.saveThings(this.comments[e.id])
+      if (this.comments[e.id] && this.comments[e.id].length) {
+        await this.saveThings(this.comments[e.id]);
       }
     }
 

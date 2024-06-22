@@ -1,8 +1,8 @@
 import { Migrator } from '../shared/migrator.js';
 
-import { TwitterMigrator } from "./twitter/twitter.js";
-import { SkitchMigrator } from "./skitch.js";
-import { LinkedInMigrator } from './linkedin.js'
+import { LinkedInMigrator } from './linkedin.js';
+import { SkitchMigrator } from './skitch.js';
+import { TwitterMigrator } from './twitter/twitter.js';
 
 export class AllSocialMigrator extends Migrator {
   override async run() {

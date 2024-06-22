@@ -1,8 +1,8 @@
- // import { TalkMigrator } from './work/talks.js';
- // await new TalkMigrator({ logger: { level: 'debug' } }).run();
+// import { TalkMigrator } from './work/talks.js';
+// await new TalkMigrator({ logger: { level: 'debug' } }).run();
 
 //import { BookMigrator } from './books/books.js';
 //await new BookMigrator({ logger: { level: 'debug' } }).run();
 
-import { TwitterMigrator } from "./social/index.js";
+import { TwitterMigrator } from './social/index.js';
 await new TwitterMigrator().run();

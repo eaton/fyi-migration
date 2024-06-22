@@ -9,8 +9,7 @@ export const CommentAuthorSchema = z.object({
 
 export const CommentSchema = CreativeWorkSchema.extend({
   type: z.string().default('Comment'),
-  parent: z
-    .coerce
+  parent: z.coerce
     .string()
     .optional()
     .describe('An entry ID or a URL the comment was posted in reply to.'),

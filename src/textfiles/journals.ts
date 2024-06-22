@@ -2,9 +2,9 @@ import { max, min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
+import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',
@@ -57,7 +57,10 @@ export class TextJournalsMigrator extends Migrator {
       }
 
       const { text, ...frontmatter } = cw;
-      this.output.write(file.replace('.txt', '.md'), { content: text, data: frontmatter });
+      this.output.write(file.replace('.txt', '.md'), {
+        content: text,
+        data: frontmatter,
+      });
       if (this.options.store == 'arango') await this.arango.set(cw);
       this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
     }

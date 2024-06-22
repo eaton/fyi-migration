@@ -1,20 +1,23 @@
 import { toText } from '@eatonfyi/html';
+import { nanohash } from '@eatonfyi/ids';
+import { toSlug } from '@eatonfyi/text';
+import is from '@sindresorhus/is';
+import { get } from 'obby';
 import { parse as parsePath } from 'path';
 import {
   ArchiveReadPart,
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
+import { SocialMediaPosting } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+} from '../../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../../shared/migrator.js';
+import { toShortDate } from '../../util/to-short-date.js';
 import * as prep from './prep.js';
 import { Tweet, TweetSchema } from './schema.js';
-import { get } from 'obby';
-import { toShortDate } from '../../util/to-short-date.js';
-import is from '@sindresorhus/is';
-import { toSlug } from '@eatonfyi/text';
-import { nanohash } from '@eatonfyi/ids';
-import { SocialMediaPosting } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   archiveGlob?: string;
@@ -205,7 +208,8 @@ export class TwitterMigrator extends Migrator {
     // at least for now.
     for (const smp of toExport) {
       await this.saveThing(smp);
-      if (smp.type === 'SocialMediaThread') await this.saveThing(smp, 'markdown');
+      if (smp.type === 'SocialMediaThread')
+        await this.saveThing(smp, 'markdown');
     }
 
     if (this.options.saveUsers) {
@@ -256,15 +260,15 @@ export class TwitterMigrator extends Migrator {
           parts.unshift('singles');
         }
       }
-      if (this.options.group.year) parts.unshift(input.date?.getFullYear().toString() ?? 'unknown');
+      if (this.options.group.year)
+        parts.unshift(input.date?.getFullYear().toString() ?? 'unknown');
       if (this.options.group.handle && typeof input.handle === 'string') {
         parts.unshift(input.handle.toLocaleLowerCase());
       }
     }
 
     return parts.join('/');
-  }
-
+  };
 
   async processArchive(fileOrFolder: string) {
     const ignore = [

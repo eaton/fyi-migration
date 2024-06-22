@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from '../schema-org/creative-work.js';
 import { urlSchema } from '../fragments/index.js';
+import { CreativeWorkSchema } from '../schema-org/creative-work.js';
 
 export const SlideSchema = z.object({
   image: z.string().optional(),
   alt: z.string().optional(),
   text: z.string().optional(),
-  isBonusSlide: z.coerce.boolean().optional()
+  isBonusSlide: z.coerce.boolean().optional(),
 });
 export type Slide = z.infer<typeof SlideSchema>;
 

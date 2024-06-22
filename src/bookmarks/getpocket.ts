@@ -59,7 +59,7 @@ export class PocketMigrator extends Migrator {
     });
 
     this.mergeThings(cws);
-    
+
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebApplication',
       id: 'getpocket',

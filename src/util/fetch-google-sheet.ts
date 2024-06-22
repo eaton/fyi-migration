@@ -12,7 +12,7 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
   documentId: string,
   sheet?: string | number,
   schema?: T,
-  strict = false
+  strict = false,
 ): Promise<z.infer<T>[]> {
   const target = `https://docs.google.com/spreadsheets/d/${documentId}/gviz/tq`;
 
