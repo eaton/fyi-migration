@@ -11,6 +11,7 @@ import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -216,7 +217,7 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepEntry(input: drupal.GoddyNode): CreativeWork | Bookmark {
     if (input.link?.field_link_url) {
-      return BookmarkSchema.parse({
+      return SocialMediaPostingSchema.parse({
         ...prepUrlForBookmark(input.link?.field_link_url),
         title: input.title,
         isPartOf: this.name,

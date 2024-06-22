@@ -13,6 +13,7 @@ import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -158,7 +159,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   }
 
   protected prepEntry(input: drupal.Node): CreativeWork {
-    return CreativeWorkSchema.parse({
+    return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
       id: `vpd-${input.nid}`,
       date: input.created,

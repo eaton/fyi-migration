@@ -4,6 +4,7 @@ import { Frontmatter } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
 import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',
@@ -35,7 +36,7 @@ export class TextJournalsMigrator extends Migrator {
         software: 'BBEdit',
       })[0];
 
-      const cw = CreativeWorkSchema.parse({
+      const cw = SocialMediaPostingSchema.parse({
         id: nanohash(txt.data),
         type: 'JournalEntry',
         date: txt.data.date,

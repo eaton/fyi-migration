@@ -14,6 +14,7 @@ import {
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
 import { sortByParents } from '../../util/parent-sort.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -158,7 +159,7 @@ export class LivejournaMigrator extends BlogMigrator {
   }
 
   protected prepEntry(entry: LivejournalEntry) {
-    return CreativeWorkSchema.parse({
+    return SocialMediaPostingSchema.parse({
       id: `lj-${entry.id}`,
       type: 'BlogPosting',
       date: entry.date,

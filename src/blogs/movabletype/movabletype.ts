@@ -8,6 +8,7 @@ import {
 } from '../../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -178,7 +179,7 @@ export class MovableTypeMigrator extends BlogMigrator {
       .filter(e => e.length > 0)
       .join('\n\n');
 
-    const entry = CreativeWorkSchema.parse({
+    const entry = SocialMediaPostingSchema.parse({
       id: `mt-${input.entry_id}`,
       type: 'BlogPosting',
       date: input.entry_created_on.toISOString(),

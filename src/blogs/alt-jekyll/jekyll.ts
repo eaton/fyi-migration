@@ -10,6 +10,8 @@ import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { findLinks } from '../../util/find-links.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -100,7 +102,7 @@ export class AltJekyllMigrator extends BlogMigrator {
 
   protected prepEntry(input: JekyllPost): CreativeWork {
 
-    const cw= CreativeWorkSchema.parse({
+    const cw= SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
       id: 'tmp',
       date: input.data.date,
@@ -111,6 +113,7 @@ export class AltJekyllMigrator extends BlogMigrator {
         ? input.data.title + ': ' + input.data.subtitle
         : undefined,
       slug: input.data.slug,
+      text: input.content,
     });
 
     if (input?.file) {
@@ -123,8 +126,6 @@ export class AltJekyllMigrator extends BlogMigrator {
     const oldUrl = `/${cw.date?.getFullYear()}/${cw.date?.getUTCMonth()}/${cw.slug}.html`;
     cw.id = 'alt-' + nanohash(oldUrl);
     cw.isPartOf = 'alt';
-
-    cw.text = input.content;
 
     return CreativeWorkSchema.parse(cw);
   }

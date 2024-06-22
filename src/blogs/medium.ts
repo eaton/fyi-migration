@@ -1,6 +1,7 @@
 import { get } from 'obby';
 import { CreativeWorkSchema } from '../schemas/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'medium',
@@ -27,7 +28,7 @@ export class MediumMigrator extends BlogMigrator {
 
     for (const f of this.input.find({ matching: 'posts/*.md' })) {
       const markdown = this.input.read(f, 'auto');
-      const { text, ...frontmatter } = CreativeWorkSchema.parse({
+      const { text, ...frontmatter } = SocialMediaPostingSchema.parse({
         type: 'BlogPosting',
         id: get(markdown, 'data.id') || undefined,
         name: get(markdown, 'data.title') || undefined,

@@ -3,6 +3,8 @@ import { CreativeWorkSchema, urlSchema } from "../schemas/index.js";
 import { SocialMediaPostingSchema } from "../schemas/social-media-post.js";
 import { Migrator, MigratorOptions } from "../shared/index.js";
 import { z } from 'zod';
+import { findLinks } from "../util/find-links.js";
+
 
 const defaults: MigratorOptions = {
   name: 'linkedin',
@@ -56,7 +58,7 @@ export class LinkedInMigrator extends Migrator {
       url: input.ShareLink?.href || undefined,
       isPartOf: this.name,
       text: input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(/\n\n+/g, '\n\n') || undefined,
-      sharedContent: input.SharedUrl || undefined,
+      sharedContent: input.SharedUrl || findLinks(input.ShareCommentary ?? '', 'url').map(l => l.href),
       image: input.MediaUrl || undefined,
     })
   }

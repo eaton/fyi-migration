@@ -10,6 +10,8 @@ import { Thing } from '../../schemas/thing.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
+import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { findLinks } from '../../util/find-links.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -205,7 +207,7 @@ export class AltDrupalMigrator extends BlogMigrator {
   }
 
   protected prepEntry(input: drupal.AltNode) {
-    return CreativeWorkSchema.parse({
+    return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
       id: `alt-${input.nid}`,
       date: input.created,
