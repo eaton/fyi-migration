@@ -7,11 +7,11 @@ export const ThingSchema = z
     url: urlSchema.optional(),
     type: z.string().default('Thing'),
     name: z.string().optional(),
-    importance: z.number().min(1).max(5).optional(),
     alternateName: oneOrMany(z.string()).optional(),
     description: z.string().optional(),
     image: z.string().optional(),
     keywords: z.array(z.string()).optional(),
+    importance: z.number().min(1).max(5).optional(),
   })
   .passthrough();
 
