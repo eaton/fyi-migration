@@ -12,12 +12,12 @@ import {
 import 'dotenv/config';
 import { emptyDeep, merge } from 'obby';
 import { Logger, LoggerOptions, pino } from 'pino';
-import { Thing, ThingSchema } from '../schemas/thing.js';
+import { Thing, ThingSchema } from '../schemas/schema-org/thing.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
 import { Store, StoreableData } from './store.js';
-import { CreativeWork } from '../schemas/creative-work.js';
+import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { toSlug } from '@eatonfyi/text';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes

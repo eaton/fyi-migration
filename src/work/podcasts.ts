@@ -1,7 +1,7 @@
 import { urlSchema } from "../schemas/fragments/index.js";
 import { Migrator, MigratorOptions } from "../shared/index.js";
-import { Episode, EpisodeSchema } from "../schemas/episode.js";
-import { CreativeWork, CreativeWorkSchema } from "../schemas/creative-work.js";
+import { Episode, EpisodeSchema } from "../schemas/CreativeWork/episode.js";
+import { CreativeWork, CreativeWorkSchema } from "../schemas/CreativeWork/creative-work.js";
 import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
 import { z } from 'zod';
 

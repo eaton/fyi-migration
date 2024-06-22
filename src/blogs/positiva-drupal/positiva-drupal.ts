@@ -3,17 +3,17 @@ import { nanohash } from '@eatonfyi/ids';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
 import is from '@sindresorhus/is';
 import { ZodTypeAny, z } from 'zod';
-import { BookmarkSchema } from '../../schemas/bookmark.js';
-import { Comment, CommentSchema } from '../../schemas/comment.js';
+import { BookmarkSchema } from '../../schemas/Custom/bookmark.js';
+import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/creative-work.js';
+} from '../../schemas/schema-org/creative-work.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',

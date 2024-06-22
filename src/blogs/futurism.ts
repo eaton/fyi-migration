@@ -1,6 +1,6 @@
 import { ExtractTemplateObject, extract, toMarkdown } from '@eatonfyi/html';
 import { z } from 'zod';
-import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {

@@ -2,7 +2,7 @@ import { min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
 import { toCase, toSlug } from '@eatonfyi/text';
 import { parse as parsePath } from 'path';
-import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
+import { CreativeWork, CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {

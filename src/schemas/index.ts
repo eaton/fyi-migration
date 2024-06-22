@@ -1,19 +1,19 @@
-export * from './event.js';
-export * from './organization.js';
-export * from './person.js';
-export * from './place.js';
-export * from './thing.js';
-
-export * from './article.js';
-export * from './book.js';
-export * from './bookmark.js';
-export * from './comment.js';
-export * from './creative-work.js';
-export * from './episode.js';
-export * from './message.js';
-export * from './talk.js';
-
-export * from './role.js';
-export * from './social-media-post.js';
-
 export * from './fragments/index.js';
+
+export * from './schema-org/creative-work.js';
+export * from './schema-org/event.js';
+export * from './schema-org/organization.js';
+export * from './schema-org/person.js';
+export * from './schema-org/place.js';
+export * from './schema-org/role.js';
+export * from './schema-org/thing.js';
+
+export * from './schema-org/CreativeWork/article.js';
+export * from './schema-org/CreativeWork/book.js';
+export * from './schema-org/CreativeWork/comment.js';
+export * from './schema-org/CreativeWork/episode.js';
+export * from './schema-org/CreativeWork/message.js';
+export * from './schema-org/CreativeWork/social-media-post.js';
+
+export * from './Custom/bookmark.js';
+export * from './Custom/talk.js';

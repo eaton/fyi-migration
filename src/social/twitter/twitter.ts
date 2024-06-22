@@ -5,7 +5,7 @@ import {
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
-import { CreativeWork, CreativeWorkSchema } from '../../schemas/creative-work.js';
+import { CreativeWork, CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../../shared/migrator.js';
 import * as prep from './prep.js';
 import { Tweet, TweetSchema } from './schema.js';
@@ -14,7 +14,7 @@ import { toShortDate } from '../../util/to-short-date.js';
 import is from '@sindresorhus/is';
 import { toSlug } from '@eatonfyi/text';
 import { nanohash } from '@eatonfyi/ids';
-import { SocialMediaPosting } from '../../schemas/social-media-post.js';
+import { SocialMediaPosting } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface TwitterMigratorOptions extends MigratorOptions {
   archiveGlob?: string;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { oneOrMany, recordWithHints } from './fragments/index.js';
+import { oneOrMany, recordWithHints } from '../fragments/index.js';
 import { ThingSchema } from './thing.js';
 
 export const PersonSchema = ThingSchema.extend({

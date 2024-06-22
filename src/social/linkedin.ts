@@ -1,6 +1,6 @@
 import { nanohash } from "@eatonfyi/ids";
 import { CreativeWorkSchema, urlSchema } from "../schemas/index.js";
-import { SocialMediaPostingSchema } from "../schemas/social-media-post.js";
+import { SocialMediaPostingSchema } from "../schemas/schema-org/CreativeWork/social-media-post.js";
 import { Migrator, MigratorOptions } from "../shared/index.js";
 import { z } from 'zod';
 import { findLinks } from "../util/find-links.js";

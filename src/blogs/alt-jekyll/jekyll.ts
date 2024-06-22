@@ -1,17 +1,16 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
-import { Comment, CommentSchema } from '../../schemas/comment.js';
+import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/creative-work.js';
+} from '../../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
-import { findLinks } from '../../util/find-links.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',

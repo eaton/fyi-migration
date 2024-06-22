@@ -2,9 +2,9 @@ import { max, min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
-import { CreativeWork, CreativeWorkSchema } from '../schemas/creative-work.js';
+import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',

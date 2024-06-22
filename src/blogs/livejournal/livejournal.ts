@@ -1,10 +1,10 @@
 import { isAfter, isBefore } from '@eatonfyi/dates';
 import { autop, extract, fromLivejournal, toMarkdown } from '@eatonfyi/html';
-import { Comment, CommentSchema } from '../../schemas/comment.js';
+import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/creative-work.js';
+} from '../../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
   LivejournalComment,
@@ -14,7 +14,7 @@ import {
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
 import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;

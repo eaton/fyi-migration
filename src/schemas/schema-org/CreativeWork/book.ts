@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from './creative-work.js';
-import { DimensionsSchema } from './fragments/dimensions.js';
+import { CreativeWorkSchema } from '../creative-work.js';
+import { DimensionsSchema } from '../../fragments/dimensions.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
   type: z.string().default('Book'),

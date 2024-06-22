@@ -4,7 +4,7 @@ import is from '@sindresorhus/is';
 import { AddressObject, ParsedMail, Source, simpleParser } from 'mailparser';
 import micromatch from 'micromatch';
 import { promisify } from 'util';
-import { Message, MessageSchema } from '../schemas/message.js';
+import { Message, MessageSchema } from '../schemas/CreativeWork/message.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const parseMail = promisify<Source, ParsedMail>(simpleParser);

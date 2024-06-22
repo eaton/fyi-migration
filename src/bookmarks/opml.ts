@@ -1,6 +1,6 @@
 import { ExtractTemplateObject, extract } from '@eatonfyi/html';
 import { z } from 'zod';
-import { BookmarkSchema } from '../schemas/bookmark.js';
+import { BookmarkSchema } from '../schemas/Custom/bookmark.js';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';

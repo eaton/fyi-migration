@@ -2,8 +2,8 @@ import { urlSchema } from "../schemas/fragments/index.js";
 import { Migrator, MigratorOptions } from "../shared/index.js";
 import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
 import { z } from 'zod';
-import { Event, EventSchema } from "../schemas/event.js";
-import { Place, PlaceSchema } from "../schemas/place.js";
+import { Event, EventSchema } from "../schemas/schema-org/event.js";
+import { Place, PlaceSchema } from "../schemas/schema-org/place.js";
 import { toCase } from "@eatonfyi/text";
 
 export interface ConferenceMigratorOptions extends MigratorOptions {

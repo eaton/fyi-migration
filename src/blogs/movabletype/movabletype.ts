@@ -1,14 +1,14 @@
 import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { ZodTypeAny, z } from 'zod';
-import { CommentSchema } from '../../schemas/comment.js';
+import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/creative-work.js';
+} from '../../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];

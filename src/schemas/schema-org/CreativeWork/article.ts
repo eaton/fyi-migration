@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from './creative-work.js';
+import { CreativeWorkSchema } from '../creative-work.js';
 
 export const ArticleSchema = CreativeWorkSchema.extend({
   type: z.string().default('Article'),

@@ -2,7 +2,7 @@ import { nanohash, uuid } from '@eatonfyi/ids';
 import { aql, Database } from 'arangojs';
 import { Config } from 'arangojs/connection.js';
 import { z } from 'zod';
-import { Thing } from '../schemas/thing.js';
+import { Thing } from '../schemas/schema-org/thing.js';
 import { NormalizedUrl } from '@eatonfyi/urls';
 
 export class ArangoDB extends Database {

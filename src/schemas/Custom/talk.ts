@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from './creative-work.js';
-import { urlSchema } from './fragments/index.js';
+import { CreativeWorkSchema } from '../schema-org/creative-work.js';
+import { urlSchema } from '../fragments/index.js';
 
 export const SlideSchema = z.object({
   image: z.string().optional(),

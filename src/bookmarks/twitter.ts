@@ -6,7 +6,7 @@ import {
   TwitterHelpers,
 } from 'twitter-archive-reader';
 import { z } from 'zod';
-import { BookmarkSchema } from '../schemas/bookmark.js';
+import { BookmarkSchema } from '../schemas/Custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 

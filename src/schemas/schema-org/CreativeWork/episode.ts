@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from './creative-work.js';
+import { CreativeWorkSchema } from '../creative-work.js';
 
 export const EpisodeSchema = CreativeWorkSchema.extend({
   type: z.string().default('Episode'),

@@ -1,9 +1,9 @@
 import { urlSchema } from "../schemas/fragments/index.js";
 import { Migrator, MigratorOptions } from "../shared/index.js";
-import { CreativeWorkSchema } from "../schemas/creative-work.js";
+import { CreativeWorkSchema } from "../schemas/CreativeWork/creative-work.js";
 import { fetchGoogleSheet } from "../util/fetch-google-sheet.js";
 import { z } from 'zod';
-import { Thing } from "../schemas/thing.js";
+import { Thing } from "../schemas/schema-org/thing.js";
 
 export interface AppearanceMigratorOptions extends MigratorOptions {
   documentId?: string;

@@ -1,7 +1,7 @@
 import { get } from 'obby';
-import { CreativeWorkSchema } from '../schemas/creative-work.js';
+import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
-import { SocialMediaPostingSchema } from '../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'medium',

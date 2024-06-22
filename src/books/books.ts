@@ -9,7 +9,7 @@ import {
   PartialBookSchema,
   type Book,
   type PartialBook,
-} from '../schemas/book.js';
+} from '../schemas/schema-org/CreativeWork/book.js';
 import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';

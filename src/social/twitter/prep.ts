@@ -1,6 +1,6 @@
 import { TwitterArchive } from 'twitter-archive-reader';
 import { CreativeWorkSchema } from '../../schemas/index.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { Tweet } from './schema.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {

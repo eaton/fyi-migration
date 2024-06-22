@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from './creative-work.js';
+import { CreativeWorkSchema } from '../creative-work.js';
 
 export const CommentAuthorSchema = z.object({
   name: z.string().optional(),

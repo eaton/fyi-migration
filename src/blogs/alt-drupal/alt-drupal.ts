@@ -1,17 +1,13 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { toSlug } from '@eatonfyi/text';
 import { z } from 'zod';
-import { Comment, CommentSchema } from '../../schemas/comment.js';
-import {
-  CreativeWork,
-  CreativeWorkSchema,
-} from '../../schemas/creative-work.js';
-import { Thing } from '../../schemas/thing.js';
+import { Comment, CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
+import { CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
+import { Thing } from '../../schemas/schema-org/thing.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
 import { sortByParents } from '../../util/parent-sort.js';
-import { SocialMediaPostingSchema } from '../../schemas/social-media-post.js';
-import { findLinks } from '../../util/find-links.js';
+import { SocialMediaPosting, SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -35,7 +31,7 @@ export class AltDrupalMigrator extends BlogMigrator {
     super({ ...defaults, ...options });
   }
 
-  entries: CreativeWork[] = [];
+  entries: SocialMediaPosting[] = [];
   comments: Comment[] = [];
   site?: Thing;
 
