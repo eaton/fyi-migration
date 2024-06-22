@@ -4,5 +4,5 @@
 //import { BookMigrator } from './books/books.js';
 //await new BookMigrator({ logger: { level: 'debug' } }).run();
 
-import { TwitterMigrator } from './social/index.js';
-await new TwitterMigrator().run();
+import { AllDatasetsMigrator } from "./datasets/all-datasets.js";
+await new AllDatasetsMigrator({ logger: { level: 'debug' }}).run();

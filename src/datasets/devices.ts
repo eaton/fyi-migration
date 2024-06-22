@@ -2,6 +2,21 @@ import { Migrator, MigratorOptions } from '../shared/migrator.js'
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { Device, DeviceSchema } from '../schemas/index.js';
 
+// This is very much in progress; unit conversions and such will need to be done.
+// in particular the 'connection speed' property will need to be split into modem,
+// wireless, and wired.
+
+// https://tripplite.eaton.com/products/ethernet-cable-types has ethernet connection speeds
+// https://www.wiisfi.com has wifi standard speeds
+// https://www.gbmb.org/mbps-to-kbs has a handy-dandy converter
+
+// 2,000kbps is the standard speed for Cat5 ethernet
+// 125,00kbps is the standard speed for Cat5 ethernet
+// 128,000kbps is the standard speed for Cat6 ethernet
+
+// Raw speed needs to be calculated with some creativity; the wide variation in
+// processor families makes it a real hell of a thing.
+
 export interface DeviceMigratorOptions extends MigratorOptions {
   documentId?: string;
   sheetName?: string;
@@ -9,7 +24,7 @@ export interface DeviceMigratorOptions extends MigratorOptions {
 
 const defaults: DeviceMigratorOptions = {
   name: 'devices',
-  output: 'output/_data',
+  output: 'src/_data',
   description: 'Devices I have owned and used',
   documentId: process.env.GOOGLE_SHEET_DATASETS,
   sheetName: 'devices',
