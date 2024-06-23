@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getMdbInfo, parseMdbTable } from '../helpers/parse-mdb.js';
+import { getMdbInfo, parseMdbTable } from '../util/parse-mdb.js';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
