@@ -17,7 +17,7 @@ export class ArticleReprintMigrator extends Migrator {
     super({ ...defaults, ...options });
   }
 
-  override async readCache() {
+  override async f() {
     const parser = new Frontmatter();
     for (const f of this.input.find({ matching: 'reprints/**/*.md' })) {
       const raw = this.input.read(f, 'utf8');
@@ -33,12 +33,14 @@ export class ArticleReprintMigrator extends Migrator {
         date: markdown.data.date,
         headline,
         section: markdown.data.section,
+        isPartOf: markdown.data.isPartOf,
         description: markdown.data.summary,
         publisher: markdown.data.publisher,
         about: markdown.data.about,
         url: markdown.data.url,
         archivedAt: markdown.data.archivedAt,
         text: markdown.content,
+        keywords: markdown.data.keywords
       });
 
       if (article.success) {
@@ -57,13 +59,9 @@ export class ArticleReprintMigrator extends Migrator {
   }
 
   override async finalize(): Promise<void> {
-    for (const { text, ...frontmatter } of this.articles) {
-      const file = this.makeFilename(frontmatter);
-      this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store == 'arango') {
-        await this.arango.set({ ...frontmatter, text });
-      }
-      this.log.debug(`Wrote ${file}`);
+    for (const article of this.articles) {
+        await this.saveThing(article);
+        await this.saveThing(article, 'markdown');
     }
 
     await this.copyAssets('images', 'reprints');
