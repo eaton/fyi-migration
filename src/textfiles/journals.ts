@@ -5,6 +5,7 @@ import { toSlug } from '@eatonfyi/text';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { parse as parsePath } from 'path';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',
@@ -28,19 +29,22 @@ export class TextJournalsMigrator extends Migrator {
       if (txt.data.textfile === undefined) {
         this.log.error(file);
       }
-      const txtId = toSlug(txt.data.textfile);
+
+      const noExtension = parsePath(txt.data.textfile).name;
+      const txtId = toSlug(noExtension);
+      
       textFiles[txtId] ??= this.prepThings({
-        id: txtId,
+        id: 'doc:' + txtId,
         type: 'DigitalDocument',
         name: txt.data.textfile,
         software: 'BBEdit',
       })[0];
 
       const cw = SocialMediaPostingSchema.parse({
-        id: nanohash(txt.data),
+        id: 'journal:' + nanohash(txt.data),
         type: 'JournalEntry',
         date: txt.data.date,
-        isPartOf: txtId,
+        isPartOf: ['doc:' + txtId],
         text: txt.content,
       });
 
@@ -55,14 +59,7 @@ export class TextJournalsMigrator extends Migrator {
           };
         }
       }
-
-      const { text, ...frontmatter } = cw;
-      this.output.write(file.replace('.txt', '.md'), {
-        content: text,
-        data: frontmatter,
-      });
-      if (this.options.store == 'arango') await this.arango.set(cw);
-      this.log.debug(`Wrote ${file.replace('.txt', '.md')}`);
+      await this.saveThing(cw);
     }
 
     await this.saveThings(Object.values(textFiles));

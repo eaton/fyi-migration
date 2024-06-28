@@ -72,7 +72,7 @@ export class TextFictionMigrator extends Migrator {
   protected prepStory(input: object) {
     const parsed = CreativeWorkSchema.safeParse({
       type: 'ShortStory',
-      id: nanohash(input),
+      id: 'story:' + nanohash(input),
       ...input,
     });
     if (parsed.success) {

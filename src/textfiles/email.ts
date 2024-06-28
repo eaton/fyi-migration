@@ -102,7 +102,7 @@ export class TextEmailMigrator extends Migrator {
 
   protected prepMail(input: ParsedMail) {
     return MessageSchema.parse({
-      id: 'msg-' + nanohash(input.headerLines),
+      id: 'email:' + nanohash(input.headerLines),
       name: input.subject,
       date: input.date?.toJSON(),
       from: this.cleanMails(input.from),
