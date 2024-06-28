@@ -40,18 +40,23 @@ export function parseMdbTable<T extends z.ZodTypeAny>(
 }
 
 export function getMdbInfo(mdbFile: string) {
-  const reader = new MDBReader(jetpack.read(mdbFile, 'buffer') as Buffer);
-  return {
-    dateCreated: reader.getCreationDate() ?? undefined,
-    password: reader.getPassword() ?? undefined,
-    tables: reader.getTableNames(),
-    systemTables: reader.getTableNames({
-      normalTables: false,
-      systemTables: true,
-    }),
-    linkedTables: reader.getTableNames({
-      normalTables: false,
-      linkedTables: true,
-    }),
-  };
+  const b = jetpack.read(mdbFile, 'buffer');
+  if (b) {
+    const reader = new MDBReader(b);
+    return {
+      dateCreated: reader.getCreationDate() ?? undefined,
+      password: reader.getPassword() ?? undefined,
+      tables: reader.getTableNames(),
+      systemTables: reader.getTableNames({
+        normalTables: false,
+        systemTables: true,
+      }),
+      linkedTables: reader.getTableNames({
+        normalTables: false,
+        linkedTables: true,
+      }),
+    };
+  } else {
+    throw new Error(`File not found: ${mdbFile}`);
+  }
 }

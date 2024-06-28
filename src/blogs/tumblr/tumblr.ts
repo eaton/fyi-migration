@@ -144,7 +144,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepSite(input: TumblrBlog) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: input.name,
+      id: 'blog:' + input.name,
       name: input.title || undefined,
       description: input.description || undefined,
       url: input.url,
@@ -155,7 +155,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `tmblr-${input.id}`,
+      id: `post:tmb-${input.id}`,
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,
@@ -164,7 +164,7 @@ export class TumblrMigrator extends BlogMigrator {
       published: !!input.date,
       keywords: input.tags,
       url: input.url,
-      isPartOf: input.blog_name,
+      isPartOf: ['blog:' + input.blog_name],
       tumblrType: input.type,
     };
 
@@ -194,7 +194,7 @@ export class TumblrMigrator extends BlogMigrator {
       name: input.title || input.source_title || undefined,
       description:
         input.body || input.description || input.summary || undefined,
-      isPartOf: input.blog_name,
+      isPartOf: ['blog:' + input.blog_name],
     });
 
     // Lotta wacky stuff happening, friends.

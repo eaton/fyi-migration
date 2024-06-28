@@ -152,7 +152,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   protected prepSite(vars?: Record<string, unknown>) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: this.name,
+      id: 'blog:' + this.name,
       url: 'https://jeff.viapositiva.net',
       name: vars?.['site_name'] || this.label,
       subtitle: vars?.['site_slogan'] || undefined,
@@ -164,13 +164,13 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.Node): CreativeWork {
     return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: `vpd-${input.nid}`,
+      id: `post:vpd-${input.nid}`,
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
-      isPartOf: 'viapositiva',
+      isPartOf: ['blog:viapositiva'],
       text: this.buildNodeBody(input),
-      about: input.amazon?.asin ? input.amazon.asin : undefined,
+      about: input.amazon?.asin ? 'book:' + input.amazon.asin : undefined,
     });
   }
 
@@ -180,13 +180,13 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input) || undefined,
-      isPartOf: 'viapositiva',
+      isPartOf: ['blog:viapositiva'],
     });
   }
 
   protected prepQuote(input: drupal.Node): CreativeWork {
     const text = toMarkdown(autop(input.body ?? ''));
-    const id = nanohash(removeStopwords(text));
+    const id = 'quote:' + nanohash(removeStopwords(text));
     return CreativeWorkSchema.parse({
       type: 'Quotation',
       id,
@@ -195,19 +195,19 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       spokenBy: input.quote?.author ?? undefined,
       isBasedOn: undefined,
       recordedIn: undefined,
-      isPartOf: 'viapositiva',
+      isPartOf: ['blog:viapositiva'],
     });
   }
 
   protected prepComment(input: drupal.Comment): Comment {
     return CommentSchema.parse({
       type: 'Comment',
-      id: `vp-c${input.cid}d`,
-      parent: input.pid ? `vp-c${input.pid}d` : undefined,
+      id: `comment:vp${input.cid}d`,
+      parent: input.pid ? `comment:vp${input.pid}d` : undefined,
       thread: undefined, // set it again later
-      about: `vpd-${input.nid}`,
+      about: `post:vp${input.nid}`,
       date: input.timestamp,
-      isPartOf: 'viapositiva',
+      isPartOf: ['blog:viapositiva'],
       commenter: {
         name: input.name,
         mail: input.mail,

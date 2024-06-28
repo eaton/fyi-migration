@@ -6,7 +6,7 @@ export function prepUrlForBookmark(input?: string | URL) {
   const url = new ParsedUrl(input);
   return {
     type: 'Bookmark',
-    id: nanohash(url.toString()),
+    id: 'link:' + nanohash(url.toString()),
     sharedContent: url.toString(),
   };
 }

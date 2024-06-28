@@ -165,7 +165,7 @@ export class MovableTypeMigrator extends BlogMigrator {
   protected prepSite(input: schemas.Blog) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: input.blog_shortname ?? this.options.name,
+      id: 'blog:' + input.blog_shortname ?? this.options.name,
       url: input.blog_site_url,
       name: input.blog_name,
       subtitle: input.blog_description,
@@ -184,12 +184,12 @@ export class MovableTypeMigrator extends BlogMigrator {
       .join('\n\n');
 
     const entry = SocialMediaPostingSchema.parse({
-      id: `mt-${input.entry_id}`,
+      id: `post:mt${input.entry_id}`,
       type: 'BlogPosting',
       date: input.entry_created_on.toISOString(),
       name: input.entry_title,
       slug: input.entry_basename,
-      isPartOf: blog.blog_shortname ?? this.name,
+      isPartOf: ['blog:' + blog.blog_shortname ?? this.name],
       text: toMarkdown(fromTextile(text)),
       keywords: category ? [category.category_label] : undefined,
     });
@@ -199,9 +199,9 @@ export class MovableTypeMigrator extends BlogMigrator {
 
   protected prepComment(input: schemas.Comment, entry: CreativeWork) {
     return CommentSchema.parse({
-      id: `mt-c${input.comment_entry_id}`,
+      id: `comment:mt${input.comment_entry_id}`,
       date: input.comment_created_on,
-      about: entry.id,
+      about: 'post:' + entry.id,
       commenter: {
         name: input.comment_author || undefined,
         mail: input.comment_email || undefined,

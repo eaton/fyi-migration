@@ -77,7 +77,7 @@ export class AltDrupalMigrator extends BlogMigrator {
       const raw = this.input.dir('tables').read(opt.file, 'auto') as Record<
         string,
         unknown
-      >[];
+      >[] ?? [];
       parsed[key] = raw.map(r => opt.schema.parse(r));
       this.cache.write(
         key + '.json',
@@ -194,7 +194,7 @@ export class AltDrupalMigrator extends BlogMigrator {
 
     await this.saveThing(
       CreativeWorkSchema.parse({
-        id: 'alt',
+        id: 'blog:alt',
         type: 'Blog',
         url: 'https://angrylittletree.com',
         name: this.entityData.variables['site_name']?.toString() ?? undefined,
@@ -209,13 +209,13 @@ export class AltDrupalMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.AltNode) {
     return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: `alt-${input.nid}`,
+      id: `post:alt${input.nid}`,
       date: input.created,
       slug: toSlug(input.title),
       name: input.title,
       description: input.summary ? toMarkdown(input.summary) : undefined,
       text: input.body ? toMarkdown(autop(input.body)) : '',
-      isPartOf: 'alt',
+      isPartOf: ['blog:alt'],
       attachments: input.attachments?.map(a => ({
         filename: a.file?.filename,
         description: a.field_attachments_description,
@@ -225,9 +225,9 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.AltComment): Comment {
     return CommentSchema.parse({
-      id: `alt-c${input.cid}d`,
-      parent: input.pid ? `alt-c${input.pid}d` : undefined,
-      about: `alt-${input.nid}`,
+      id: `comment:alt${input.cid}d`,
+      parent: input.pid ? `comment:alt${input.pid}d` : undefined,
+      about: `post:alt${input.nid}`,
       date: input.created,
       commenter: {
         name: input.name,
@@ -235,7 +235,7 @@ export class AltDrupalMigrator extends BlogMigrator {
         url: input.homepage,
       },
       thread: undefined, // We throw away the thread value and recalculate it later.
-      isPartOf: 'alt',
+      isPartOf: ['blog:alt'],
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

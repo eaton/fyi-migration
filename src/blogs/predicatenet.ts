@@ -45,7 +45,7 @@ export class PredicateNetMigrator extends BlogMigrator {
         date: '2001-01-01',
         name: l.title,
         description: l.description,
-        isPartOf: this.name,
+        isPartOf: ['blog:' + this.name],
       });
       await this.saveThing(link);
     }
@@ -65,9 +65,9 @@ export class PredicateNetMigrator extends BlogMigrator {
 
     for (const quote of quotes ?? []) {
       const cw = CreativeWorkSchema.parse({
-        id: nanohash(quote.content),
+        id: 'quote:' + nanohash(quote.content),
         type: 'Quotation',
-        isPartOf: this.name,
+        isPartOf: ['blog:' + this.name],
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
       });
@@ -77,7 +77,7 @@ export class PredicateNetMigrator extends BlogMigrator {
 
   override async finalize() {
     const site = CreativeWorkSchema.parse({
-      id: 'predicate',
+      id: 'blog:predicate',
       type: 'Blog',
       url: 'http://predicate.net',
       name: 'Predicate.net',

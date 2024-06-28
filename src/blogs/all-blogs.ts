@@ -5,6 +5,7 @@ import { AltJekyllMigrator } from './alt-jekyll/jekyll.js';
 import { FuturismMigrator } from './futurism.js';
 import { GoddyMigrator } from './goddy/goddy.js';
 import { LivejournaMigrator } from './livejournal/livejournal.js';
+import { KingdomComeMigrator } from './kingdomcome.js';
 import { MediumMigrator } from './medium.js';
 import { MovableTypeMigrator } from './movabletype/movabletype.js';
 import { PositivaDrupalMigrator } from './positiva-drupal/positiva-drupal.js';
@@ -15,6 +16,7 @@ export class AllBlogMigrator extends Migrator {
   override async run() {
     await new LivejournaMigrator({ logger: this.log }).run();
     await new PredicateNetMigrator({ logger: this.log }).run();
+    await new KingdomComeMigrator({ logger: this.log }).run();
     await new MovableTypeMigrator({ logger: this.log }).run();
     await new FuturismMigrator({ logger: this.log }).run();
     await new PositivaDrupalMigrator({ logger: this.log }).run();

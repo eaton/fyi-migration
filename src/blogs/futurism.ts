@@ -23,11 +23,11 @@ export class FuturismMigrator extends BlogMigrator {
 
       const { text, ...frontmatter } = CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: 'tp-' + parsed.id,
+        id: 'post:tp-' + parsed.id,
         name: parsed.name.trim(),
         date: parsed.date,
         text: toMarkdown(parsed.text),
-        isPartOf: 'futurism',
+        isPartOf: ['blog:futurism'],
       });
 
       const file = this.makeFilename(frontmatter);
@@ -39,7 +39,7 @@ export class FuturismMigrator extends BlogMigrator {
 
     const site = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: this.name,
+      id: 'blog:' + this.name,
       name: this.label,
       description: this.description,
       url: 'http://future.viapositiva.net',

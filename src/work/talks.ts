@@ -60,6 +60,7 @@ export class TalkMigrator extends Migrator {
         this.options.sheetName,
         schema,
       );
+      this.rawTalks = this.rawTalks.map(t => { t.id = 'talk:' + t.id;  return t })
     }
     if (this.rawTalks.length) {
       this.cache.write('raw-talks.ndjson', this.rawTalks);
@@ -177,7 +178,7 @@ export class TalkMigrator extends Migrator {
 
   protected prepTalkEvent(input: CustomSchemaItem) {
     return TalkEventSchema.parse({
-      event: input.presentedAt,
+      event: 'event:' + input.presentedAt,
       date: input.date,
       withTitle: input.name,
       isFeaturedVersion: input.featured,

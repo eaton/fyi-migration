@@ -169,35 +169,21 @@ export class GoddyMigrator extends BlogMigrator {
     const comments = cache.comments.map(c => this.prepComment(c));
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
-    for (const { text, ...frontmatter } of nodes) {
-      if (frontmatter.type === 'Bookmark') {
-        await this.saveThing(frontmatter);
-        if (this.options.store == 'arango') {
-          await this.arango.set(frontmatter);
-        }
-      } else {
-        const file = this.makeFilename(frontmatter);
-        this.output.write(file, { content: text, data: frontmatter });
-        if (this.options.store == 'arango') {
-          await this.arango.set({ ...frontmatter, text });
-        }
-
-        this.log.debug(`Wrote ${file}`);
-
-        const nodeComments = comments.filter(c => c.about === frontmatter.id);
-        if (nodeComments.length) {
-          sortByParents(nodeComments);
-          await this.saveThings(nodeComments);
-          this.log.debug(
-            `Saved ${nodeComments.length} comments for ${frontmatter.id}`,
-          );
-        }
+    for (const node of nodes) {
+      this.saveThing(node);
+      const nodeComments = comments.filter(c => c.about === node.id);
+      if (nodeComments.length) {
+        sortByParents(nodeComments);
+        await this.saveThings(nodeComments);
+        this.log.debug(
+          `Saved ${nodeComments.length} comments for ${node.id}`,
+        );
       }
     }
 
     const site = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: this.name,
+      id: 'blog:' + this.name,
       url: 'https://growingupgoddy.com',
       name: cache.vars['site_name'] || this.label,
       subtitle: cache.vars['site_slogan'] || undefined,
@@ -227,18 +213,18 @@ export class GoddyMigrator extends BlogMigrator {
     } else {
       return CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: `gdy-${input.nid}`,
+        id: `post:gdy${input.nid}`,
         date: input.created,
         name: input.title,
         slug: toSlug(input.title),
         description: input.summary,
-        isPartOf: this.name,
+        isPartOf: ['blog:' + this.name],
         quote: input.money_quote
           ? toMarkdown(autop(input.money_quote.field_money_quote_value))
           : undefined,
         isAbout:
           (input.product
-            ? input.product.field_product_asin?.trim()
+            ? 'book:' + input.product.field_product_asin?.trim()
             : undefined) ??
           input.link?.field_link_url ??
           undefined,
@@ -250,9 +236,9 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {
     return CommentSchema.parse({
-      id: `gdy-c${input.cid}`,
-      about: `gdy-${input.nid}`,
-      parent: input.pid ? `gdy-c${input.pid}` : undefined,
+      id: `comment:gdy${input.cid}`,
+      about: `post:gdy${input.nid}`,
+      parent: input.pid ? `comment:gdy${input.pid}` : undefined,
       thread: undefined, // Set it later manually
       date: input.created,
       commenter: {
@@ -260,7 +246,7 @@ export class GoddyMigrator extends BlogMigrator {
         mail: input.mail,
         url: input.homepage,
       },
-      isPartOf: this.name,
+      isPartOf: ['blog:' + this.name],
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

@@ -17,7 +17,7 @@ export class ArticleReprintMigrator extends Migrator {
     super({ ...defaults, ...options });
   }
 
-  override async f() {
+  override async fillCache() {
     const parser = new Frontmatter();
     for (const f of this.input.find({ matching: 'reprints/**/*.md' })) {
       const raw = this.input.read(f, 'utf8');

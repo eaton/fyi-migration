@@ -149,7 +149,7 @@ export class LivejournaMigrator extends BlogMigrator {
 
     const lj = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: this.name,
+      id: 'blog:' + this.name,
       name: this.label,
       url: 'http://predicate.livejournal.com',
       hosting: 'Livejournal',
@@ -162,12 +162,12 @@ export class LivejournaMigrator extends BlogMigrator {
 
   protected prepEntry(entry: LivejournalEntry) {
     return SocialMediaPostingSchema.parse({
-      id: `lj-${entry.id}`,
+      id: `post:lj${entry.id}`,
       type: 'BlogPosting',
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
-      isPartOf: this.name,
+      isPartOf: ['blog:' + this.name],
       avatar: entry.avatar,
       mood: entry.mood,
       music: entry.music,
@@ -176,14 +176,14 @@ export class LivejournaMigrator extends BlogMigrator {
 
   protected prepComment(comment: LivejournalComment): Comment {
     return CommentSchema.parse({
-      id: `lj-c${comment.id}`,
-      parent: comment.parent ? `lj-c${comment.parent}` : undefined,
-      about: comment.entry ? `lj-${comment.entry}` : undefined,
+      id: `comment:lj${comment.id}`,
+      parent: comment.parent ? `comment:lj${comment.parent}` : undefined,
+      about: comment.entry ? `post:lj${comment.entry}` : undefined,
       commenter: {
         name: comment.name,
         mail: comment.email,
       },
-      isPartOf: this.name,
+      isPartOf: ['blog:' + this.name],
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
     });
