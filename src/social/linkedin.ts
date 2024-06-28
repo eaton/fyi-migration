@@ -33,10 +33,11 @@ export class LinkedInMigrator extends Migrator {
     }
 
     const linkedIn = CreativeWorkSchema.parse({
-      id: this.name,
+      id: 'blog:' + this.name,
       type: 'Blog',
       name: this.label,
       url: 'https://www.linkedin.com/in/jeffeaton/',
+      isPartOf: ['site:linkedin']
     });
     await this.saveThing(linkedIn);
 
@@ -52,10 +53,10 @@ export class LinkedInMigrator extends Migrator {
     }
 
     return SocialMediaPostingSchema.parse({
-      id: `li-${id}`,
+      id: `post:li${id}`,
       date: input.Date,
       url: input.ShareLink?.href || undefined,
-      isPartOf: this.name,
+      isPartOf: ['blog:' + this.name],
       text:
         input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(
           /\n\n+/g,
