@@ -419,7 +419,7 @@ export class Migrator {
 
     if (typeof input.creator === 'string') {
       from = this.getId(input.creator, 'person');
-      await this.saveThing({ id: toSlug(from), type: 'Person', name: from });
+      await this.saveThing({ id: 'person:' + toSlug(from), type: 'Person', name: from });
       await this.linkThings('person:' + toSlug(from), 'creator', to);
     } else if (Array.isArray(input.creator)) {
       for (const cr of input.creator) {

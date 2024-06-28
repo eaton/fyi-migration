@@ -243,6 +243,7 @@ export class BookMigrator extends Fetcher {
 
     const books = Object.values(this.bookData);
     for (const book of books) {
+      book.id = 'book:' + book.id;
       await this.saveThing(book);
       await this.linkCreators(book);
     }

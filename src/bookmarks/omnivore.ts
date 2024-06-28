@@ -93,7 +93,7 @@ export class OmnivoreMigrator extends Migrator {
         description: l.description || undefined,
         date: l.savedAt,
         keywords: l.labels,
-        isPartOf: 'omnivore',
+        isPartOf: 'webapp:omnivore',
       });
       for (const h of l.highlights ?? []) {
         if (h.type === 'NOTE' && h.annotation?.length) {
@@ -111,7 +111,7 @@ export class OmnivoreMigrator extends Migrator {
 
     const omnivore = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'omnivore',
+      id: 'webapp:omnivore',
       name: 'Omnivore',
       description: 'A newer, slicker, self-hostable reading app.',
       url: 'https://omnivore.app',

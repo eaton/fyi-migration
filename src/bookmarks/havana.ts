@@ -56,7 +56,7 @@ export class HavanaLinkMigrator extends Migrator {
         name: l.title,
         description: l.summary,
         date: l.date ?? tempDate,
-        isPartOf: this.options.name,
+        isPartOf: ['site:' + this.options.name],
       });
       return link;
     });
@@ -65,7 +65,7 @@ export class HavanaLinkMigrator extends Migrator {
 
     const havana = CreativeWorkSchema.parse({
       type: 'WebSite',
-      id: this.options.name,
+      id: 'site:' + this.options.name,
       name: this.options.label,
       url: 'https://havana-mod.com',
     });

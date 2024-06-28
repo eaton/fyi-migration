@@ -104,7 +104,7 @@ export class BrowserBookmarkMigrator extends Migrator {
         ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
-        isPartOf: this.options.browser?.id ?? this.options.name,
+        isPartOf: ['app:' + this.options.browser?.id ?? this.options.name],
       });
       return link;
     });
@@ -115,7 +115,7 @@ export class BrowserBookmarkMigrator extends Migrator {
       this.options.browser ??
       CreativeWorkSchema.parse({
         type: 'SoftwareApplication',
-        id: this.options.name,
+        id: 'app:' + this.options.name,
         name: this.options.label,
         description: this.options.description,
       });

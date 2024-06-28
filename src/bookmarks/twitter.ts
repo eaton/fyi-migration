@@ -105,7 +105,7 @@ export class TwitterBookmarkMigrator extends Migrator {
         date: l.date,
         description: l.description,
         keywords: l.hashtags,
-        isPartOf: `@${l.handle}`,
+        isPartOf: [`blog:@${l.handle}`],
       });
       return link;
     });

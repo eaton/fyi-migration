@@ -72,8 +72,8 @@ export class ConferenceMigrator extends Migrator {
 
   prepEvent(item: ImportType) {
     return EventSchema.parse({
-      id: item.id,
-      isPartOf: item.isPartOf,
+      id: 'event:' + item.id,
+      isPartOf: 'event:' + item.isPartOf,
       name: item.name,
       url: item.url,
       location: item.place.id,
@@ -86,7 +86,7 @@ export class ConferenceMigrator extends Migrator {
   prepSeries(item: ImportType) {
     if (item.isPartOf) {
       return EventSchema.parse({
-        id: item.isPartOf,
+        id: 'event:' + item.isPartOf,
         type: 'EventSeries',
         name: toCase.title(item.isPartOf),
       });
@@ -98,8 +98,8 @@ export class ConferenceMigrator extends Migrator {
   prepPlace(item: ImportType) {
     if (item.place.name) {
       return PlaceSchema.parse({
-        id: item.place.id,
-        isPartOf: item.place.isPartOf,
+        id: 'place:' + item.place.id,
+        isPartOf: item.place.isPartOf ? 'place:' + item.place.isPartOf : undefined,
         name: item.place.name,
       });
     } else {

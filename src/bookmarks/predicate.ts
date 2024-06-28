@@ -57,7 +57,7 @@ export class PredicateLinkMigrator extends Migrator {
         ...prepUrlForBookmark(l.url),
         name: l.title,
         date: l.date ?? tempDate,
-        isPartOf: this.options.name,
+        isPartOf: ['site:predicate'],
       });
       return link;
     });

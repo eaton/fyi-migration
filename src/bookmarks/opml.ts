@@ -62,7 +62,6 @@ export class OpmlMigrator extends Migrator {
         name: l.title,
         date: this.options.date,
         description: l.notes,
-        isPartOf: this.name,
       });
       return link;
     });

@@ -51,7 +51,7 @@ export class InstapaperMigrator extends Migrator {
         name: l.Title,
         date: l.Timestamp,
         description: l.Selection,
-        isPartOf: `instapaper`,
+        isPartOf: ['webapp:instapaper'],
       });
       return link;
     });
@@ -60,7 +60,7 @@ export class InstapaperMigrator extends Migrator {
 
     const insta = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'instapaper',
+      id: 'webapp:instapaper',
       name: 'Instapaper',
       url: 'https://instapaper.com',
     });

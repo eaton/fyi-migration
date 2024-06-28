@@ -222,7 +222,7 @@ export class GoddyMigrator extends BlogMigrator {
         quote: input.money_quote
           ? toMarkdown(autop(input.money_quote.field_money_quote_value))
           : undefined,
-        isAbout:
+        about:
           (input.product
             ? 'book:' + input.product.field_product_asin?.trim()
             : undefined) ??

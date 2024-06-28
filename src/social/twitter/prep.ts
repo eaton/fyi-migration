@@ -7,20 +7,20 @@ export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: `@${info.user.screen_name.toLocaleLowerCase()}`,
+      id: `blog:@${info.user.screen_name.toLocaleLowerCase()}`,
       id_str: info.user.id,
       subtitle: info.user.name,
       date: info.user.created_at,
       image: info.user.profile_img_url,
       description: info.user.bio,
       url: handleUrl(info.user.screen_name),
-      hosting: 'Twitter',
+      isPartOf: ['site:twitter'],
     });
   } else {
     return CreativeWorkSchema.parse({
       ...info,
       url: handleUrl(info.handle),
-      hosting: 'Twitter',
+      isPartOf: ['site:twitter'],
     });
   }
 }
@@ -28,7 +28,7 @@ export function user(info: Record<string, string> | TwitterArchive) {
 export function tweet(tweet: Tweet) {
   return SocialMediaPostingSchema.parse({
     type: 'SocialMediaPosting',
-    id: tweet.id,
+    id: 'post:t' + tweet.id,
     about: tweet.aboutId
       ? tweetUrl(tweet.aboutId, tweet.aboutHandle)
       : undefined,
@@ -36,7 +36,7 @@ export function tweet(tweet: Tweet) {
     text: tweetToMarkdown(tweet),
     handle: tweet.handle,
     url: tweetUrl(tweet.id, tweet.handle),
-    isPartOf: `@${tweet.handle.toLocaleLowerCase()}`,
+    isPartOf: [`blog:@${tweet.handle.toLocaleLowerCase()}`],
     favorites: tweet.favorites,
     retweets: tweet.retweets,
     software: tweet.source,
@@ -52,9 +52,9 @@ export function thread(tweets: Tweet[]) {
 
   const cw = SocialMediaPostingSchema.parse({
     type: 'SocialMediaThread',
-    id: first.id,
+    id: 'thread:t' + first.id,
     handle: first.handle,
-    isPartOf: `@${first.handle.toLocaleLowerCase()}`,
+    isPartOf: [`blog:@${first.handle.toLocaleLowerCase()}`],
     about: first.aboutId
       ? tweetUrl(first.aboutId, first.aboutHandle)
       : undefined,

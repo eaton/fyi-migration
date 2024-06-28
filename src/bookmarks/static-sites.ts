@@ -87,7 +87,7 @@ export class StaticLinkMigrator extends Migrator {
         name: l.title || undefined,
         date: l.date,
         description: l.description || undefined,
-        isPartOf: l.source ?? this.options.name,
+        isPartOf: ['site:' + (l.source ?? this.options.name)],
       });
       return link;
     });

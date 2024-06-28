@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { OrganizationSchema } from '../schemas/index.js';
 
 export interface AutogramLinkMigrationOptions extends MigratorOptions {}
 
@@ -50,20 +50,28 @@ export class AutogramLinkMigrator extends Migrator {
         name: l.data.title,
         date: l.data.date,
         description: l.content,
-        isPartOf: 'autogram',
+        isPartOf: ['site:autogram'],
       });
       return link;
     });
 
     await this.mergeThings(cws);
 
-    const autog = CreativeWorkSchema.parse({
+    const autog = OrganizationSchema.parse({
       type: 'Organization',
-      id: 'autogram',
+      id: 'org:autogram',
       name: 'Autogram',
       url: 'https://autogram.is',
     });
-    await this.saveThing(autog);
+
+    const autob = OrganizationSchema.parse({
+      type: 'WebSite',
+      id: 'site:autogram',
+      name: 'Autogram',
+      url: 'https://autogram.is',
+    });
+
+    await this.saveThings([autog, autob]);
     return;
   }
 }

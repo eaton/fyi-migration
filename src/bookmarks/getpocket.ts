@@ -53,7 +53,7 @@ export class PocketMigrator extends Migrator {
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         keywords: l.tags,
-        isPartOf: `getpocket`,
+        isPartOf: `webapp:getpocket`,
       });
       return link;
     });
@@ -62,7 +62,7 @@ export class PocketMigrator extends Migrator {
 
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'getpocket',
+      id: 'webapp:getpocket',
       name: 'Pocket',
       description: 'One of the nicer read-it-later tools.',
       url: 'https://getpocket.com',

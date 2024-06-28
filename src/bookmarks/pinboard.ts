@@ -97,10 +97,10 @@ export class PinboardMigrator extends Migrator {
     }
 
     const cws = this.links.map(l => {
-      let isPartOf = 'pinboard';
+      let isPartOf = ['webapp:pinboard'];
       if (this.options.deliciousDate) {
         isPartOf =
-          this.options.deliciousDate > l.time ? 'delicious' : 'pinboard';
+          this.options.deliciousDate > l.time ? ['webapp:delicious'] : ['webapp:pinboard'];
       }
 
       const link = BookmarkSchema.parse({
@@ -118,7 +118,7 @@ export class PinboardMigrator extends Migrator {
 
     const pinboard = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'pinboard',
+      id: 'webapp:pinboard',
       name: 'Pinboard',
       description: 'When de.licio.us died, Pinboard took up the slack.',
       url: 'https://pinboard.in',
@@ -128,7 +128,7 @@ export class PinboardMigrator extends Migrator {
     if (this.options.deliciousDate) {
       const delicious = CreativeWorkSchema.parse({
         type: 'WebApplication',
-        id: 'delicious',
+        id: 'webapp:delicious',
         name: 'Delicious',
         description:
           'Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.',

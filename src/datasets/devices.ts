@@ -59,7 +59,7 @@ export class DeviceMigrator extends Migrator {
     const data = this.cache.read('devices.ndjson', 'auto');
 
     if (data && Array.isArray(data)) {
-      this.devices = data.map(e => DeviceSchema.parse(e));
+      this.devices = data.map(e => DeviceSchema.parse(e)).map(e => { e.id = 'device:' + e.id; return e; })
     }
     return;
   }
