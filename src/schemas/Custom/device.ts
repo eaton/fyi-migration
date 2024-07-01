@@ -1,5 +1,5 @@
 import { ThingSchema } from "../schema-org/thing.js";
-import { DimensionsSchema } from "../fragments/dimensions.js";
+import { SizeSchema } from "../fragments/size.js";
 import { z } from "zod";
 
 export const DeviceSchema = ThingSchema.extend({
@@ -15,8 +15,8 @@ export const DeviceSchema = ThingSchema.extend({
   mips: z.string().optional(),
   ram: z.string().optional(),
   storage: z.string().optional(),
-  screen: DimensionsSchema.optional(),
-  camera: DimensionsSchema.optional(),
+  screen: SizeSchema.optional(),
+  camera: SizeSchema.optional(),
   multi: z.coerce.number().optional(),
   msrp: z.string().optional(),
   notes: z.string().optional(),

@@ -24,7 +24,7 @@ export async function parseRawArchive(archivePath: string) {
   }
 
   const user = {
-    id: 'twt-@' + account.username,
+    id: '@' + account.username,
     id_str: account.accountId,
     name: account.username,
     displayName: account.accountDisplayName,

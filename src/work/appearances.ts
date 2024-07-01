@@ -67,13 +67,13 @@ export class AppearanceMigrator extends Migrator {
 
   prepAppearance(item: ImportType) {
     const cw = CreativeWorkSchema.parse({
-      id: item.id,
+      id: item.type + ':' + item.id,
       type: item.type,
       name: item.name,
       date: item.date,
       description: item.description,
       url: item.url,
-      isPartOf: item.venue?.id,
+      isPartOf: [item.venue?.id + ':' + item.venue?.type],
     });
     if (item.role) {
       cw.creator = {};

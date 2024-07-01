@@ -1,6 +1,6 @@
 import { type ExtractTemplateObject } from '@eatonfyi/html';
 import { z } from 'zod';
-import { DimensionsSchema } from '../../schemas/index.js';
+import { SizeSchema } from '../../schemas/index.js';
 
 const optionalString = z
   .string()
@@ -99,7 +99,7 @@ export const schema = z.object({
   format: optionalString,
   date: optionalString,
   creator: z.record(z.array(z.string())).optional(),
-  dimensions: DimensionsSchema.optional(),
+  dimensions: SizeSchema.optional(),
   category: optionalString,
   breadcrumbs: z.array(z.object({ name: z.string() })).optional(),
 

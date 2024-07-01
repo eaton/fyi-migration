@@ -67,9 +67,9 @@ export class PodcastMigrator extends Migrator {
 
   prepEpisode(item: ImportType) {
     return EpisodeSchema.parse({
-      id: [item.isPartOf, item.position.toString().padStart(3, '0')].join('-'),
+      id: 'episode:' + [item.isPartOf, item.position.toString().padStart(3, '0')].join('-'),
       type: 'PodcastEpisode',
-      isPartOf: item.isPartOf,
+      isPartOf: ['podcast:' + item.isPartOf],
       name: item.name,
       description: item.description,
       url: item.url,
@@ -79,7 +79,7 @@ export class PodcastMigrator extends Migrator {
   prepSeries(item: ImportType) {
     if (item.podcast) {
       return CreativeWorkSchema.parse({
-        id: item.isPartOf,
+        id: 'podcast:' + item.isPartOf,
         type: 'PodcastSeries',
         name: item.podcast.name,
         url: item.podcast.url,

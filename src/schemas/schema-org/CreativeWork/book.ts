@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DimensionsSchema } from '../../fragments/dimensions.js';
+import { SizeSchema } from '../../fragments/size.js';
 import { CreativeWorkSchema } from '../creative-work.js';
 
 export const BookSchema = CreativeWorkSchema.extend({
@@ -17,7 +17,7 @@ export const BookSchema = CreativeWorkSchema.extend({
   owned: z.string().optional(),
   source: z.string().optional(),
   category: z.string().optional(),
-  dimensions: DimensionsSchema.optional(),
+  dimensions: SizeSchema.optional(),
 });
 export type Book = z.infer<typeof BookSchema>;
 
