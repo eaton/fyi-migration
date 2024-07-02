@@ -1,10 +1,12 @@
 import { uuid } from '@eatonfyi/ids';
 import { Database, aql } from 'arangojs';
 import { Config } from 'arangojs/connection.js';
+import 'dotenv/config';
 import { z } from 'zod';
 import { Thing } from '../schemas/schema-org/thing.js';
-import { schemer } from './index.js';
-import { idSeparator } from '../schemas/index.js';
+import { getCollection, getId, getType, listCollections } from './schemer.js';
+
+export const idSeparator = '.';
 
 export class ArangoDB extends Database {
   constructor(config?: Config) {
@@ -25,7 +27,7 @@ export class ArangoDB extends Database {
   }
 
   async has(id: string) {
-    const collection = schemer.getCollection(id);
+    const collection = getCollection(id);
     return await this.collection(collection).documentExists(id);
   }
 
@@ -44,7 +46,7 @@ export class ArangoDB extends Database {
    * Push data to ArangoDB, and attempt to intuit the id/key/collection if possible.
    */
   async set(item: Thing): Promise<boolean> {
-    const _id = this.getId(item)
+    const _id = this.getId(item);
     const [_collection, _key] = _id.split('/');
 
     return await this.collection(_collection)
@@ -77,19 +79,26 @@ export class ArangoDB extends Database {
     const _key = uuid({ key, property, mime });
 
     return await this.collection('text')
-      .save({ _key, document, property, mime, text }, { overwriteMode: 'update' })
+      .save(
+        { _key, document, property, mime, text },
+        { overwriteMode: 'update' },
+      )
       .then(() => true);
   }
 
   /**
    * Push data to ArangoDB, and attempt to intuit the id/key/collection if possible.
    */
-  async getText(item: string | Thing, property: 'text', mime = 'text/markdown') {
+  async getText(
+    item: string | Thing,
+    property: 'text',
+    mime = 'text/markdown',
+  ) {
     const document = this.getKey(item);
     const _key = uuid({ document, property, mime });
     return await this.collection('text')
       .document(_key)
-      .then(d => typeof d.text === 'string' ? d.text : d.text.toString());
+      .then(d => (typeof d.text === 'string' ? d.text : d.text.toString()));
   }
 
   /**
@@ -182,13 +191,9 @@ export class ArangoDB extends Database {
   }
 
   async initialize() {
-    await Promise.all(
-      schemer.listcollections().map(
-        d => this.ensureCollection(d)
-      )
-    );
+    await Promise.all(listCollections().map(d => this.ensureCollection(d)));
 
-    // General use collections that aren't explicit entities 
+    // General use collections that aren't explicit entities
     await this.ensureCollection('text');
     await this.ensureCollection('urls');
 
@@ -202,12 +207,10 @@ export class ArangoDB extends Database {
     }
 
     await Promise.all(
-      schemer.listcollections().map(
-        d => this.collection(d).truncate()
-      )
+      listCollections().map(d => this.collection(d).truncate()),
     );
 
-    // General use collections that aren't explicit entities 
+    // General use collections that aren't explicit entities
     await this.collection('text').truncate();
     await this.collection('urls').truncate();
 
@@ -216,19 +219,19 @@ export class ArangoDB extends Database {
   }
 
   getId(item: string | Thing) {
-    const collection = schemer.getCollection(item);
-    const type = schemer.getType(item);
-    const key = schemer.getId(item);
+    const collection = getCollection(item);
+    const type = getType(item);
+    const key = getId(item);
     return `${collection}/${type}${idSeparator}${key}`;
   }
 
   getKey(item: string | Thing) {
-    const type = schemer.getType(item);
-    const key = schemer.getId(item);
+    const type = getType(item);
+    const key = getId(item);
     return `${type}${idSeparator}${key}`;
   }
 
   getCollection(item: string | Thing) {
-    return schemer.getCollection(item);
+    return getCollection(item);
   }
 }

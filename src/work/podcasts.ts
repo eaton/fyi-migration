@@ -1,10 +1,13 @@
 import { z } from 'zod';
+import { urlSchema } from '../schemas/fragments/index.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../schemas/schema-org/creative-work.js';
-import { Episode, EpisodeSchema } from '../schemas/schema-org/CreativeWork/episode.js';
-import { urlSchema } from '../schemas/fragments/index.js';
+import {
+  Episode,
+  EpisodeSchema,
+} from '../schemas/schema-org/CreativeWork/episode.js';
 import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
@@ -67,7 +70,10 @@ export class PodcastMigrator extends Migrator {
 
   prepEpisode(item: ImportType) {
     return EpisodeSchema.parse({
-      id: toId('episode', [item.isPartOf, item.position.toString().padStart(3, '0')].join('-')),
+      id: toId(
+        'episode',
+        [item.isPartOf, item.position.toString().padStart(3, '0')].join('-'),
+      ),
       type: 'PodcastEpisode',
       isPartOf: toId('podcast', item.isPartOf),
       name: item.name,

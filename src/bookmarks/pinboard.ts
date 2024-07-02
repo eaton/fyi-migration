@@ -2,7 +2,7 @@ import { Pinboard, type PinboardLink } from '../apis/pinboard.js';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schema-meta.js';
+import { toId } from '../shared/schemer.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface PinboardMigratorOptions extends MigratorOptions {
@@ -101,7 +101,9 @@ export class PinboardMigrator extends Migrator {
       let isPartOf = toId('webapp', 'pinboard');
       if (this.options.deliciousDate) {
         isPartOf =
-          this.options.deliciousDate > l.time ? toId('webapp', 'delicious') : toId('webapp', 'pinboard');
+          this.options.deliciousDate > l.time
+            ? toId('webapp', 'delicious')
+            : toId('webapp', 'pinboard');
       }
 
       const link = BookmarkSchema.parse({

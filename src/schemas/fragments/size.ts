@@ -1,18 +1,17 @@
 import { z } from 'zod';
 
-
 /**
  * We're going to abuse this horribly to represent physical size, size of digital documents,
  * and screen/image resolutions.
- * 
+ *
  * When physical items are being discussed:
  * Width x Height x Depth [sizeUom], Weight [weightUom]
- * 
+ *
  * For screen and imaging devices:
  * Width x Height x Depth [sizeUom == color depth], Weight [weightUom] = Pixels Per Uom
- * 
+ *
  * For digital files:
- * 
+ *
  * Width x Height [sizeUom], Weight [weightUom] = Binary File Size
  */
 export const SizeSchema = z

@@ -6,7 +6,7 @@ const defaults: MigratorOptions = {
   name: 'datasets',
   input: 'input/datasets',
   output: 'src/_data',
-}
+};
 
 export class AllDatasetsMigrator extends Migrator {
   constructor(options: MigratorOptions = {}) {
@@ -17,11 +17,16 @@ export class AllDatasetsMigrator extends Migrator {
     await new ConferenceMigrator({ logger: this.log }).run();
     await new DeviceMigrator({ logger: this.log }).run();
 
-    const raw = ['email-month.tsv', 'email-week.tsv', 'iphone-photos.csv', 'travel.tsv', 'twitter-engagement.tsv'];
+    const raw = [
+      'email-month.tsv',
+      'email-week.tsv',
+      'iphone-photos.csv',
+      'travel.tsv',
+      'twitter-engagement.tsv',
+    ];
     for (const file of raw) {
-      this.input.copy(file, this.output.path(file))
+      this.input.copy(file, this.output.path(file));
     }
     return;
   }
 }
-

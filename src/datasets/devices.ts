@@ -1,6 +1,6 @@
-import { Migrator, MigratorOptions } from '../shared/migrator.js'
-import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { Device, DeviceSchema } from '../schemas/index.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 // This is very much in progress; unit conversions and such will need to be done.
 // in particular the 'connection speed' property will need to be split into modem,
@@ -30,7 +30,6 @@ const defaults: DeviceMigratorOptions = {
   sheetName: 'devices',
 };
 
-
 export class DeviceMigrator extends Migrator {
   declare options: DeviceMigratorOptions;
   devices: Device[] = [];
@@ -59,14 +58,19 @@ export class DeviceMigrator extends Migrator {
     const data = this.cache.read('devices.ndjson', 'auto');
 
     if (data && Array.isArray(data)) {
-      this.devices = data.map(e => DeviceSchema.parse(e)).map(e => { e.id = 'device:' + e.id; return e; })
+      this.devices = data
+        .map(e => DeviceSchema.parse(e))
+        .map(e => {
+          e.id = 'device:' + e.id;
+          return e;
+        });
     }
     return;
   }
 
   override async finalize() {
     await this.saveThings(this.devices);
-    this.output.write('devices.ndjson', this.devices)
+    this.output.write('devices.ndjson', this.devices);
     return;
   }
 }

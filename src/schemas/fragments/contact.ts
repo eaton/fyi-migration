@@ -9,6 +9,6 @@ export const ContactSchema = z
     fax: z.string().optional(),
     url: z.string().url().optional(),
   })
-  .describe("Contact information for a Person or Organization.");
+  .describe('Contact information for a Person or Organization.');
 
 export type Contact = z.infer<typeof ContactSchema>;

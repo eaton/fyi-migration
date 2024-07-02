@@ -1,10 +1,7 @@
 import { Article } from '../schemas/schema-org/CreativeWork/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
-export interface KidstuffMigratorOptions extends MigratorOptions {
-
-}
-
+export interface KidstuffMigratorOptions extends MigratorOptions {}
 
 const defaults: KidstuffMigratorOptions = {
   name: 'kidstuff',

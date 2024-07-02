@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { prepUrlForBookmark } from '../util/clean-link.js';
 import { OrganizationSchema } from '../schemas/index.js';
-import { toId } from '../shared/schema-meta.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schemer.js';
+import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface AutogramLinkMigrationOptions extends MigratorOptions {}
 

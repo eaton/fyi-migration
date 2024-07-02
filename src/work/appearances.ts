@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { urlSchema } from '../schemas/fragments/index.js';
+import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Thing } from '../schemas/schema-org/thing.js';
-import { Migrator, MigratorOptions } from '../shared/index.js';
+import { getMeta, Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
-import { toId, schemer } from '../shared/index.js';
 
 export interface AppearanceMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -61,15 +60,18 @@ export class AppearanceMigrator extends Migrator {
   }
 
   prepVenue(item: ImportType) {
-    if (item.venue?.name) {
-      return CreativeWorkSchema.parse(item.venue);
+    if (item.venue?.id && item.venue?.type) {
+      return CreativeWorkSchema.parse({
+        ...item.venue,
+        id: toId(item.venue?.type, item.venue?.id)
+      });
     }
   }
 
   prepAppearance(item: ImportType) {
     const cw = CreativeWorkSchema.parse({
       id: toId(item.type, item.id),
-      type: item.type ? schemer.getSchema(item.type) : undefined,
+      type: item.type ? getMeta(item.type).name : undefined,
       name: item.name,
       date: item.date,
       description: item.description,

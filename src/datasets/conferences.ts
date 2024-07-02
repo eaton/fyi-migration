@@ -82,7 +82,9 @@ export class ConferenceMigrator extends Migrator {
     if (item.place.name) {
       return PlaceSchema.parse({
         id: toId('place', item.place.id),
-        isPartOf: item.place.isPartOf ? toId('place', + item.place.isPartOf) : undefined,
+        isPartOf: item.place.isPartOf
+          ? toId('place', +item.place.isPartOf)
+          : undefined,
         name: item.place.name,
       });
     } else {

@@ -9,6 +9,7 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { toId } from '../../shared/schemer.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
@@ -18,7 +19,6 @@ import {
   type LivejournalEntry,
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
-import { toId } from '../../shared/schema-meta.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -178,7 +178,9 @@ export class LivejournaMigrator extends BlogMigrator {
   protected prepComment(comment: LivejournalComment): Comment {
     return CommentSchema.parse({
       id: toId('comment', `lj${comment.id}`),
-      parent: comment.parent ? toId('comment', `lj${comment.parent}`) : undefined,
+      parent: comment.parent
+        ? toId('comment', `lj${comment.parent}`)
+        : undefined,
       about: comment.entry ? toId('post', `lj${comment.entry}`) : undefined,
       commenter: {
         name: comment.name,

@@ -12,7 +12,7 @@ import {
   TalkInstance,
   TalkSchema,
 } from '../schemas/custom/talk.js';
-import { Migrator, MigratorOptions, toId } from '../shared/index.js';
+import { getId, Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface TalkMigratorOptions extends MigratorOptions {
@@ -60,7 +60,10 @@ export class TalkMigrator extends Migrator {
         this.options.sheetName,
         schema,
       );
-      this.rawTalks = this.rawTalks.map(t => { t.id = 'talk:' + t.id;  return t })
+      this.rawTalks = this.rawTalks.map(t => {
+        t.id = toId('talk', t.id);
+        return t;
+      });
     }
     if (this.rawTalks.length) {
       this.cache.write('raw-talks.ndjson', this.rawTalks);
@@ -79,7 +82,7 @@ export class TalkMigrator extends Migrator {
     }
 
     for (const talk of this.talks) {
-      talk.performances = performances[talk.id] ?? [];
+      talk.performances = performances[getId(talk.id)] ?? [];
     }
     this.cache.write('talks.ndjson', this.rawTalks);
 
@@ -150,7 +153,7 @@ export class TalkMigrator extends Migrator {
               talk.text = this.keynoteToMarkdown(talk, deck.slides);
             }
             this.cache
-              .dir(talk.id.replace('talk.', ''))
+              .dir(talk.id)
               .dir(perf.event)
               .copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
           }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { oneOrMany, urlSchema, idSchema } from '../fragments/index.js';
+import { idSchema, oneOrMany, urlSchema } from '../fragments/index.js';
 
 export const ThingSchema = z
   .object({

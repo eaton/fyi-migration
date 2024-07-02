@@ -10,11 +10,11 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { toId } from '../../shared/schemer.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -135,8 +135,12 @@ export class AltJekyllMigrator extends BlogMigrator {
   protected prepComment(comment: Disqus.Post): Comment {
     return CommentSchema.parse({
       id: toId('comment', `alt-c${comment.dsqId}`),
-      parent: comment.parent ? toId('comment', `alt-c${comment.parent}`) : undefined,
-      about: comment.linkId ?  toId('post', `alt-${nanohash(comment.linkId)}`) : undefined,
+      parent: comment.parent
+        ? toId('comment', `alt-c${comment.parent}`)
+        : undefined,
+      about: comment.linkId
+        ? toId('post', `alt-${nanohash(comment.linkId)}`)
+        : undefined,
       date: comment.createdAt,
       isPartOf: toId('blog', 'alt'),
       commenter: { name: comment.author.name },

@@ -8,11 +8,11 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { toId } from '../../shared/schemer.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -176,9 +176,7 @@ export class GoddyMigrator extends BlogMigrator {
       if (nodeComments.length) {
         sortByParents(nodeComments);
         await this.saveThings(nodeComments);
-        this.log.debug(
-          `Saved ${nodeComments.length} comments for ${node.id}`,
-        );
+        this.log.debug(`Saved ${nodeComments.length} comments for ${node.id}`);
       }
     }
 

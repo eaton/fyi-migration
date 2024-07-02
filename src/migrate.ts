@@ -12,12 +12,7 @@ import { ArticleReprintMigrator } from './work/article-reprints.js';
 export class MigrateEverything extends Migrator {
   override async run() {
     await this.arango.initialize();
-
-    await this.arango.collection('thing').truncate();
-    await this.arango.collection('link').truncate();
-    await this.arango.collection('text').truncate();
-    await this.arango.collection('url').truncate();
-    await this.arango.collection('media').truncate();
+    await this.arango.reset(() => Promise.resolve(true));
 
     await new AllTextFilesMigrator({ logger: this.log }).run();
     await new AllBlogMigrator({ logger: this.log }).run();

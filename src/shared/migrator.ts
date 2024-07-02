@@ -18,17 +18,12 @@ import { Thing, ThingSchema } from '../schemas/schema-org/thing.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
+import { getId, toId } from './schemer.js';
 import { Store, StoreableData } from './store.js';
-import { schemer, toId } from './index.js';
-
-// Auto-serialize and deserilalize data for filenames with these suffixes
-jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
-jetpack.setSerializer('.ndjson', new NdJson(jsonDateParser));
-jetpack.setSerializer('.json5', new Json5(jsonDateParser, 2));
-jetpack.setSerializer('.csv', new Csv());
-jetpack.setSerializer('.tsv', new Tsv());
-jetpack.setSerializer('.yaml', new Yaml());
-jetpack.setSerializer('.md', new Frontmatter());
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import PQueue from 'p-queue';
+import wretch, { Wretch } from 'wretch';
+import { getRotator } from '../util/get-rotator.js';
 
 /**
  * Standard options for all Migrator classes
@@ -95,6 +90,13 @@ export interface MigratorOptions {
   progress?: 'silent' | 'progress' | 'status' | 'details';
 
   store?: string | 'arango' | 'pgsql' | 'sqlite' | 'file';
+
+
+  fetch?: Wretch;
+  proxies?: string[];
+  concurrency?: number;
+  userAgent?: string;
+
 }
 
 const loggerDefaults: LoggerOptions = {
@@ -117,6 +119,10 @@ const defaults: MigratorOptions = {
   logger: loggerDefaults,
   progress: 'status',
   store: process.env.STORAGE_DEFAULT ?? 'file',
+  proxies: (process.env.PROXIES?.split(' ') ?? []).filter(s => s?.length),
+  concurrency: 1,
+  userAgent:
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0',
 };
 
 /**
@@ -134,10 +140,22 @@ export class Migrator {
   protected _data?: Store<StoreableData>;
   protected _arango?: ArangoDB;
 
+  fetcher: Wretch;
+  fetchQueue: PQueue = new PQueue({ autoStart: false });
+
   log: Logger;
 
   constructor(options: MigratorOptions = {}) {
     this.options = merge(defaults, options);
+
+    // Auto-serialize and deserilalize data for filenames with these suffixes
+    jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
+    jetpack.setSerializer('.ndjson', new NdJson(jsonDateParser));
+    jetpack.setSerializer('.json5', new Json5(jsonDateParser, 2));
+    jetpack.setSerializer('.csv', new Csv());
+    jetpack.setSerializer('.tsv', new Tsv());
+    jetpack.setSerializer('.yaml', new Yaml());
+    jetpack.setSerializer('.md', new Frontmatter());
 
     if (isLogger(this.options.logger)) {
       // Parent logger
@@ -153,6 +171,21 @@ export class Migrator {
       // No options passed in
       this.log = pino({ ...loggerDefaults, name: this.name });
     }
+
+        this.fetcher =
+      this.options.fetch ??
+      wretch().headers({
+        'User-Agent': this.options.userAgent ?? 'Eaton',
+      });
+
+    if (this.options.proxies?.length) {
+      const getProxy = getRotator(
+        this.options.proxies?.map(ip => new HttpsProxyAgent(`https://${ip}`)),
+      );
+      this.fetcher = this.fetcher.options({ agent: getProxy() });
+    }
+
+    this.fetchQueue.concurrency = this.options.concurrency ?? 1;
   }
 
   get name() {
@@ -399,7 +432,7 @@ export class Migrator {
       await this.arango.link(from, to, rel).catch((err: Error) => {
         throw new Error(err.message, { cause: { from, rel, to } });
       });
-      this.log.debug(`Linked ${schemer.getId(from)} to ${schemer.getId(to)}`);
+      this.log.debug(`Linked ${getId(from)} to ${getId(to)}`);
     } else {
       this.log.error(
         `Linking not supported with current storage mechanism (${storage})`,
@@ -415,32 +448,39 @@ export class Migrator {
    */
   async linkCreators(input: CreativeWork) {
     if (input.creator === undefined) return;
-    let from = '';
-    const to = schemer.getId(input);
+    let personId = '';
+    const workId = getId(input);
+    if (!workId) return;
 
     if (typeof input.creator === 'string') {
-      await this.saveThing({ id: toId('person', toSlug(from)), type: 'Person', name: from });
-      from = toId('person', toSlug(from));
-      await this.linkThings(from, to, 'creator');
+      personId = toId('person', toSlug(input.creator));
+      await this.saveThing({
+        id: personId,
+        type: 'Person',
+        name: input.creator,
+      });
+      await this.linkThings(workId, personId, 'creator');
     } else if (Array.isArray(input.creator)) {
       for (const cr of input.creator) {
+        personId = toId('person', toSlug(cr));
         await this.saveThing({
-          id: toId('person', toSlug(cr)),
+          id: personId,
           type: 'Person',
-          name: cr
+          name: cr,
         });
-        await this.linkThings(toId('person', toSlug(cr)), to, 'creator');
+        await this.linkThings(workId, personId, 'creator');
       }
     } else {
       for (const [r, cr] of Object.entries(input.creator)) {
         const crs = Array.isArray(cr) ? cr : [cr];
         for (const creator of crs) {
+          personId = toId('person', toSlug(creator));
           await this.saveThing({
-            id: toId('person', toSlug(creator)),
+            id: personId,
             type: 'Person',
             name: creator,
           });
-          await this.linkThings(toId('person', toSlug(creator)), to, r);
+          await this.linkThings(workId, personId, r);
         }
       }
     }

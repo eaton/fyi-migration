@@ -8,8 +8,8 @@ import {
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schemer.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { toId } from '../shared/schema-meta.js';
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {
   ignoreLinksToTweets?: boolean;

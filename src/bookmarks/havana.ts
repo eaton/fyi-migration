@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { getMdbInfo, parseMdbTable } from '../util/parse-mdb.js';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schemer.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { toId } from '../shared/schema-meta.js';
+import { getMdbInfo, parseMdbTable } from '../util/parse-mdb.js';
 
 export interface HavanaLinkMigratorOptions extends MigratorOptions {
   fakeStart?: Date;

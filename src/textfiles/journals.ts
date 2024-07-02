@@ -2,11 +2,11 @@ import { max, min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
+import { parse as parsePath } from 'path';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { parse as parsePath } from 'path';
-import { toId } from '../shared/schema-meta.js';
+import { toId } from '../shared/schemer.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',
@@ -33,7 +33,7 @@ export class TextJournalsMigrator extends Migrator {
 
       const noExtension = parsePath(txt.data.textfile).name;
       const txtId = toSlug(noExtension);
-      
+
       textFiles[txtId] ??= this.prepThings({
         id: toId('work', txtId),
         type: 'CreativeWork',

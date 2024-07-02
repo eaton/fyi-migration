@@ -10,12 +10,12 @@ import {
   type Book,
   type PartialBook,
 } from '../schemas/schema-org/CreativeWork/book.js';
-import { Fetcher, FetcherOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
+import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 
-export interface BookMigratorOptions extends FetcherOptions {
+export interface BookMigratorOptions extends MigratorOptions {
   documentId?: string;
   sheetName?: string;
   reFetch?: boolean;
@@ -30,7 +30,7 @@ const defaults: BookMigratorOptions = {
   sheetName: 'books',
 };
 
-export class BookMigrator extends Fetcher {
+export class BookMigrator extends Migrator {
   declare options: BookMigratorOptions;
   bookData: Record<string, Book> = {};
 
@@ -243,7 +243,7 @@ export class BookMigrator extends Fetcher {
 
     const books = Object.values(this.bookData);
     for (const book of books) {
-      book.id = 'book:' + book.id;
+      book.id = toId('book', book.id);
       await this.saveThing(book);
       await this.linkCreators(book);
     }

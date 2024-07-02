@@ -6,6 +6,7 @@ import {
   CreativeWorkInput,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { toId } from '../../shared/schemer.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {
@@ -15,7 +16,6 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;

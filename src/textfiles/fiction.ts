@@ -7,7 +7,7 @@ import {
   CreativeWorkSchema,
 } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schema-meta.js';
+import { toId } from '../shared/schemer.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-fiction',

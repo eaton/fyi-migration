@@ -1,6 +1,6 @@
-import { ThingSchema } from "../schema-org/thing.js";
-import { SizeSchema } from "../fragments/size.js";
-import { z } from "zod";
+import { z } from 'zod';
+import { SizeSchema } from '../fragments/size.js';
+import { ThingSchema } from '../schema-org/thing.js';
 
 export const DeviceSchema = ThingSchema.extend({
   type: z.string().default('HardwareDevice'),
@@ -20,18 +20,6 @@ export const DeviceSchema = ThingSchema.extend({
   multi: z.coerce.number().optional(),
   msrp: z.string().optional(),
   notes: z.string().optional(),
-})
+});
 
 export type Device = z.infer<typeof DeviceSchema>;
-
-
-
-
-
-
-
-
-
-
-
-

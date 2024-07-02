@@ -5,8 +5,8 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schemer.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
-import { toId } from '../shared/schema-meta.js';
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
@@ -116,7 +116,7 @@ export class BrowserBookmarkMigrator extends Migrator {
       this.options.browser ??
       CreativeWorkSchema.parse({
         type: 'SoftwareApplication',
-        id: 'app:' + this.options.name,
+        id: toId('app', this.name),
         name: this.options.label,
         description: this.options.description,
       });

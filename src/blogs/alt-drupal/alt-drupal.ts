@@ -11,10 +11,10 @@ import {
 } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
 import { Thing } from '../../schemas/schema-org/thing.js';
+import { toId } from '../../shared/schemer.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -75,10 +75,11 @@ export class AltDrupalMigrator extends BlogMigrator {
 
     for (const [key, opt] of Object.entries(map)) {
       this.log.debug(`Parsing ${opt.file}`);
-      const raw = this.input.dir('tables').read(opt.file, 'auto') as Record<
-        string,
-        unknown
-      >[] ?? [];
+      const raw =
+        (this.input.dir('tables').read(opt.file, 'auto') as Record<
+          string,
+          unknown
+        >[]) ?? [];
       parsed[key] = raw.map(r => opt.schema.parse(r));
       this.cache.write(
         key + '.json',

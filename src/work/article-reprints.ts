@@ -1,8 +1,11 @@
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
-import { Article, ArticleSchema } from '../schemas/schema-org/CreativeWork/article.js';
+import {
+  Article,
+  ArticleSchema,
+} from '../schemas/schema-org/CreativeWork/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schema-meta.js';
+import { toId } from '../shared/schemer.js';
 
 const defaults: MigratorOptions = {
   name: 'articles',
@@ -41,7 +44,7 @@ export class ArticleReprintMigrator extends Migrator {
         url: markdown.data.url,
         archivedAt: markdown.data.archivedAt,
         text: markdown.content,
-        keywords: markdown.data.keywords
+        keywords: markdown.data.keywords,
       });
 
       if (article.success) {
@@ -61,8 +64,8 @@ export class ArticleReprintMigrator extends Migrator {
 
   override async finalize(): Promise<void> {
     for (const article of this.articles) {
-        await this.saveThing(article);
-        await this.saveThing(article, 'markdown');
+      await this.saveThing(article);
+      await this.saveThing(article, 'markdown');
     }
 
     await this.copyAssets('images', 'reprints');

@@ -2,7 +2,10 @@ import { parse as parseDate } from '@eatonfyi/dates';
 import { extract, type ExtractTemplateObject } from '@eatonfyi/html';
 import { emptyDeep } from 'empty-deep';
 import { z } from 'zod';
-import { BookSchema, PartialBook } from '../../schemas/schema-org/CreativeWork/book.js';
+import {
+  BookSchema,
+  PartialBook,
+} from '../../schemas/schema-org/CreativeWork/book.js';
 import { expandIds, getBestId } from '../normalize-ids.js';
 
 export async function abookapart(html: string) {

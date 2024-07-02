@@ -37,7 +37,7 @@ export class LinkedInMigrator extends Migrator {
       type: 'Blog',
       name: this.label,
       url: 'https://www.linkedin.com/in/jeffeaton/',
-      isPartOf: toId('site', 'linkedin')
+      isPartOf: toId('site', 'linkedin'),
     });
     await this.saveThing(linkedIn);
 

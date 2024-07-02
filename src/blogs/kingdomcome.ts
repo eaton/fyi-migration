@@ -1,13 +1,16 @@
 import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
-import { SocialMediaPosting, SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
+import { z } from 'zod';
+import {
+  SocialMediaPosting,
+  SocialMediaPostingSchema,
+} from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../schemas/schema-org/creative-work.js';
+import { toId } from '../shared/schemer.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
-import { z } from 'zod';
-import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'kingdomcome',
@@ -35,9 +38,7 @@ export class KingdomComeMigrator extends BlogMigrator {
       this.log.debug(`Parsing ${file}`);
       await this.input
         .readAsync(file, 'auto')
-        .then((data: Frontmatter) =>
-          schema.safeParse(data),
-        )
+        .then((data: Frontmatter) => schema.safeParse(data))
         .then(result => {
           if (result.success) {
             const cw = this.prepEntry(result.data);
@@ -62,14 +63,13 @@ export class KingdomComeMigrator extends BlogMigrator {
         id: toId('blog', 'kingdomcome'),
         url: 'http://kingdomcome.blogspot.com',
         name: this.label,
-        description: this.description
+        description: this.description,
       }),
     );
 
     for (const e of this.entries) {
       await this.saveThings(e);
     }
-
 
     return Promise.resolve();
   }
@@ -90,9 +90,9 @@ const schema = z.object({
   data: z.object({
     date: z.coerce.date().optional(),
     title: z.coerce.string().optional(),
-    url: z.string()
+    url: z.string(),
   }),
   content: z.string(),
-})
+});
 
 type FrontmatterFile = z.infer<typeof schema>;

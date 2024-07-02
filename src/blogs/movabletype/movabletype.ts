@@ -7,9 +7,9 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
+import { toId } from '../../shared/schemer.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -142,17 +142,13 @@ export class MovableTypeMigrator extends BlogMigrator {
           c => c.category_id === entry.entry_category_id,
         );
 
-        const { text, ...frontmatter } = this.prepEntry(entry, blog, category);
+        const prepped = this.prepEntry(entry, blog, category);
         const mappedComments = (entry.comments ?? []).map(c =>
-          this.prepComment(c, frontmatter),
+          this.prepComment(c, prepped),
         );
 
-        const file = [site.id, this.makeFilename(frontmatter)].join('/');
-        this.output.write(file, { content: text, data: frontmatter });
-        if (this.options.store == 'arango') {
-          await this.arango.set({ ...frontmatter, text });
-        }
-        this.log.debug(`Wrote ${file}`);
+        this.saveThing(prepped);
+        this.saveThing(prepped, 'markdown');
 
         if (mappedComments.length) {
           await this.saveThings(mappedComments);

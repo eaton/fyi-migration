@@ -1,14 +1,14 @@
 import { TwitterArchive } from 'twitter-archive-reader';
 import { CreativeWorkSchema } from '../../schemas/index.js';
 import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
+import { toId } from '../../shared/schemer.js';
 import { Tweet } from './schema.js';
-import { toId } from '../../shared/schema-meta.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      
+
       id: toId('blog', `@${info.user.screen_name.toLocaleLowerCase()}`),
       id_str: info.user.id,
       subtitle: info.user.name,

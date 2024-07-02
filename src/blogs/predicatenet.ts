@@ -3,9 +3,9 @@ import { nanohash } from '@eatonfyi/ids';
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
+import { toId } from '../shared/schemer.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
-import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'predicate',

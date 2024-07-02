@@ -66,6 +66,7 @@
     "@sindresorhus/is": "^6.3.1",
     "@types/jszip": "^3.4.1",
     "@types/mailparser": "^3.4.4",
+    "@typescript-eslint/typescript-estree": "^7.15.0",
     "arangojs": "^8.8.1",
     "crawlee": "^3.10.2",
     "dotenv": "^16.4.5",
