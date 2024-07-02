@@ -2,6 +2,7 @@ import { ExtractTemplateObject, extract, toMarkdown } from '@eatonfyi/html';
 import { z } from 'zod';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'futurism',
@@ -23,11 +24,11 @@ export class FuturismMigrator extends BlogMigrator {
 
       const { text, ...frontmatter } = CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: 'post:tp-' + parsed.id,
+        id: toId('post', 'tp-' + parsed.id),
         name: parsed.name.trim(),
         date: parsed.date,
         text: toMarkdown(parsed.text),
-        isPartOf: ['blog:futurism'],
+        isPartOf: toId('blog', this.name),
       });
 
       const file = this.makeFilename(frontmatter);
@@ -39,7 +40,7 @@ export class FuturismMigrator extends BlogMigrator {
 
     const site = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + this.name,
+      id: toId('blog', this.name),
       name: this.label,
       description: this.description,
       url: 'http://future.viapositiva.net',

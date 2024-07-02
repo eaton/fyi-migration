@@ -6,6 +6,7 @@ import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {
   file: string;
@@ -104,7 +105,7 @@ export class BrowserBookmarkMigrator extends Migrator {
         ...prepUrlForBookmark(l.url),
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
-        isPartOf: ['app:' + this.options.browser?.id ?? this.options.name],
+        isPartOf: toId('app', this.options.browser?.id ?? this.options.name),
       });
       return link;
     });

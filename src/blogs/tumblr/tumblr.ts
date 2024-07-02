@@ -15,6 +15,7 @@ import {
   type TumblrBlog,
   type TumblrPost,
 } from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 export interface TumblrMigratorOptions extends BlogMigratorOptions {
   consumer_key?: string;
@@ -164,7 +165,7 @@ export class TumblrMigrator extends BlogMigrator {
       published: !!input.date,
       keywords: input.tags,
       url: input.url,
-      isPartOf: ['blog:' + input.blog_name],
+      isPartOf: toId('blog', input.blog_name),
       tumblrType: input.type,
     };
 
@@ -194,7 +195,7 @@ export class TumblrMigrator extends BlogMigrator {
       name: input.title || input.source_title || undefined,
       description:
         input.body || input.description || input.summary || undefined,
-      isPartOf: ['blog:' + input.blog_name],
+      isPartOf: toId('blog', input.blog_name),
     });
 
     // Lotta wacky stuff happening, friends.

@@ -14,6 +14,7 @@ import { Thing } from '../../schemas/schema-org/thing.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-drupal',
@@ -194,7 +195,7 @@ export class AltDrupalMigrator extends BlogMigrator {
 
     await this.saveThing(
       CreativeWorkSchema.parse({
-        id: 'blog:alt',
+        id: toId('blog', 'alt'),
         type: 'Blog',
         url: 'https://angrylittletree.com',
         name: this.entityData.variables['site_name']?.toString() ?? undefined,
@@ -209,13 +210,13 @@ export class AltDrupalMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.AltNode) {
     return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: `post:alt${input.nid}`,
+      id: toId('post', `alt${input.nid}`),
       date: input.created,
       slug: toSlug(input.title),
       name: input.title,
       description: input.summary ? toMarkdown(input.summary) : undefined,
       text: input.body ? toMarkdown(autop(input.body)) : '',
-      isPartOf: ['blog:alt'],
+      isPartOf: toId('blog', 'alt'),
       attachments: input.attachments?.map(a => ({
         filename: a.file?.filename,
         description: a.field_attachments_description,
@@ -225,9 +226,9 @@ export class AltDrupalMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.AltComment): Comment {
     return CommentSchema.parse({
-      id: `comment:alt${input.cid}d`,
-      parent: input.pid ? `comment:alt${input.pid}d` : undefined,
-      about: `post:alt${input.nid}`,
+      id: toId('comment', `alt${input.cid}d`),
+      parent: input.pid ? toId('comment', `alt${input.pid}d`) : undefined,
+      about: toId('post', `alt${input.nid}`),
       date: input.created,
       commenter: {
         name: input.name,
@@ -235,7 +236,7 @@ export class AltDrupalMigrator extends BlogMigrator {
         url: input.homepage,
       },
       thread: undefined, // We throw away the thread value and recalculate it later.
-      isPartOf: ['blog:alt'],
+      isPartOf: toId('blog', 'alt'),
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

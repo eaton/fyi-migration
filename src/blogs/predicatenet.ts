@@ -5,6 +5,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'predicate',
@@ -45,7 +46,7 @@ export class PredicateNetMigrator extends BlogMigrator {
         date: '2001-01-01',
         name: l.title,
         description: l.description,
-        isPartOf: ['blog:' + this.name],
+        isPartOf: toId('blog', this.name),
       });
       await this.saveThing(link);
     }
@@ -65,9 +66,9 @@ export class PredicateNetMigrator extends BlogMigrator {
 
     for (const quote of quotes ?? []) {
       const cw = CreativeWorkSchema.parse({
-        id: 'quote:' + nanohash(quote.content),
+        id: toId('quote', nanohash(quote.content)),
         type: 'Quotation',
-        isPartOf: ['blog:' + this.name],
+        isPartOf: toId('blog', this.name),
         text: quote.content,
         spokenBy: quote.speaker ?? undefined,
       });
@@ -77,7 +78,7 @@ export class PredicateNetMigrator extends BlogMigrator {
 
   override async finalize() {
     const site = CreativeWorkSchema.parse({
-      id: 'blog:predicate',
+      id: toId('blog', 'predicate'),
       type: 'Blog',
       url: 'http://predicate.net',
       name: 'Predicate.net',

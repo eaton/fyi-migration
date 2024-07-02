@@ -12,6 +12,7 @@ import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 export interface DrupalMigratorOptions extends BlogMigratorOptions {
   comments?: boolean;
@@ -183,7 +184,7 @@ export class GoddyMigrator extends BlogMigrator {
 
     const site = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + this.name,
+      id: toId('blog', this.name),
       url: 'https://growingupgoddy.com',
       name: cache.vars['site_name'] || this.label,
       subtitle: cache.vars['site_slogan'] || undefined,
@@ -206,25 +207,25 @@ export class GoddyMigrator extends BlogMigrator {
       return SocialMediaPostingSchema.parse({
         ...prepUrlForBookmark(input.link?.field_link_url),
         title: input.title,
-        isPartOf: this.name,
+        isPartOf: toId('blog', this.name),
         description: toMarkdown(autop(input.summary ?? '')) || undefined,
         date: input.created,
       });
     } else {
       return CreativeWorkSchema.parse({
         type: 'BlogPosting',
-        id: `post:gdy${input.nid}`,
+        id: toId('post', `gdy${input.nid}`),
         date: input.created,
         name: input.title,
         slug: toSlug(input.title),
         description: input.summary,
-        isPartOf: ['blog:' + this.name],
+        isPartOf: toId('blog', this.name),
         quote: input.money_quote
           ? toMarkdown(autop(input.money_quote.field_money_quote_value))
           : undefined,
         about:
           (input.product
-            ? 'book:' + input.product.field_product_asin?.trim()
+            ? toId('book', input.product.field_product_asin?.trim())
             : undefined) ??
           input.link?.field_link_url ??
           undefined,
@@ -236,9 +237,9 @@ export class GoddyMigrator extends BlogMigrator {
 
   protected prepComment(input: drupal.GoddyComment): CreativeWork {
     return CommentSchema.parse({
-      id: `comment:gdy${input.cid}`,
-      about: `post:gdy${input.nid}`,
-      parent: input.pid ? `comment:gdy${input.pid}` : undefined,
+      id: toId('comment', `gdy${input.cid}`),
+      about: toId('post', `gdy${input.nid}`),
+      parent: input.pid ? toId('comment', `gdy${input.pid}`) : undefined,
       thread: undefined, // Set it later manually
       date: input.created,
       commenter: {
@@ -246,7 +247,7 @@ export class GoddyMigrator extends BlogMigrator {
         mail: input.mail,
         url: input.homepage,
       },
-      isPartOf: ['blog:' + this.name],
+      isPartOf: toId('blog', this.name),
       name: input.subject,
       text: toMarkdown(autop(input.body ?? '')),
     });

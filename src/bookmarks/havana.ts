@@ -4,6 +4,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface HavanaLinkMigratorOptions extends MigratorOptions {
   fakeStart?: Date;
@@ -56,7 +57,7 @@ export class HavanaLinkMigrator extends Migrator {
         name: l.title,
         description: l.summary,
         date: l.date ?? tempDate,
-        isPartOf: ['site:' + this.options.name],
+        isPartOf: toId('site', this.name),
       });
       return link;
     });
@@ -65,7 +66,7 @@ export class HavanaLinkMigrator extends Migrator {
 
     const havana = CreativeWorkSchema.parse({
       type: 'WebSite',
-      id: 'site:' + this.options.name,
+      id: toId('site', this.options.name),
       name: this.options.label,
       url: 'https://havana-mod.com',
     });

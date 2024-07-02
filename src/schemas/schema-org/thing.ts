@@ -1,17 +1,18 @@
 import { z } from 'zod';
-import { oneOrMany, urlSchema } from '../fragments/index.js';
+import { oneOrMany, urlSchema, idSchema } from '../fragments/index.js';
 
 export const ThingSchema = z
   .object({
-    id: z.coerce.string(),
-    url: urlSchema.optional(),
+    id: idSchema,
     type: z.string().default('Thing'),
     name: z.string().optional(),
     alternateName: oneOrMany(z.string()).optional(),
     description: z.string().optional(),
     image: z.string().optional(),
+    url: urlSchema.optional(),
     keywords: z.array(z.string()).optional(),
-    importance: z.number().min(1).max(5).optional(),
+    isPartOf: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
+    hasPart: oneOrMany(z.string()).optional(), // none, one, or more string or string/order objects
   })
   .passthrough();
 

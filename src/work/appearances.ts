@@ -4,6 +4,7 @@ import { urlSchema } from '../schemas/fragments/index.js';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { toId, schemer } from '../shared/index.js';
 
 export interface AppearanceMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -67,13 +68,13 @@ export class AppearanceMigrator extends Migrator {
 
   prepAppearance(item: ImportType) {
     const cw = CreativeWorkSchema.parse({
-      id: item.type + ':' + item.id,
-      type: item.type,
+      id: toId(item.type, item.id),
+      type: item.type ? schemer.getSchema(item.type) : undefined,
       name: item.name,
       date: item.date,
       description: item.description,
       url: item.url,
-      isPartOf: [item.venue?.id + ':' + item.venue?.type],
+      isPartOf: toId(item.venue?.type, item.venue?.id),
     });
     if (item.role) {
       cw.creator = {};

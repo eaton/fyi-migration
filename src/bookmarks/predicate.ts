@@ -3,6 +3,7 @@ import { getMdbInfo, parseMdbTable } from '../util/parse-mdb.js';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface PredicateLinkMigratorOptions extends MigratorOptions {
   fakeStart?: Date;
@@ -57,7 +58,7 @@ export class PredicateLinkMigrator extends Migrator {
         ...prepUrlForBookmark(l.url),
         name: l.title,
         date: l.date ?? tempDate,
-        isPartOf: ['site:predicate'],
+        isPartOf: toId('site', 'predicate'),
       });
       return link;
     });

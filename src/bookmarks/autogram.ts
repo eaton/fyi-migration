@@ -3,6 +3,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 import { OrganizationSchema } from '../schemas/index.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface AutogramLinkMigrationOptions extends MigratorOptions {}
 
@@ -50,7 +51,7 @@ export class AutogramLinkMigrator extends Migrator {
         name: l.data.title,
         date: l.data.date,
         description: l.content,
-        isPartOf: ['site:autogram'],
+        isPartOf: toId('site', 'autogram'),
       });
       return link;
     });

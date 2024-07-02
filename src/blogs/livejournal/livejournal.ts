@@ -18,6 +18,7 @@ import {
   type LivejournalEntry,
 } from './schema.js';
 import { parseSemagicFile } from './semagic.js';
+import { toId } from '../../shared/schema-meta.js';
 
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
@@ -149,7 +150,7 @@ export class LivejournaMigrator extends BlogMigrator {
 
     const lj = CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + this.name,
+      id: toId('blog', this.name),
       name: this.label,
       url: 'http://predicate.livejournal.com',
       hosting: 'Livejournal',
@@ -162,12 +163,12 @@ export class LivejournaMigrator extends BlogMigrator {
 
   protected prepEntry(entry: LivejournalEntry) {
     return SocialMediaPostingSchema.parse({
-      id: `post:lj${entry.id}`,
+      id: toId('post', `lj${entry.id}`),
       type: 'BlogPosting',
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
-      isPartOf: ['blog:' + this.name],
+      isPartOf: toId('blog', this.name),
       avatar: entry.avatar,
       mood: entry.mood,
       music: entry.music,
@@ -176,14 +177,14 @@ export class LivejournaMigrator extends BlogMigrator {
 
   protected prepComment(comment: LivejournalComment): Comment {
     return CommentSchema.parse({
-      id: `comment:lj${comment.id}`,
-      parent: comment.parent ? `comment:lj${comment.parent}` : undefined,
-      about: comment.entry ? `post:lj${comment.entry}` : undefined,
+      id: toId('comment', `lj${comment.id}`),
+      parent: comment.parent ? toId('comment', `lj${comment.parent}`) : undefined,
+      about: comment.entry ? toId('post', `lj${comment.entry}`) : undefined,
       commenter: {
         name: comment.name,
         mail: comment.email,
       },
-      isPartOf: ['blog:' + this.name],
+      isPartOf: toId('blog', this.name),
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
     });

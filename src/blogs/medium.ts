@@ -2,6 +2,7 @@ import { get } from 'obby';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'medium',
@@ -20,7 +21,7 @@ export class MediumMigrator extends BlogMigrator {
     await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'blog:' + this.name,
+        id: toId('blog', this.name),
         name: this.label,
         url: 'https://medium.com/@eaton',
       }),
@@ -30,7 +31,7 @@ export class MediumMigrator extends BlogMigrator {
       const markdown = this.input.read(f, 'auto');
       const { text, ...frontmatter } = SocialMediaPostingSchema.parse({
         type: 'BlogPosting',
-        id: 'post:' + get(markdown, 'data.id') || undefined,
+        id: toId('post', get(markdown, 'data.id')),
         name: get(markdown, 'data.title') || undefined,
         description: get(markdown, 'data.summary') || undefined,
         slug: get(markdown, 'data.slug') || undefined,
@@ -38,7 +39,7 @@ export class MediumMigrator extends BlogMigrator {
         url: get(markdown, 'data.url') || undefined,
         date: get(markdown, 'data.date') || undefined,
         text: get(markdown, 'content') || undefined,
-        isPartOf: ['blog:' + this.name],
+        isPartOf: toId('blog', this.name),
       });
 
       const file = this.makeFilename(frontmatter);

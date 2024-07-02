@@ -7,6 +7,7 @@ import {
 } from '../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 import { z } from 'zod';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'kingdomcome',
@@ -58,7 +59,7 @@ export class KingdomComeMigrator extends BlogMigrator {
     await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'blog:kingdomcome',
+        id: toId('blog', 'kingdomcome'),
         url: 'http://kingdomcome.blogspot.com',
         name: this.label,
         description: this.description
@@ -76,11 +77,11 @@ export class KingdomComeMigrator extends BlogMigrator {
   protected prepEntry(input: FrontmatterFile): CreativeWork {
     return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: 'post:' + nanohash(input.data.url),
+      id: toId('blog', nanohash(input.data.url)),
       date: input.data.date,
       name: input.data.title,
       text: input.content,
-      isPartOf: ['blog:kingdomcome']
+      isPartOf: toId('blog', this.name),
     });
   }
 }

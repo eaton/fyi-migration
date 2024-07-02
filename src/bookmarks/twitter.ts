@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {
   ignoreLinksToTweets?: boolean;
@@ -105,7 +106,7 @@ export class TwitterBookmarkMigrator extends Migrator {
         date: l.date,
         description: l.description,
         keywords: l.hashtags,
-        isPartOf: [`blog:@${l.handle}`],
+        isPartOf: toId('blog', `@${l.handle}`),
       });
       return link;
     });

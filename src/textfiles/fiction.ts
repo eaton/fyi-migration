@@ -7,6 +7,7 @@ import {
   CreativeWorkSchema,
 } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-fiction',
@@ -72,7 +73,7 @@ export class TextFictionMigrator extends Migrator {
   protected prepStory(input: object) {
     const parsed = CreativeWorkSchema.safeParse({
       type: 'ShortStory',
-      id: 'story:' + nanohash(input),
+      id: toId('story', nanohash(input)),
       ...input,
     });
     if (parsed.success) {

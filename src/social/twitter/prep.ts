@@ -2,25 +2,27 @@ import { TwitterArchive } from 'twitter-archive-reader';
 import { CreativeWorkSchema } from '../../schemas/index.js';
 import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { Tweet } from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: `blog:@${info.user.screen_name.toLocaleLowerCase()}`,
+      
+      id: toId('blog', `@${info.user.screen_name.toLocaleLowerCase()}`),
       id_str: info.user.id,
       subtitle: info.user.name,
       date: info.user.created_at,
       image: info.user.profile_img_url,
       description: info.user.bio,
       url: handleUrl(info.user.screen_name),
-      isPartOf: ['site:twitter'],
+      isPartOf: toId('site', 'twitter'),
     });
   } else {
     return CreativeWorkSchema.parse({
       ...info,
       url: handleUrl(info.handle),
-      isPartOf: ['site:twitter'],
+      isPartOf: toId('site', 'twitter'),
     });
   }
 }
@@ -28,7 +30,7 @@ export function user(info: Record<string, string> | TwitterArchive) {
 export function tweet(tweet: Tweet) {
   return SocialMediaPostingSchema.parse({
     type: 'SocialMediaPosting',
-    id: 'post:t' + tweet.id,
+    id: toId('post', 't' + tweet.id),
     about: tweet.aboutId
       ? tweetUrl(tweet.aboutId, tweet.aboutHandle)
       : undefined,
@@ -36,7 +38,7 @@ export function tweet(tweet: Tweet) {
     text: tweetToMarkdown(tweet),
     handle: tweet.handle,
     url: tweetUrl(tweet.id, tweet.handle),
-    isPartOf: [`blog:@${tweet.handle.toLocaleLowerCase()}`],
+    isPartOf: toId('blog', `@${tweet.handle.toLocaleLowerCase()}`),
     favorites: tweet.favorites,
     retweets: tweet.retweets,
     software: tweet.source,
@@ -52,9 +54,9 @@ export function thread(tweets: Tweet[]) {
 
   const cw = SocialMediaPostingSchema.parse({
     type: 'SocialMediaThread',
-    id: 'thread:t' + first.id,
+    id: toId('thread', 't' + first.id),
     handle: first.handle,
-    isPartOf: [`blog:@${first.handle.toLocaleLowerCase()}`],
+    isPartOf: toId('blog', `@${first.handle.toLocaleLowerCase()}`),
     about: first.aboutId
       ? tweetUrl(first.aboutId, first.aboutHandle)
       : undefined,

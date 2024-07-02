@@ -6,6 +6,7 @@ import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/soc
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { parse as parsePath } from 'path';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',
@@ -34,17 +35,17 @@ export class TextJournalsMigrator extends Migrator {
       const txtId = toSlug(noExtension);
       
       textFiles[txtId] ??= this.prepThings({
-        id: 'doc:' + txtId,
-        type: 'DigitalDocument',
+        id: toId('work', txtId),
+        type: 'CreativeWork',
         name: txt.data.textfile,
         software: 'BBEdit',
       })[0];
 
       const cw = SocialMediaPostingSchema.parse({
-        id: 'journal:' + nanohash(txt.data),
+        id: toId('journal', nanohash(txt.data)),
         type: 'JournalEntry',
         date: txt.data.date,
-        isPartOf: ['doc:' + txtId],
+        isPartOf: toId('work', txtId),
         text: txt.content,
       });
 

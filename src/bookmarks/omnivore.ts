@@ -4,6 +4,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface OmnivoreMigratorOptions extends MigratorOptions {
   apiKey?: string;
@@ -93,7 +94,7 @@ export class OmnivoreMigrator extends Migrator {
         description: l.description || undefined,
         date: l.savedAt,
         keywords: l.labels,
-        isPartOf: 'webapp:omnivore',
+        isPartOf: toId('webapp', this.name),
       });
       for (const h of l.highlights ?? []) {
         if (h.type === 'NOTE' && h.annotation?.length) {
@@ -111,7 +112,7 @@ export class OmnivoreMigrator extends Migrator {
 
     const omnivore = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'webapp:omnivore',
+        id: toId('webapp', 'omnivore'),
       name: 'Omnivore',
       description: 'A newer, slicker, self-hostable reading app.',
       url: 'https://omnivore.app',

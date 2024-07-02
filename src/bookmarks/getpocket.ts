@@ -4,6 +4,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface PocketMigratorOptions extends MigratorOptions {}
 
@@ -53,7 +54,7 @@ export class PocketMigrator extends Migrator {
         name: l.name !== l.url ? l.name : undefined,
         date: l.date,
         keywords: l.tags,
-        isPartOf: `webapp:getpocket`,
+        isPartOf: toId('webapp', 'getpocket'),
       });
       return link;
     });
@@ -62,7 +63,7 @@ export class PocketMigrator extends Migrator {
 
     const getpocket = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'webapp:getpocket',
+      id: toId('webapp', this.options.name),
       name: 'Pocket',
       description: 'One of the nicer read-it-later tools.',
       url: 'https://getpocket.com',

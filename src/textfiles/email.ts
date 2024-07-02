@@ -6,6 +6,7 @@ import micromatch from 'micromatch';
 import { promisify } from 'util';
 import { Message, MessageSchema } from '../schemas/schema-org/CreativeWork/message.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const parseMail = promisify<Source, ParsedMail>(simpleParser);
 
@@ -102,7 +103,7 @@ export class TextEmailMigrator extends Migrator {
 
   protected prepMail(input: ParsedMail) {
     return MessageSchema.parse({
-      id: 'email:' + nanohash(input.headerLines),
+      id: toId('email' + nanohash(input.headerLines)),
       name: input.subject,
       date: input.date?.toJSON(),
       from: this.cleanMails(input.from),

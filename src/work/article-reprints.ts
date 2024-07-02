@@ -2,6 +2,7 @@ import { nanohash } from '@eatonfyi/ids';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { Article, ArticleSchema } from '../schemas/schema-org/CreativeWork/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schema-meta.js';
 
 const defaults: MigratorOptions = {
   name: 'articles',
@@ -28,7 +29,7 @@ export class ArticleReprintMigrator extends Migrator {
           ? markdown.data.title + ': ' + markdown.data.subtitle
           : undefined;
       const article = ArticleSchema.safeParse({
-        id: markdown.data.id || nanohash(markdown.data),
+        id: toId('article', markdown.data.id || nanohash(markdown.data)),
         name: markdown.data.title,
         date: markdown.data.date,
         headline,

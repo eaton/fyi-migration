@@ -14,6 +14,7 @@ import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';
 import { jekyllPostSchema, type JekyllPost } from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'alt-jekyll',
@@ -92,7 +93,7 @@ export class AltJekyllMigrator extends BlogMigrator {
     await this.saveThing(
       CreativeWorkSchema.parse({
         type: 'Blog',
-        id: 'alt',
+        id: toId('blog', 'alt'),
         url: 'https://angrylittletree.com',
         name: 'Angry Little Tree',
       }),
@@ -105,11 +106,11 @@ export class AltJekyllMigrator extends BlogMigrator {
   protected prepEntry(input: JekyllPost): CreativeWork {
     const cw = SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: 'tmp',
+      id: 'tmp.tmp',
       date: input.data.date,
       name: input.data.title,
       description: input.data.summary,
-      isPartOf: 'alt',
+      isPartOf: toId('blog', 'alt'),
       headline: input.data.subtitle
         ? input.data.title + ': ' + input.data.subtitle
         : undefined,
@@ -125,19 +126,19 @@ export class AltJekyllMigrator extends BlogMigrator {
     }
 
     const oldUrl = `/${cw.date?.getFullYear()}/${cw.date?.getUTCMonth()}/${cw.slug}.html`;
-    cw.id = 'alt-' + nanohash(oldUrl);
-    cw.isPartOf = 'alt';
+    cw.id = toId('post', 'alt-' + nanohash(oldUrl));
+    cw.isPartOf = toId('blog', 'alt');
 
     return CreativeWorkSchema.parse(cw);
   }
 
   protected prepComment(comment: Disqus.Post): Comment {
     return CommentSchema.parse({
-      id: `alt-c${comment.dsqId}`,
-      parent: comment.parent ? `alt-c${comment.parent}` : undefined,
-      about: comment.linkId ? `alt-${nanohash(comment.linkId)}` : undefined,
+      id: toId('comment', `alt-c${comment.dsqId}`),
+      parent: comment.parent ? toId('comment', `alt-c${comment.parent}`) : undefined,
+      about: comment.linkId ?  toId('post', `alt-${nanohash(comment.linkId)}`) : undefined,
       date: comment.createdAt,
-      isPartOf: 'alt',
+      isPartOf: toId('blog', 'alt'),
       commenter: { name: comment.author.name },
       text: toMarkdown(autop(comment.message)),
     });

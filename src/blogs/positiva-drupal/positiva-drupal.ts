@@ -17,6 +17,7 @@ import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 const defaults: BlogMigratorOptions = {
   name: 'vp-drupal',
@@ -152,7 +153,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   protected prepSite(vars?: Record<string, unknown>) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + this.name,
+      id: toId('blog', this.name),
       url: 'https://jeff.viapositiva.net',
       name: vars?.['site_name'] || this.label,
       subtitle: vars?.['site_slogan'] || undefined,
@@ -168,7 +169,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),
-      isPartOf: ['blog:viapositiva'],
+      isPartOf: toId('blog', 'viapositiva'),
       text: this.buildNodeBody(input),
       about: input.amazon?.asin ? 'book:' + input.amazon.asin : undefined,
     });
@@ -180,13 +181,13 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       date: input.created,
       name: input.title,
       description: this.buildNodeBody(input) || undefined,
-      isPartOf: ['blog:viapositiva'],
+      isPartOf: toId('blog', 'viapositiva'),
     });
   }
 
   protected prepQuote(input: drupal.Node): CreativeWork {
     const text = toMarkdown(autop(input.body ?? ''));
-    const id = 'quote:' + nanohash(removeStopwords(text));
+    const id = toId('quote', nanohash(removeStopwords(text)));
     return CreativeWorkSchema.parse({
       type: 'Quotation',
       id,
@@ -195,19 +196,19 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       spokenBy: input.quote?.author ?? undefined,
       isBasedOn: undefined,
       recordedIn: undefined,
-      isPartOf: ['blog:viapositiva'],
+      isPartOf: toId('blog', 'viapositiva'),
     });
   }
 
   protected prepComment(input: drupal.Comment): Comment {
     return CommentSchema.parse({
       type: 'Comment',
-      id: `comment:vp${input.cid}d`,
-      parent: input.pid ? `comment:vp${input.pid}d` : undefined,
+      id: toId('comment', `vp${input.cid}d`),
+      parent: input.pid ? toId('comment', `vp${input.pid}d`) : undefined,
       thread: undefined, // set it again later
-      about: `post:vp${input.nid}`,
+      about: toId('post', `vp${input.nid}`),
       date: input.timestamp,
-      isPartOf: ['blog:viapositiva'],
+      isPartOf: toId('blog', 'viapositiva'),
       commenter: {
         name: input.name,
         mail: input.mail,

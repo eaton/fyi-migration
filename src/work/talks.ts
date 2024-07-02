@@ -12,7 +12,7 @@ import {
   TalkInstance,
   TalkSchema,
 } from '../schemas/custom/talk.js';
-import { Migrator, MigratorOptions } from '../shared/index.js';
+import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface TalkMigratorOptions extends MigratorOptions {
@@ -150,7 +150,7 @@ export class TalkMigrator extends Migrator {
               talk.text = this.keynoteToMarkdown(talk, deck.slides);
             }
             this.cache
-              .dir(talk.id)
+              .dir(talk.id.replace('talk.', ''))
               .dir(perf.event)
               .copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
           }
@@ -165,20 +165,21 @@ export class TalkMigrator extends Migrator {
           description: perf.description,
           url: perf.url,
         };
-        await this.linkThings(talk, rel, 'event:' + perf.event);
+
+        await this.linkThings(talk, toId('event', perf.event), rel);
       }
     }
     return;
   }
 
   protected prepTalk(input: CustomSchemaItem): Talk {
-    const t = TalkSchema.parse({ id: input.id });
+    const t = TalkSchema.parse({ id: toId('talk', input.id) });
     return t;
   }
 
   protected prepTalkEvent(input: CustomSchemaItem) {
     return TalkEventSchema.parse({
-      event: 'event:' + input.presentedAt,
+      event: toId('event', input.presentedAt),
       date: input.date,
       withTitle: input.name,
       isFeaturedVersion: input.featured,

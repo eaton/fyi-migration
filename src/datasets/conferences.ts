@@ -1,9 +1,8 @@
-import { toCase } from '@eatonfyi/text';
 import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Event, EventSchema } from '../schemas/schema-org/event.js';
 import { Place, PlaceSchema } from '../schemas/schema-org/place.js';
-import { Migrator, MigratorOptions } from '../shared/index.js';
+import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 export interface ConferenceMigratorOptions extends MigratorOptions {
@@ -22,7 +21,6 @@ export class ConferenceMigrator extends Migrator {
   declare options: ConferenceMigratorOptions;
 
   places: Place[] = [];
-  series: Event[] = [];
   events: Event[] = [];
 
   constructor(options: ConferenceMigratorOptions = {}) {
@@ -53,10 +51,8 @@ export class ConferenceMigrator extends Migrator {
       for (const e of events) {
         const event = this.prepEvent(e);
         const place = this.prepPlace(e);
-        const series = this.prepSeries(e);
 
         this.events.push(event);
-        if (series) this.series.push(series);
         if (place) this.places.push(place);
       }
     }
@@ -64,7 +60,6 @@ export class ConferenceMigrator extends Migrator {
   }
 
   override async finalize() {
-    await this.saveThings(this.series);
     await this.saveThings(this.events);
     await this.saveThings(this.places);
     return;
@@ -73,7 +68,7 @@ export class ConferenceMigrator extends Migrator {
   prepEvent(item: ImportType) {
     return EventSchema.parse({
       id: 'event:' + item.id,
-      isPartOf: 'event:' + item.isPartOf,
+      isPartOf: toId('event', item.isPartOf),
       name: item.name,
       url: item.url,
       location: item.place.id,
@@ -83,23 +78,11 @@ export class ConferenceMigrator extends Migrator {
     });
   }
 
-  prepSeries(item: ImportType) {
-    if (item.isPartOf) {
-      return EventSchema.parse({
-        id: 'event:' + item.isPartOf,
-        type: 'EventSeries',
-        name: toCase.title(item.isPartOf),
-      });
-    } else {
-      return undefined;
-    }
-  }
-
   prepPlace(item: ImportType) {
     if (item.place.name) {
       return PlaceSchema.parse({
-        id: 'place:' + item.place.id,
-        isPartOf: item.place.isPartOf ? 'place:' + item.place.isPartOf : undefined,
+        id: toId('place', item.place.id),
+        isPartOf: item.place.isPartOf ? toId('place', + item.place.isPartOf) : undefined,
         name: item.place.name,
       });
     } else {

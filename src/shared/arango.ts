@@ -4,6 +4,7 @@ import { Config } from 'arangojs/connection.js';
 import { z } from 'zod';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { schemer } from './index.js';
+import { idSeparator } from '../schemas/index.js';
 
 export class ArangoDB extends Database {
   constructor(config?: Config) {
@@ -102,19 +103,19 @@ export class ArangoDB extends Database {
     const _from = this.getId(from);
     const _to = this.getId(to);
 
-    let otherProps: Record<string, unknown> = {};
+    let props: Record<string, unknown> = {};
     if (rel === undefined) {
-      otherProps.rel = 'mainEntity';
+      props.rel = 'mainEntity';
     } else if (typeof rel === 'string') {
-      otherProps.rel = rel;
+      props.rel = rel;
     } else {
-      otherProps = rel;
+      props = rel;
     }
 
-    const _key = uuid({ _from, _to, rel: otherProps.rel });
+    const _key = uuid({ _from, _to, rel: props.rel });
 
-    return await this.collection('link')
-      .save({ _key, _from, _to, ...otherProps }, { overwriteMode: 'update' })
+    return await this.collection('relations')
+      .save({ _key, _from, _to, ...props }, { overwriteMode: 'update' })
       .then(() => true);
   }
 
@@ -128,12 +129,12 @@ export class ArangoDB extends Database {
 
     if (rel) {
       const _key = uuid({ _from, _to, rel: rel });
-      await this.query(aql`REMOVE ${_key} IN link`);
+      await this.query(aql`REMOVE ${_key} IN relations`);
     } else {
       await this.query(aql`
-        FOR l IN link
+        FOR l IN relations
         FILTER l._from == ${_from}, l._to == ${_to}
-        REMOVE l._key IN link
+        REMOVE l._key IN relations
       `);
     }
     return;
@@ -182,50 +183,49 @@ export class ArangoDB extends Database {
 
   async initialize() {
     await Promise.all(
-      schemer.getDistinctCollections().map(
-        c => this.ensureCollection(c)
+      schemer.listcollections().map(
+        d => this.ensureCollection(d)
       )
     );
 
     // General use collections that aren't explicit entities 
     await this.ensureCollection('text');
-    await this.ensureCollection('embeddings');
-    await this.ensureCollection('url');
+    await this.ensureCollection('urls');
 
-    await this.ensureEdgeCollection('link');
+    // The big ol bucket of connections
+    await this.ensureEdgeCollection('relations');
   }
 
-  async reset(confirm: () => boolean) {
-    if (!confirm()) {
+  async reset(confirm: () => Promise<boolean>) {
+    if (!(await confirm())) {
       throw new Error('Cannot reset the database without a confirm function.');
     }
 
     await Promise.all(
-      schemer.getDistinctCollections().map(
-        c => this.collection(c).truncate()
+      schemer.listcollections().map(
+        d => this.collection(d).truncate()
       )
     );
 
     // General use collections that aren't explicit entities 
     await this.collection('text').truncate();
-    await this.collection('embeddings').truncate();
-    await this.collection('url').truncate();
+    await this.collection('urls').truncate();
 
-    // And our much-abused links/relationships collection
-    await this.collection('link').truncate();
+    // The big ol bucket of connections
+    await this.collection('relations').truncate();
   }
 
   getId(item: string | Thing) {
     const collection = schemer.getCollection(item);
     const type = schemer.getType(item);
     const key = schemer.getId(item);
-    return `${collection}/${type}:${key}`;
+    return `${collection}/${type}${idSeparator}${key}`;
   }
 
   getKey(item: string | Thing) {
     const type = schemer.getType(item);
     const key = schemer.getId(item);
-    return `${type}:${key}`;
+    return `${type}${idSeparator}${key}`;
   }
 
   getCollection(item: string | Thing) {

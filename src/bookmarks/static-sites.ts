@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface StaticLinkMigratorOptions extends MigratorOptions {
   sourceDates?: Record<string, Date>;
@@ -87,7 +88,7 @@ export class StaticLinkMigrator extends Migrator {
         name: l.title || undefined,
         date: l.date,
         description: l.description || undefined,
-        isPartOf: ['site:' + (l.source ?? this.options.name)],
+        isPartOf: toId('site', (l.source ?? this.options.name)),
       });
       return link;
     });

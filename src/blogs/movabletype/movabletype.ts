@@ -9,6 +9,7 @@ import {
 } from '../../schemas/schema-org/creative-work.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
+import { toId } from '../../shared/schema-meta.js';
 
 export interface MovableTypeMigratorOptions extends BlogMigratorOptions {
   authors?: number[];
@@ -165,7 +166,7 @@ export class MovableTypeMigrator extends BlogMigrator {
   protected prepSite(input: schemas.Blog) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + input.blog_shortname ?? this.options.name,
+      id: toId('blog', input.blog_shortname ?? this.name),
       url: input.blog_site_url,
       name: input.blog_name,
       subtitle: input.blog_description,
@@ -184,12 +185,12 @@ export class MovableTypeMigrator extends BlogMigrator {
       .join('\n\n');
 
     const entry = SocialMediaPostingSchema.parse({
-      id: `post:mt${input.entry_id}`,
+      id: toId('post', 'mt' + input.entry_id),
       type: 'BlogPosting',
       date: input.entry_created_on.toISOString(),
       name: input.entry_title,
       slug: input.entry_basename,
-      isPartOf: ['blog:' + blog.blog_shortname ?? this.name],
+      isPartOf: toId('blog', blog.blog_shortname ?? this.name),
       text: toMarkdown(fromTextile(text)),
       keywords: category ? [category.category_label] : undefined,
     });
@@ -199,9 +200,9 @@ export class MovableTypeMigrator extends BlogMigrator {
 
   protected prepComment(input: schemas.Comment, entry: CreativeWork) {
     return CommentSchema.parse({
-      id: `comment:mt${input.comment_entry_id}`,
+      id: toId('comment', `mt${input.comment_id}`),
       date: input.comment_created_on,
-      about: 'post:' + entry.id,
+      about: entry.id,
       commenter: {
         name: input.comment_author || undefined,
         mail: input.comment_email || undefined,

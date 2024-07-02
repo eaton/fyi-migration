@@ -19,6 +19,7 @@ import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
 import { Store, StoreableData } from './store.js';
+import { schemer, toId } from './index.js';
 
 // Auto-serialize and deserilalize data for filenames with these suffixes
 jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
@@ -389,8 +390,8 @@ export class Migrator {
    */
   async linkThings(
     from: string | Thing,
-    rel: string | Record<string, unknown>,
     to: string | Thing,
+    rel: string | Record<string, unknown>,
     store?: string,
   ) {
     const storage = store ?? this.options.store;
@@ -398,7 +399,7 @@ export class Migrator {
       await this.arango.link(from, to, rel).catch((err: Error) => {
         throw new Error(err.message, { cause: { from, rel, to } });
       });
-      this.log.debug(`Linked ${this.getId(from)} to ${this.getId(to)}`);
+      this.log.debug(`Linked ${schemer.getId(from)} to ${schemer.getId(to)}`);
     } else {
       this.log.error(
         `Linking not supported with current storage mechanism (${storage})`,
@@ -415,40 +416,33 @@ export class Migrator {
   async linkCreators(input: CreativeWork) {
     if (input.creator === undefined) return;
     let from = '';
-    const to = this.getId(input);
+    const to = schemer.getId(input);
 
     if (typeof input.creator === 'string') {
-      from = this.getId(input.creator, 'person');
-      await this.saveThing({ id: 'person:' + toSlug(from), type: 'Person', name: from });
-      await this.linkThings('person:' + toSlug(from), 'creator', to);
+      await this.saveThing({ id: toId('person', toSlug(from)), type: 'Person', name: from });
+      from = toId('person', toSlug(from));
+      await this.linkThings(from, to, 'creator');
     } else if (Array.isArray(input.creator)) {
       for (const cr of input.creator) {
-        await this.saveThing({ id: toSlug(cr), type: 'Person', name: cr });
-        await this.linkThings('person:' + toSlug(cr), 'creator', to);
+        await this.saveThing({
+          id: toId('person', toSlug(cr)),
+          type: 'Person',
+          name: cr
+        });
+        await this.linkThings(toId('person', toSlug(cr)), to, 'creator');
       }
     } else {
       for (const [r, cr] of Object.entries(input.creator)) {
         const crs = Array.isArray(cr) ? cr : [cr];
         for (const creator of crs) {
           await this.saveThing({
-            id: toSlug(creator),
+            id: toId('person', toSlug(creator)),
             type: 'Person',
             name: creator,
           });
-          await this.linkThings('person:' + toSlug(creator), r, to);
+          await this.linkThings(toId('person', toSlug(creator)), to, r);
         }
       }
     }
-  }
-
-  protected getId(input: string | Thing, type?: string) {
-    if (typeof input === 'string') {
-      if (input.indexOf(':') > -1) {
-        return input;
-      } else {
-        return type ? `${type}:${input}` : input;
-      }
-    }
-    return input.type.toLocaleLowerCase() + ':' + input.id;
   }
 }

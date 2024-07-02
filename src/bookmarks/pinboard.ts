@@ -2,6 +2,7 @@ import { Pinboard, type PinboardLink } from '../apis/pinboard.js';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schema-meta.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface PinboardMigratorOptions extends MigratorOptions {
@@ -97,10 +98,10 @@ export class PinboardMigrator extends Migrator {
     }
 
     const cws = this.links.map(l => {
-      let isPartOf = ['webapp:pinboard'];
+      let isPartOf = toId('webapp', 'pinboard');
       if (this.options.deliciousDate) {
         isPartOf =
-          this.options.deliciousDate > l.time ? ['webapp:delicious'] : ['webapp:pinboard'];
+          this.options.deliciousDate > l.time ? toId('webapp', 'delicious') : toId('webapp', 'pinboard');
       }
 
       const link = BookmarkSchema.parse({
@@ -118,7 +119,7 @@ export class PinboardMigrator extends Migrator {
 
     const pinboard = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'webapp:pinboard',
+      id: toId('webapp', 'pinboard'),
       name: 'Pinboard',
       description: 'When de.licio.us died, Pinboard took up the slack.',
       url: 'https://pinboard.in',
@@ -128,7 +129,7 @@ export class PinboardMigrator extends Migrator {
     if (this.options.deliciousDate) {
       const delicious = CreativeWorkSchema.parse({
         type: 'WebApplication',
-        id: 'webapp:delicious',
+        id: toId('webapp', 'delicious'),
         name: 'Delicious',
         description:
           'Social bookmarking and link-sharing is old hat now, but Delicious put it on the map.',

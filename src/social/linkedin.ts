@@ -2,7 +2,7 @@ import { nanohash } from '@eatonfyi/ids';
 import { z } from 'zod';
 import { CreativeWorkSchema, urlSchema } from '../schemas/index.js';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
-import { Migrator, MigratorOptions } from '../shared/index.js';
+import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { findLinks } from '../util/find-links.js';
 
 const defaults: MigratorOptions = {
@@ -33,11 +33,11 @@ export class LinkedInMigrator extends Migrator {
     }
 
     const linkedIn = CreativeWorkSchema.parse({
-      id: 'blog:' + this.name,
+      id: toId('blog', this.name),
       type: 'Blog',
       name: this.label,
       url: 'https://www.linkedin.com/in/jeffeaton/',
-      isPartOf: ['site:linkedin']
+      isPartOf: toId('site', 'linkedin')
     });
     await this.saveThing(linkedIn);
 
@@ -53,10 +53,10 @@ export class LinkedInMigrator extends Migrator {
     }
 
     return SocialMediaPostingSchema.parse({
-      id: `post:li${id}`,
+      id: toId('post', `li${id}`),
       date: input.Date,
       url: input.ShareLink?.href || undefined,
-      isPartOf: ['blog:' + this.name],
+      isPartOf: toId('blog', this.name),
       text:
         input.ShareCommentary?.replaceAll('"\n"', '\n\n').replaceAll(
           /\n\n+/g,

@@ -3,6 +3,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
+import { toId } from '../shared/schema-meta.js';
 
 export interface InstapaperMigratorOptions extends MigratorOptions {}
 
@@ -51,7 +52,7 @@ export class InstapaperMigrator extends Migrator {
         name: l.Title,
         date: l.Timestamp,
         description: l.Selection,
-        isPartOf: ['webapp:instapaper'],
+        isPartOf: toId('webapp', this.name),
       });
       return link;
     });
@@ -60,7 +61,7 @@ export class InstapaperMigrator extends Migrator {
 
     const insta = CreativeWorkSchema.parse({
       type: 'WebApplication',
-      id: 'webapp:instapaper',
+      id: toId('webapp', this.options.name),
       name: 'Instapaper',
       url: 'https://instapaper.com',
     });
