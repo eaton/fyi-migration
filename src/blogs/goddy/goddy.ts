@@ -171,7 +171,9 @@ export class GoddyMigrator extends BlogMigrator {
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
     for (const node of nodes) {
-      this.saveThing(node);
+      await this.saveThing(node);
+      await this.saveThing(node, 'markdown');
+
       const nodeComments = comments.filter(c => c.about === node.id);
       if (nodeComments.length) {
         sortByParents(nodeComments);
@@ -191,8 +193,8 @@ export class GoddyMigrator extends BlogMigrator {
     });
     await this.saveThing(site);
 
-    this.copyAssets('files', 'goddy');
-    return Promise.resolve();
+    await this.copyAssets('files', 'goddy');
+    return;
   }
 
   protected readTableCsv<T extends ZodTypeAny>(file: string, schema: T) {
