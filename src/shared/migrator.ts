@@ -22,7 +22,7 @@ import { getRotator } from '../util/get-rotator.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
-import { getId, toId } from './schemer.js';
+import { getId, getType, idSeparator, toId } from './schemer.js';
 import { Store, StoreableData } from './store.js';
 
 /**
@@ -447,7 +447,7 @@ export class Migrator {
   async linkCreators(input: CreativeWork) {
     if (input.creator === undefined) return;
     let personId = '';
-    const workId = getId(input);
+    const workId = getType(input) + idSeparator + getId(input);
     if (!workId) return;
 
     if (typeof input.creator === 'string') {
