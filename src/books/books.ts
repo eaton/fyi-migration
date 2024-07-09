@@ -10,10 +10,10 @@ import {
   type Book,
   type PartialBook,
 } from '../schemas/schema-org/CreativeWork/book.js';
+import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
-import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 
 export interface BookMigratorOptions extends MigratorOptions {
   documentId?: string;

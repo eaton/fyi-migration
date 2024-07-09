@@ -63,7 +63,7 @@ export class AppearanceMigrator extends Migrator {
     if (item.venue?.id && item.venue?.type) {
       return CreativeWorkSchema.parse({
         ...item.venue,
-        id: toId(item.venue?.type, item.venue?.id)
+        id: toId(item.venue?.type, item.venue?.id),
       });
     }
   }

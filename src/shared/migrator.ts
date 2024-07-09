@@ -11,19 +11,19 @@ import {
 } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
 import 'dotenv/config';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { emptyDeep, merge } from 'obby';
+import PQueue from 'p-queue';
 import { Logger, LoggerOptions, pino } from 'pino';
+import wretch, { Wretch } from 'wretch';
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Thing, ThingSchema } from '../schemas/schema-org/thing.js';
+import { getRotator } from '../util/get-rotator.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
 import { getId, toId } from './schemer.js';
 import { Store, StoreableData } from './store.js';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import PQueue from 'p-queue';
-import wretch, { Wretch } from 'wretch';
-import { getRotator } from '../util/get-rotator.js';
 
 /**
  * Standard options for all Migrator classes
@@ -91,12 +91,10 @@ export interface MigratorOptions {
 
   store?: string | 'arango' | 'pgsql' | 'sqlite' | 'file';
 
-
   fetch?: Wretch;
   proxies?: string[];
   concurrency?: number;
   userAgent?: string;
-
 }
 
 const loggerDefaults: LoggerOptions = {
@@ -172,7 +170,7 @@ export class Migrator {
       this.log = pino({ ...loggerDefaults, name: this.name });
     }
 
-        this.fetcher =
+    this.fetcher =
       this.options.fetch ??
       wretch().headers({
         'User-Agent': this.options.userAgent ?? 'Eaton',
