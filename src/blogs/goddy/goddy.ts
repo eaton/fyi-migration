@@ -172,7 +172,9 @@ export class GoddyMigrator extends BlogMigrator {
 
     for (const node of nodes) {
       await this.saveThing(node);
-      await this.saveThing(node, 'markdown');
+      if (node.type == 'BlogPosting') {
+        await this.saveThing(node, 'markdown');
+      }
 
       const nodeComments = comments.filter(c => c.about === node.id);
       if (nodeComments.length) {

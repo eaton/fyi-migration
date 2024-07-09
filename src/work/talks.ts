@@ -82,9 +82,9 @@ export class TalkMigrator extends Migrator {
     }
 
     for (const talk of this.talks) {
-      talk.performances = performances[getId(talk.id)] ?? [];
+      talk.performances = performances[talk.id] ?? [];
     }
-    this.cache.write('talks.ndjson', this.rawTalks);
+    this.cache.write('talks.ndjson', this.talks);
 
     // Finally we're going to actually do the keynote exports for each flagged
     // talk; it's time consuming and is absolutely a time to cache some shit.
@@ -137,28 +137,31 @@ export class TalkMigrator extends Migrator {
   override async finalize() {
     for (const talk of this.talks) {
       const timesPerformed = talk.performances?.length;
-      const featuredPerformance = talk.performances?.find(
-        p => p.isFeaturedVersion,
+      const tKey = getId(talk.id);
+      const canon = talk.performances?.find(
+        p => p.isCanonicalVersion,
       );
       for (const perf of talk.performances ?? []) {
-        if (timesPerformed === 1 || perf.event === featuredPerformance?.event) {
+        const pKey = getId(perf.event);
+
+        if (timesPerformed === 1 || perf.event === canon?.event) {
           talk.name = perf.withTitle;
           talk.date = perf.date;
 
           // If there's a deck for the talk, copy over its supporting assets and generate
           // the talk's markdown text from the slide notes.
-          if (this.decks[talk.id]) {
-            const deck = this.decks[talk.id][perf.event];
+          if (this.decks[tKey]) {
+            const deck = this.decks[tKey][pKey];
             if (deck && deck.slides) {
               talk.text = this.keynoteToMarkdown(talk, deck.slides);
             }
             this.cache
-              .dir(talk.id)
-              .dir(perf.event)
-              .copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
+              .dir(tKey)
+              .dir(pKey)
+              .copy('.', this.assets.dir(tKey).path(), { overwrite: true });
           }
-          await this.saveThing(talk, 'markdown');
           await this.saveThing(talk);
+          await this.saveThing(talk, 'markdown');
         }
 
         const rel = {
@@ -177,7 +180,7 @@ export class TalkMigrator extends Migrator {
   }
 
   protected prepTalk(input: CustomSchemaItem): Talk {
-    const t = TalkSchema.parse({ id: toId('talk', input.id) });
+    const t = TalkSchema.parse({ id: input.id });
     return t;
   }
 
@@ -186,7 +189,7 @@ export class TalkMigrator extends Migrator {
       event: toId('event', input.presentedAt),
       date: input.date,
       withTitle: input.name,
-      isFeaturedVersion: input.featured,
+      isCanonicalVersion: input.canonical,
       url: input.url,
       recording: input.recording,
       pdf: input.pdf,
@@ -198,7 +201,10 @@ export class TalkMigrator extends Migrator {
     if (!performance.keynoteFile) return;
     if (!this.keynotes.exists(performance.keynoteFile)) return;
 
-    const deckDir = this.cache.dir(talk.id).dir(performance.event);
+    const talkId = getId(talk.id);
+    const performanceId = getId(performance.event);
+
+    const deckDir = this.cache.dir(talkId).dir(performanceId);
     if (deckDir.exists('deck.json')) return;
 
     const path = deckDir.path();
@@ -259,7 +265,7 @@ export class TalkMigrator extends Migrator {
     includeSkipped = false,
     useTitles = true,
   ) {
-    return slides
+    const markdown = slides
       .map(slide => {
         const text: string[] = [];
         if (slide.skipped === false || (slide.skipped && includeSkipped)) {
@@ -273,8 +279,10 @@ export class TalkMigrator extends Migrator {
       .filter(s => s.trim().length)
       .join('\n\n---\n\n');
 
+    return markdown;
+    
     function fixImage(input: string) {
-      return input.replace('./images/', `media://talks/${talk.id}/`);
+      return input.replace('./images/', `media://talks/${getId(talk.id)}/`);
     }
   }
 }
@@ -288,6 +296,7 @@ const schema = z.object({
   keynote: z.string().optional(),
   recording: z.string().optional(),
   pdf: z.string().optional(),
+  canonical: z.coerce.boolean().default(false),
   featured: z.coerce.boolean().default(false),
 });
 

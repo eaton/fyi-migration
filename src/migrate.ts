@@ -14,13 +14,13 @@ export class MigrateEverything extends Migrator {
     await this.arango.initialize();
     await this.arango.reset(() => Promise.resolve(true));
 
-    await new AllTextFilesMigrator({ logger: this.log }).run();
-    await new AllBlogMigrator({ logger: this.log }).run();
-    await new ArticleReprintMigrator({ logger: this.log }).run();
-    await new AllBookmarksMigrator({ logger: this.log }).run();
-    await new AllSocialMigrator({ logger: this.log }).run();
-    await new BookMigrator({ logger: this.log }).run();
-    await new AllDatasetsMigrator({ logger: this.log }).run();
+    // await new AllTextFilesMigrator({ logger: this.log }).run();
+    // await new AllBlogMigrator({ logger: this.log }).run();
+    // await new ArticleReprintMigrator({ logger: this.log }).run();
+    // await new AllBookmarksMigrator({ logger: this.log }).run();
+    // await new AllSocialMigrator({ logger: this.log }).run();
+    // await new BookMigrator({ logger: this.log }).run();
+    // await new AllDatasetsMigrator({ logger: this.log }).run();
     await new AllWorkMigrator({ logger: this.log }).run();
     return;
   }

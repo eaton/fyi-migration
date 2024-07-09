@@ -14,7 +14,7 @@ export const TalkEventSchema = z.object({
   event: z.string(),
   date: z.coerce.date().optional(),
   withTitle: z.string().optional(),
-  isFeaturedVersion: z.coerce.boolean().optional(),
+  isCanonicalVersion: z.coerce.boolean().optional(),
   description: z.string().optional(),
   recording: urlSchema.optional(),
   transcript: z.string().optional(),
@@ -26,7 +26,7 @@ export const TalkEventSchema = z.object({
 export type TalkInstance = z.infer<typeof TalkEventSchema>;
 
 export const TalkSchema = CreativeWorkSchema.extend({
-  type: z.string().default('Talk'),
+  type: z.string().default('Presentation'),
   performances: z.array(TalkEventSchema).optional(),
   keySlide: z.number().optional(),
   slides: z.array(SlideSchema).optional(),

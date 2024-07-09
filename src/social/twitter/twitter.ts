@@ -208,6 +208,9 @@ export class TwitterMigrator extends Migrator {
     // at least for now.
     for (const smp of toExport) {
       await this.saveThing(smp);
+      if (smp.hasPart) {
+        await this.saveThing(smp, 'markdown');
+      }
     }
 
     if (this.options.saveUsers) {
