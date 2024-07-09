@@ -4,6 +4,7 @@ import { Event, EventSchema } from '../schemas/schema-org/event.js';
 import { Place, PlaceSchema } from '../schemas/schema-org/place.js';
 import { Migrator, MigratorOptions, toId } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { isEmpty } from 'emptier';
 
 export interface ConferenceMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -38,7 +39,9 @@ export class ConferenceMigrator extends Migrator {
         this.options.sheetName,
         schema,
       );
-      this.cache.write('conferences.ndjson', items);
+      if (!isEmpty(items)) {
+        this.cache.write('conferences.ndjson', items);
+      }
     }
     return;
   }

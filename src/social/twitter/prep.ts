@@ -8,7 +8,6 @@ export function user(info: Record<string, string> | TwitterArchive) {
   if (info instanceof TwitterArchive) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-
       id: toId('blog', `@${info.user.screen_name.toLocaleLowerCase()}`),
       id_str: info.user.id,
       subtitle: info.user.name,

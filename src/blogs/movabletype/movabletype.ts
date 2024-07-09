@@ -198,6 +198,7 @@ export class MovableTypeMigrator extends BlogMigrator {
     return CommentSchema.parse({
       id: toId('comment', `mt${input.comment_id}`),
       date: input.comment_created_on,
+      isPartOf: entry.isPartOf,
       about: entry.id,
       commenter: {
         name: input.comment_author || undefined,
