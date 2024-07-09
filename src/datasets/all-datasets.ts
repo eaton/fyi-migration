@@ -25,7 +25,7 @@ export class AllDatasetsMigrator extends Migrator {
       'twitter-engagement.tsv',
     ];
     for (const file of raw) {
-      this.input.copy(file, this.output.path(file));
+      this.input.copy(file, this.output.path(file), { overwrite: true });
     }
     return;
   }
