@@ -64,6 +64,7 @@ export class AppearanceMigrator extends Migrator {
       return CreativeWorkSchema.parse({
         ...item.venue,
         id: toId(item.venue?.type, item.venue?.id),
+        type: item.type ? getMeta(item.type).name : undefined,
       });
     }
   }
