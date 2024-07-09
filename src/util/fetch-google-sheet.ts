@@ -45,7 +45,11 @@ export async function fetchGoogleSheet<T extends z.ZodTypeAny = z.ZodRecord>(
         return parsed.data;
       } else {
         if (strict) {
-          throw parsed.error;
+          const context = {
+            data: row,
+            errors: parsed.error.format()
+          }
+          throw new Error('Error parsing row', { cause: context });
         } else {
           return undefined;
         }
