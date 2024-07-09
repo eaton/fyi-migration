@@ -158,6 +158,7 @@ export class TalkMigrator extends Migrator {
               .copy('.', this.assets.dir(talk.id).path(), { overwrite: true });
           }
           await this.saveThing(talk, 'markdown');
+          await this.saveThing(talk);
         }
 
         const rel = {
