@@ -216,7 +216,7 @@ export function schemas(): SchemaRecord[] {
       name: 'EmailMessage',
       parent: 'Message',
       type: 'email',
-      collection: 'works',
+      collection: 'email',
     },
     {
       name: 'Movie',
