@@ -139,6 +139,8 @@ export class LivejournalMigrator extends BlogMigrator {
   protected prepEntry(entry: lja.LjArchiveEvent) {
     if (entry.security === 'usemask') {
       entry.security = 'lj-group/' + entry.audience?.toString();
+    } else if (entry.security !== undefined) {
+      entry.security = 'private';
     }
     return SocialMediaPostingSchema.parse({
       id: toId('post', `lj${entry.id}`),
@@ -175,14 +177,12 @@ export class LivejournalMigrator extends BlogMigrator {
       // Replace `<lj-user name="foo">` with <a href="...">
       const users = parseUserTags(output);
       for (const [a, username] of Object.entries(users) ?? []) {
-        output = output?.replaceAll(a, `<a href="https://www.livejournal.com/users/${username}>${username}</a>`)
+        output = output?.replaceAll(a, `<a href="https://www.livejournal.com/users/${username}">${username}</a>`);
       }
 
       const cut = parseCutTag(output, true);
-      if (cut.hiddenText) {
-        // We're not even going to attempt to include the cut text for now. Oh well.
-        output = [cut.preCut || '', cut.hiddenText || '', cut.postCut || ''].join('\n\n'); 
-      }
+      // We're not even going to attempt to include the cut text for now. Oh well.
+      output = [cut.preCut || '', cut.hiddenText || '', cut.postCut || ''].join('\n\n'); 
 
       output = autop(output);
       output = toMarkdown(output);
