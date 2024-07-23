@@ -1,3 +1,2 @@
-import { MailboxMigrator } from './mailboxes.js';
-
-await new MailboxMigrator({ logger: { level: 'debug' } }).run();
+import { LivejournalMigrator } from './blogs/index.js';
+await new LivejournalMigrator({ logger: { level: 'debug' } }).run();

@@ -1,30 +1,22 @@
 import { isAfter, isBefore } from '@eatonfyi/dates';
-import { autop, extract, fromLivejournal, toMarkdown } from '@eatonfyi/html';
+import { autop, toMarkdown } from '@eatonfyi/html';
 import {
   Comment,
   CommentSchema,
 } from '../../schemas/schema-org/CreativeWork/comment.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
+import { SocialMediaPosting, SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
-  CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
 import { toId } from '../../shared/schemer.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
-import {
-  LivejournalComment,
-  xmlSchema,
-  xmlTemplate,
-  type LivejournalEntry,
-} from './schema.js';
-import { parseSemagicFile } from './semagic.js';
-
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
   ignoreAfter?: Date;
   ignoreComments?: boolean;
 }
+import {lja, parseCutTag, parseUserTags } from '@eatonfyi/ljarchive';
 
 const defaults: LivejournalMigrateOptions = {
   name: 'lj',
@@ -34,12 +26,16 @@ const defaults: LivejournalMigrateOptions = {
   input: 'input/blogs/livejournal',
   cache: 'cache/blogs/livejournal',
   output: 'src/entries/lj',
+  urlsToFix: {
+    'http*://www.predicate.(net|org)/users/verb/lj/': 'media://lj/',
+    'http*://www.predicate.(net|org)/': 'media://predicatenet/',
+  }
 };
 
-export class LivejournaMigrator extends BlogMigrator {
+export class LivejournalMigrator extends BlogMigrator {
   declare options: LivejournalMigrateOptions;
-  rawEntries: LivejournalEntry[] = [];
-  entries: CreativeWork[] = [];
+  journal: lja.LjArchiveFile | undefined = undefined;
+  entries: SocialMediaPosting[] = [];
   comments: Record<string, Comment[]> = {};
 
   constructor(options: LivejournalMigrateOptions = {}) {
@@ -50,104 +46,73 @@ export class LivejournaMigrator extends BlogMigrator {
     return this.cache.find({ matching: '*.json', recursive: false }).length > 0;
   }
 
-  async fillCache(): Promise<void> {
-    const sljFiles = this.input.find({ matching: '*.slj', recursive: false });
-    for (const file of sljFiles) {
-      this.log.debug(`Parsing ${file}`);
-      const raw = this.input.read(file, 'buffer');
-      if (raw) {
-        try {
-          const entry = parseSemagicFile(raw);
-          if (entry) {
-            this.cache.write(
-              this.makeFilename(
-                { name: entry.subject ?? entry.id, date: entry.date },
-                '.json',
-              ),
-              entry,
-            );
-          }
-        } catch (err: unknown) {
-          this.log.error({ err, file }, 'Error parsing Semagic file');
-        }
+  override async readCache(): Promise<lja.LjArchiveFile | undefined> {
+    if (this.journal === undefined) {
+      const buffer = this.input.read('archive.lja', 'buffer');
+      if (buffer !== undefined) {
+        this.journal = lja.parse(buffer);
+      } else {
+        this.log.error('Error reading archive');
       }
     }
-
-    const xmlFiles = this.input.find({ matching: '*.xml', recursive: false });
-    for (const file of xmlFiles) {
-      this.log.debug(`Parsing ${file}`);
-      const xml = this.input.read(file);
-      if (xml) {
-        const extracted = await extract(xml, xmlTemplate, xmlSchema, {
-          xml: true,
-        });
-        for (const entry of extracted) {
-          if (
-            this.options.ignoreBefore &&
-            isBefore(entry.date, this.options.ignoreBefore)
-          ) {
-            continue;
-          }
-          if (
-            this.options.ignoreAfter &&
-            isAfter(entry.date, this.options.ignoreAfter)
-          ) {
-            continue;
-          }
-
-          const filename = this.makeFilename(
-            { name: entry.subject ?? entry.id, date: entry.date },
-            '.json',
-          );
-          this.cache.write(filename, entry);
-        }
-      }
-    }
-
-    return Promise.resolve();
-  }
-
-  override async readCache(): Promise<LivejournalEntry[]> {
-    if (this.rawEntries.length === 0) {
-      const files = this.cache.find({ matching: '*.json', recursive: false });
-      for (const file of files) {
-        this.rawEntries.push(this.cache.read(file, 'auto') as LivejournalEntry);
-      }
-    }
-    return this.rawEntries;
+    return this.journal;
   }
 
   override async process() {
     const raw = await this.readCache();
+    if (raw === undefined) return;
 
-    for (const entry of raw) {
+    const moods = Object.fromEntries(raw.moods.map(m => [m.id, m.name]));
+    const users = Object.fromEntries(raw.users.map(u => [u.id, u.name]));
+    
+    const events = raw.events;
+
+    // Construct a blog record for the journal
+
+    for (const event of events) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      const cw = this.prepEntry(entry);
-      this.entries.push(cw);
-
-      if (entry.comments && entry.comments.length) {
-        this.comments[cw.id] ??= [];
-        for (const comment of entry.comments) {
-          this.comments[cw.id].push(
-            this.prepComment({ entry: entry.id, ...comment }),
-          );
-        }
-        if (this.comments[cw.id].length) sortByParents(this.comments[cw.id]);
+      if (this.options.ignoreBefore && isBefore(event.date, this.options.ignoreBefore)) {
+        continue;
       }
+      if (this.options.ignoreAfter && isAfter(event.date, this.options.ignoreAfter)) {
+        continue;
+      }
+
+      // Swap in mood
+      if (event.moodId) {
+        event.mood ??= moods[event.moodId];
+      }
+
+      // Process other fields
+      const cw = this.prepEntry(event);
+
+      const comments = this.journal?.comments?.filter(c => c.eventId === event.id) ?? [];
+      if (comments.length) {
+        this.comments ??= {};
+        this.comments[cw.id] ??= [];
+      }
+      for (const comment of comments) {
+        if (comment.userId) {
+          // Swap in comment author-name
+          comment.userName ??= users[comment.userId] ?? users[0];
+          this.comments[cw.id].push(
+            this.prepComment(comment),
+          )
+        }
+      }
+
+      if (this.comments[cw.id] && this.comments[cw.id].length) {
+        cw.commentCount = comments.length;
+        sortByParents(this.comments[cw.id]);
+      }
+
+      this.entries.push(cw);
     }
+
     return;
   }
 
   override async finalize() {
-    for (const e of this.entries) {
-      await this.saveThing(e);
-      await this.saveThing(e, 'markdown');
-
-      if (this.comments[e.id] && this.comments[e.id].length) {
-        await this.saveThings(this.comments[e.id]);
-      }
-    }
-
     const lj = CreativeWorkSchema.parse({
       type: 'Blog',
       id: toId('blog', this.name),
@@ -157,35 +122,46 @@ export class LivejournaMigrator extends BlogMigrator {
     });
     await this.saveThing(lj);
 
+    for (const e of this.entries) {
+      await this.saveThing(e);
+      // await this.saveThing(e, 'markdown');
+
+      if (this.comments[e.id] && this.comments[e.id].length) {
+        await this.saveThings(this.comments[e.id]);
+      }
+    }
+
     await this.copyAssets('media/lj-photos', 'lj');
+    await this.copyAssets('media/lj-userpics', 'lj/userpics');
     return Promise.resolve();
   }
 
-  protected prepEntry(entry: LivejournalEntry) {
+  protected prepEntry(entry: lja.LjArchiveEvent) {
+    if (entry.security === 'usemask') {
+      entry.security = 'lj-group/' + entry.audience?.toString();
+    }
     return SocialMediaPostingSchema.parse({
       id: toId('post', `lj${entry.id}`),
+      privacy: entry.security || undefined,
       type: 'BlogPosting',
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
       isPartOf: toId('blog', this.name),
-      avatar: entry.avatar,
+      avatar: entry.userPicKeyword?.replaceAll(/\W+/g, '-').toLocaleLowerCase(),
       mood: entry.mood,
       music: entry.music,
     });
   }
 
-  protected prepComment(comment: LivejournalComment): Comment {
+  protected prepComment(comment: lja.LjArchiveComment): Comment {
     return CommentSchema.parse({
       id: toId('comment', `lj${comment.id}`),
-      parent: comment.parent
-        ? toId('comment', `lj${comment.parent}`)
+      parent: comment.parentId
+        ? toId('comment', `lj${comment.parentId}`)
         : undefined,
-      about: comment.entry ? toId('post', `lj${comment.entry}`) : undefined,
-      commenter: {
-        name: comment.name,
-        mail: comment.email,
-      },
+      about: comment.eventId ? toId('post', `lj${comment.eventId}`) : undefined,
+      commenter: { name: comment.userName },
       isPartOf: toId('blog', this.name),
       date: comment.date,
       text: this.ljMarkupToMarkdown(comment.body),
@@ -194,11 +170,26 @@ export class LivejournaMigrator extends BlogMigrator {
 
   // TODO: This is also where we should fix table photo layouts, and probably borked links as well.
   protected ljMarkupToMarkdown(text?: string) {
-    if (text) {
-      return toMarkdown(
-        autop(fromLivejournal(text, { breaks: true, usernames: true })),
-      );
+    let output = text;
+    if (output) {
+      // Replace `<lj-user name="foo">` with <a href="...">
+      const users = parseUserTags(output);
+      for (const [a, username] of Object.entries(users) ?? []) {
+        output = output?.replaceAll(a, `<a href="https://www.livejournal.com/users/${username}>${username}</a>`)
+      }
+
+      const cut = parseCutTag(output, true);
+      if (cut.hiddenText) {
+        // We're not even going to attempt to include the cut text for now. Oh well.
+        output = [cut.preCut || '', cut.hiddenText || '', cut.postCut || ''].join('\n\n'); 
+      }
+
+      output = autop(output);
+      output = toMarkdown(output);
+      if (this.options.urlsToFix) {
+        output = this.fixUrls(output);
+      }
     }
-    return undefined;
+    return output;
   }
 }

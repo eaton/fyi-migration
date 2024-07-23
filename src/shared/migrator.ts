@@ -73,6 +73,13 @@ export interface MigratorOptions {
    */
   assets?: string;
 
+  
+  /**
+   * A key/value list of glob strings and replacements for output markup. This can be used
+   * (for example) to replace internal links and image URLs.
+   */
+  urlsToFix?: Record<string, string>;
+
   /**
    * The directory ad-hoc data files should be stored in. During the migration process, it can
    * be accessed using a simple Storage wrapper via the `yourMigration.data` property.
@@ -482,5 +489,15 @@ export class Migrator {
         }
       }
     }
+  }
+
+  fixUrls(input: string) {
+    let output = input;
+    if (this.options.urlsToFix) {
+      for (const [needle, replacement] of Object.entries(this.options.urlsToFix) ?? []) {
+        output = output.replaceAll(new RegExp(needle, 'gi'), replacement);
+      }
+    }
+    return output;
   }
 }

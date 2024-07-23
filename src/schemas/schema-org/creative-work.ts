@@ -17,6 +17,7 @@ export const CreativeWorkSchema = ThingSchema.extend({
   publisher: z.string().optional(),
   archivedAt: z.string().optional(),
   text: z.string().optional(),
+  commentCount: z.number().optional(),
 });
 
 export type CreativeWork = z.infer<typeof CreativeWorkSchema>;
