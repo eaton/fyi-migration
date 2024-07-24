@@ -17,6 +17,7 @@ const projectImportSchema = z.object({
     })
     .optional(),
   description: z.string().optional(),
+  text: z.string().optional(),
   client: z.object({
     id: z.string().transform(i => i ? toId('org', i) : undefined),
     name: z.string().optional(),
