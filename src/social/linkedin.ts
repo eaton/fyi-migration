@@ -1,7 +1,11 @@
 import { nanohash } from '@eatonfyi/ids';
-import { CreativeWorkSchema, toId, urlSchema } from '@eatonfyi/schema';
+import {
+  CreativeWorkSchema,
+  SocialMediaPostingSchema,
+  toId,
+  urlSchema,
+} from '@eatonfyi/schema';
 import { z } from 'zod';
-import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { findLinks } from '../util/find-links.js';
 

@@ -1,14 +1,12 @@
-import { toId } from '@eatonfyi/schema';
-import { z } from 'zod';
-import { urlSchema } from '../schemas/fragments/index.js';
-import {
-  Project,
-  ProjectSchema,
-} from '../schemas/schema-org/CreativeWork/project.js';
 import {
   Organization,
   OrganizationSchema,
-} from '../schemas/schema-org/organization.js';
+  Project,
+  ProjectSchema,
+  toId,
+  urlSchema,
+} from '@eatonfyi/schema';
+import { z } from 'zod';
 import {
   SheetMigrator,
   SheetMigratorOptions,

@@ -1,10 +1,12 @@
 import { ExtractTemplateObject, extract } from '@eatonfyi/html';
+import {
+  BookmarkSchema,
+  CreativeWorkSchema,
+  Thing,
+  toId,
+} from '@eatonfyi/schema';
 import micromatch from 'micromatch';
 import { z } from 'zod';
-import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { toId } from '../schemas/mapper.js';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
-import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 

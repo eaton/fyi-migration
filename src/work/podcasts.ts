@@ -1,14 +1,12 @@
-import { toId } from '@eatonfyi/schema';
-import { z } from 'zod';
-import { urlSchema } from '../schemas/fragments/index.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../schemas/schema-org/creative-work.js';
-import {
   Episode,
   EpisodeSchema,
-} from '../schemas/schema-org/CreativeWork/episode.js';
+  toId,
+  urlSchema,
+} from '@eatonfyi/schema';
+import { z } from 'zod';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 

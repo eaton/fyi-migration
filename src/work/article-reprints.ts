@@ -1,10 +1,6 @@
 import { nanohash } from '@eatonfyi/ids';
+import { Article, ArticleSchema, toId } from '@eatonfyi/schema';
 import { Frontmatter } from '@eatonfyi/serializers';
-import { toId } from '../schemas/mapper.js';
-import {
-  Article,
-  ArticleSchema,
-} from '../schemas/schema-org/CreativeWork/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {

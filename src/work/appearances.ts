@@ -1,8 +1,11 @@
-import { getMeta, toId } from '@eatonfyi/schema';
+import {
+  CreativeWorkSchema,
+  getMeta,
+  Thing,
+  toId,
+  urlSchema,
+} from '@eatonfyi/schema';
 import { z } from 'zod';
-import { urlSchema } from '../schemas/fragments/index.js';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
-import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 

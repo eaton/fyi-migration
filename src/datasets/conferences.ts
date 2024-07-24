@@ -1,9 +1,13 @@
-import { toId } from '@eatonfyi/schema';
+import {
+  Event,
+  EventSchema,
+  Place,
+  PlaceSchema,
+  toId,
+  urlSchema,
+} from '@eatonfyi/schema';
 import { isEmpty } from 'emptier';
 import { z } from 'zod';
-import { urlSchema } from '../schemas/fragments/index.js';
-import { Event, EventSchema } from '../schemas/schema-org/event.js';
-import { Place, PlaceSchema } from '../schemas/schema-org/place.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 

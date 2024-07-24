@@ -1,5 +1,6 @@
 import { nanohash } from '@eatonfyi/ids';
 import {
+  CreativeWork,
   CreativeWorkSchema,
   SocialMediaPosting,
   SocialMediaPostingSchema,

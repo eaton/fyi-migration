@@ -1,17 +1,17 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
 import {
+  BookmarkSchema,
   Comment,
   CommentSchema,
   CreativeWork,
   CreativeWorkSchema,
+  SocialMediaPostingSchema,
   toId,
 } from '@eatonfyi/schema';
 import { removeStopwords, toSlug } from '@eatonfyi/text';
 import is from '@sindresorhus/is';
 import { ZodTypeAny, z } from 'zod';
-import { BookmarkSchema } from '../../schemas/custom/bookmark.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';

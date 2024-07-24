@@ -1,11 +1,9 @@
 import { max, min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
+import { CreativeWork, SocialMediaPostingSchema, toId } from '@eatonfyi/schema';
 import { Frontmatter } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
 import { parse as parsePath } from 'path';
-import { toId } from '../schemas/mapper.js';
-import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
-import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 
 const defaults: MigratorOptions = {

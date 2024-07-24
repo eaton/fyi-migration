@@ -1,3 +1,4 @@
+import { BookmarkSchema, toId } from '@eatonfyi/schema';
 import { ParsedUrl } from '@eatonfyi/urls';
 import {
   ArchiveReadPart,
@@ -6,8 +7,6 @@ import {
   TwitterHelpers,
 } from 'twitter-archive-reader';
 import { z } from 'zod';
-import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { toId } from '../schemas/mapper.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 

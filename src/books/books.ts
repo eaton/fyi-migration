@@ -1,16 +1,16 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { nanohash } from '@eatonfyi/ids';
-import { toId } from '@eatonfyi/schema';
+import {
+  BookSchema,
+  PartialBookSchema,
+  toId,
+  type Book,
+  type PartialBook,
+} from '@eatonfyi/schema';
 import { canParse, NormalizedUrl } from '@eatonfyi/urls';
 import { emptyDeep, merge, set, unflatten } from 'obby';
 import { parse as parsePath } from 'path';
 import { z } from 'zod';
-import {
-  BookSchema,
-  PartialBookSchema,
-  type Book,
-  type PartialBook,
-} from '../schemas/schema-org/CreativeWork/book.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';

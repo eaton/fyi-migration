@@ -1,9 +1,6 @@
 import { extract } from '@eatonfyi/html';
+import { BookSchema, PartialBook } from '@eatonfyi/schema';
 import { emptyDeep } from 'empty-deep';
-import {
-  BookSchema,
-  PartialBook,
-} from '../../schemas/schema-org/CreativeWork/book.js';
 import { expandIds, getBestId } from '../normalize-ids.js';
 import { schema, template } from './amazon-schema.js';
 import { fixAmazonBookData } from './fix-amazon-data.js';

@@ -1,7 +1,9 @@
-import { toId } from '@eatonfyi/schema';
+import {
+  CreativeWorkSchema,
+  SocialMediaPostingSchema,
+  toId,
+} from '@eatonfyi/schema';
 import { TwitterArchive } from 'twitter-archive-reader';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
-import { CreativeWorkSchema } from '../@eatonfyi/schema';
 import { Tweet } from './schema.js';
 
 export function user(info: Record<string, string> | TwitterArchive) {
