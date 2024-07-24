@@ -122,11 +122,8 @@ export class PositivaDrupalMigrator extends BlogMigrator {
       } else if (n.type === 'quotes') {
         const quote = this.prepQuote(n);
         await this.saveThing(quote);
-        this.log.debug(`Wrote quote by ${quote.spokenBy}`);
       } else if (n.type === 'blog' || n.type === 'review') {
         const entry = this.prepEntry(n);
-        await this.saveThing(entry);
-        await this.saveThing(entry, 'markdown');
 
         // Handle comments
         const mappedComments = cache.comments
@@ -134,12 +131,11 @@ export class PositivaDrupalMigrator extends BlogMigrator {
           .map(c => this.prepComment(c));
 
         if (mappedComments.length) {
+          entry.commentCount = mappedComments.length;
           sortByParents(mappedComments);
           await this.saveThings(mappedComments);
-          this.log.debug(
-            `Saved ${mappedComments.length} comments for ${entry.id}`,
-          );
         }
+        await this.saveThing(entry);
       }
     }
 

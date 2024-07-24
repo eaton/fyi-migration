@@ -146,13 +146,11 @@ export class MovableTypeMigrator extends BlogMigrator {
         const mappedComments = (entry.comments ?? []).map(c =>
           this.prepComment(c, prepped),
         );
-
-        this.saveThing(prepped);
-        this.saveThing(prepped, 'markdown');
-
         if (mappedComments.length) {
+          prepped.commentCount = mappedComments.length;
           await this.saveThings(mappedComments);
         }
+        await this.saveThing(prepped);
       }
     }
     await this.copyAssets('files', 'positiva');

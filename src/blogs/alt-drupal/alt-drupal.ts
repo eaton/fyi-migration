@@ -1,5 +1,4 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
-import { toSlug } from '@eatonfyi/text';
 import { z } from 'zod';
 import {
   Comment,
@@ -184,14 +183,13 @@ export class AltDrupalMigrator extends BlogMigrator {
   override async finalize() {
     // Currently ignoring comments, whoop whoop
     for (const e of this.entries) {
-      await this.saveThing(e);
-      await this.saveThing(e, 'markdown');
-
       const entryComments = this.comments.filter(c => c.about === e.id);
       if (entryComments.length) {
+        e.commentCount = entryComments.length;
         sortByParents(entryComments);
         await this.saveThings(entryComments);
       }
+      await this.saveThing(e);
     }
 
     await this.saveThing(
@@ -213,7 +211,6 @@ export class AltDrupalMigrator extends BlogMigrator {
       type: 'BlogPosting',
       id: toId('post', `alt${input.nid}`),
       date: input.created,
-      slug: toSlug(input.title),
       name: input.title,
       description: input.summary ? toMarkdown(input.summary) : undefined,
       text: input.body ? toMarkdown(autop(input.body)) : '',

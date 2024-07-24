@@ -65,7 +65,6 @@ export class ArticleReprintMigrator extends Migrator {
   override async finalize(): Promise<void> {
     for (const article of this.articles) {
       await this.saveThing(article);
-      await this.saveThing(article, 'markdown');
     }
 
     await this.copyAssets('images', 'reprints');

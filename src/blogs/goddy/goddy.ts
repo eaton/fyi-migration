@@ -171,17 +171,14 @@ export class GoddyMigrator extends BlogMigrator {
     const nodes = cache.nodes.map(n => this.prepEntry(n));
 
     for (const node of nodes) {
-      await this.saveThing(node);
-      if (node.type == 'BlogPosting') {
-        await this.saveThing(node, 'markdown');
-      }
-
       const nodeComments = comments.filter(c => c.about === node.id);
       if (nodeComments.length) {
+        node.commentCount = nodeComments.length;
         sortByParents(nodeComments);
         await this.saveThings(nodeComments);
         this.log.debug(`Saved ${nodeComments.length} comments for ${node.id}`);
       }
+      await this.saveThing(node);
     }
 
     const site = CreativeWorkSchema.parse({
@@ -225,12 +222,8 @@ export class GoddyMigrator extends BlogMigrator {
         quote: input.money_quote
           ? toMarkdown(autop(input.money_quote.field_money_quote_value))
           : undefined,
-        about:
-          (input.product
-            ? toId('book', input.product.field_product_asin?.trim())
-            : undefined) ??
-          input.link?.field_link_url ??
-          undefined,
+        asin: input.product ? input.product.field_product_asin?.trim() : undefined,
+        link: input.link?.field_link_url ?? undefined,
         text: toMarkdown(autop(input.body ?? '')),
         nodeType: input.type,
       });

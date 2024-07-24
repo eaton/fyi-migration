@@ -124,7 +124,6 @@ export class LivejournalMigrator extends BlogMigrator {
 
     for (const e of this.entries) {
       await this.saveThing(e);
-      // await this.saveThing(e, 'markdown');
 
       if (this.comments[e.id] && this.comments[e.id].length) {
         await this.saveThings(this.comments[e.id]);
@@ -137,19 +136,19 @@ export class LivejournalMigrator extends BlogMigrator {
   }
 
   protected prepEntry(entry: lja.LjArchiveEvent) {
-    if (entry.security === 'usemask') {
-      entry.security = 'lj-group/' + entry.audience?.toString();
+    if (entry.security === 'usemask' && entry.audience) {
+      entry.security = 'lj-mask/' + entry.audience?.toString();
     } else if (entry.security !== undefined) {
       entry.security = 'private';
     }
     return SocialMediaPostingSchema.parse({
       id: toId('post', `lj${entry.id}`),
-      privacy: entry.security || undefined,
       type: 'BlogPosting',
       date: entry.date,
       name: entry.subject,
       text: this.ljMarkupToMarkdown(entry.body),
       isPartOf: toId('blog', this.name),
+      privacy: entry.security || undefined,
       avatar: entry.userPicKeyword?.replaceAll(/\W+/g, '-').toLocaleLowerCase(),
       mood: entry.mood,
       music: entry.music,

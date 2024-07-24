@@ -81,13 +81,12 @@ export class AltJekyllMigrator extends BlogMigrator {
     }
 
     for (const e of this.entries) {
-      await this.saveThings(e);
-      await this.saveThings(e, 'markdown');
-
       const comments = this.comments[e.id];
       if (comments?.length) {
+        e.commentCount = comments.length;
         await this.saveThings(comments);
       }
+      await this.saveThings(e);
     }
 
     await this.saveThing(

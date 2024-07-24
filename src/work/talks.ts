@@ -161,7 +161,6 @@ export class TalkMigrator extends Migrator {
               .copy('.', this.assets.dir(tKey).path(), { overwrite: true });
           }
           await this.saveThing(talk);
-          await this.saveThing(talk, 'markdown');
         }
 
         const rel = {
