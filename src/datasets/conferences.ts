@@ -12,10 +12,10 @@ export interface ConferenceMigratorOptions extends MigratorOptions {
 }
 
 const defaults: ConferenceMigratorOptions = {
-  name: 'conferences',
+  name: 'events',
   description: 'Conference dates, locations, and attendance over time',
   documentId: process.env.GOOGLE_SHEET_DATASETS,
-  sheetName: 'conferences',
+  sheetName: 'events',
 };
 
 export class ConferenceMigrator extends Migrator {
@@ -29,7 +29,7 @@ export class ConferenceMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('conferences.ndjson') === 'file';
+    return this.cache.exists('events.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -40,14 +40,14 @@ export class ConferenceMigrator extends Migrator {
         schema,
       );
       if (!isEmpty(items)) {
-        this.cache.write('conferences.ndjson', items);
+        this.cache.write('events.ndjson', items);
       }
     }
     return;
   }
 
   override async readCache() {
-    const data = this.cache.read('conferences.ndjson', 'auto');
+    const data = this.cache.read('events.ndjson', 'auto');
 
     if (data && Array.isArray(data)) {
       const events = data.map(e => schema.parse(e));
@@ -86,7 +86,7 @@ export class ConferenceMigrator extends Migrator {
       return PlaceSchema.parse({
         id: toId('place', item.place.id),
         isPartOf: item.place.isPartOf
-          ? toId('place', +item.place.isPartOf)
+          ? toId('place', + item.place.isPartOf)
           : undefined,
         name: item.place.name,
       });

@@ -3,6 +3,7 @@ import { AppearanceMigrator } from './appearances.js';
 import { ArticleReprintMigrator } from './article-reprints.js';
 import { PodcastMigrator } from './podcasts.js';
 import { TalkMigrator } from './talks.js';
+import { ProjectMigrator } from './projects.js';
 
 export class AllWorkMigrator extends Migrator {
   override async run() {
@@ -10,6 +11,7 @@ export class AllWorkMigrator extends Migrator {
     await new PodcastMigrator({ logger: this.log }).run();
     await new AppearanceMigrator({ logger: this.log }).run();
     await new TalkMigrator({ logger: this.log }).run();
+    await new ProjectMigrator({ logger: this.log }).run();
     return;
   }
 }

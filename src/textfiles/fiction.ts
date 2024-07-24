@@ -56,17 +56,7 @@ export class TextFictionMigrator extends Migrator {
   }
 
   override async finalize() {
-    for (const s of this.stories) {
-      const { text, ...frontmatter } = s;
-      const file = this.makeFilename(frontmatter);
-      if (file) {
-        this.output.write(file, { content: text, data: frontmatter });
-        if (this.options.store == 'arango') await this.arango.set(frontmatter);
-        this.log.debug(`Wrote ${file}`);
-      } else {
-        this.log.debug(`Couldn't write ${frontmatter}`);
-      }
-    }
+    await this.saveThings(this.stories);
     return;
   }
 

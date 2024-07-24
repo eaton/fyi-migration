@@ -1,2 +1,2 @@
-import { LivejournalMigrator } from './blogs/index.js';
-await new LivejournalMigrator({ logger: { level: 'debug' } }).run();
+import { ProjectMigrator } from './work/index.js';
+await new ProjectMigrator({ logger: { level: 'debug' } }).run();

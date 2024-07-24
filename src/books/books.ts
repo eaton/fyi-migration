@@ -20,6 +20,7 @@ export interface BookMigratorOptions extends MigratorOptions {
   sheetName?: string;
   reFetch?: boolean;
   reParse?: boolean;
+  fetchExternalData?: boolean;
 }
 
 const defaults: BookMigratorOptions = {
@@ -28,6 +29,7 @@ const defaults: BookMigratorOptions = {
   output: 'src/books',
   documentId: process.env.GOOGLE_SHEET_LIBRARY,
   sheetName: 'books',
+  fetchExternalData: true,
 };
 
 export class BookMigrator extends Migrator {
