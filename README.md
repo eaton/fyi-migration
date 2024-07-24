@@ -12,9 +12,8 @@ Posts and entries from the assorted places I've written over the years. These ar
 
 `Textfiles` and `Livejournal` in particular will probably need some post-migration curation and careful consideration. Many of those posts were never intended to be publicly published, are extremely full of teen and post-college cringe, or contain snippets of personal information about folks who probably didn't anticipate their melodrama spilling out.
 
-These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entities linked to a parent `Blog` entity, depending on the nature of the content. Comments will naturally be exposed as `Comment` entities.
+These will be exposed as Schema.org `BlogPosting`, or `ShortStory` entities linked to a parent `Blog` entity, depending on the nature of the content. Comments will naturally be exposed as `Comment` entities. I toyed around with primarily-link-related posts being a custom Bookmark type and using Review for stuff talking about a book, but after some consideration I think they'll stay vanilla, and rely on the `sharedContent` and `isAbout` properties to handle relationships to those things intead.
 
-- [ ] ~~Blogger~~
 - [x] TypePad
 - [x] Livejournal (minus Textfiles reprints)
 - [x] MovableType
@@ -43,7 +42,7 @@ These will be exposed as Schema.org `BlogPost`, `Review`, or `ShortStory` entiti
 - [ ] Bluesky
 - [ ] Facebook
 - [ ] Usenet
-- [ ] Metafilter
+- [ ] Metafilter (the import itself is done, but chewing on how to separate the wheat from the chaff.)
 - [x] Linkedin
 
 ## Appearances
@@ -62,7 +61,7 @@ Places I've written, presented, been quoted, and so on.
 
 ## Projects
 
-This is a very, very wacky grab bag and covers things I've done for funsies as well as work projects. Some of these will end up as line-item entries while others will get a dedicated page, or even multiple pages.
+This is a very, very wacky grab bag and covers things I've done for funsies as well as work projects. Some of these will end up as line-item entries while others will get a dedicated page, or even multiple pages. At least for the time being I have a nonstandatd `Project` entity type that hangs onto a placeholder for each of these things, and also optionally tracks project-specific employers and clients.
 
 - [ ] Insert Content Here
 - [ ] Christian Rightcast
@@ -101,7 +100,7 @@ Employment timeline; this is less of a primary focus and more splashover data fr
 
 ## Links
 
-Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc. These are unlikely to be exposed as Schema.org entities.
+Saved and shared links over the years. Accurately capturing the dates/times, and distinguishing between "bookmarks" and "links that happened to be mentioned" is tricky. Some of these will also need to be removed from the dataset as they were only meant to be personal/local bookmarks and contain links to client staging sites, work intranets, etc. These are unlikely to be exposed as Schema.org entities. (Note: In the process of moving most of the 'mentioned in a post' stuff to live in normal BlogPosts etc rather than dedicated Bookmarks.)
 
 - [x] Browser Bookmarks
 - [x] Old sites (MDB files & HTML extraction)
@@ -124,6 +123,7 @@ Whenever possible I'll lean on hotlinking to Flickr for the large photos; keepin
 - [ ] Instagram selections
 - [ ] Flickr selections
 - [ ] iCloud Photo selections
+- [ ] Potentially shift some photoblogging to [glass.photo](https://glass.photo) and see how it works out.
 
 ## Weird Oldschool Stuff
 
@@ -169,6 +169,8 @@ These will be used to populate 'on this day/week' and other contextual cues arou
 ## Facts
 
 These are basically a database of supporting facts that can be used to populate Schema.org data and used to cross-link entris and other content that mentions them. `Books` in particular will be used to construct a reading room view of my library, and `People` will be used to deduplicate references to folks I know in tweets, old posts, and so on.
+
+For the time being these being stored in the 'products', 'events', and 'things' buckets — with people, places, and organizations forming the bulk of the stuff in the 'things' bucket.
 
 - [x] Books
   - [x] TTRPG books

@@ -74,7 +74,7 @@
     "dotenv": "^16.4.5",
     "drizzle-kit": "^0.22.7",
     "drizzle-orm": "^0.31.2",
-    "emptier": "^1.0.0",
+    "emptier": "^1.2.0",
     "empty-deep": "^1.0.0",
     "execa": "^9.2.0",
     "google-spreadsheet": "^4.1.2",

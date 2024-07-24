@@ -11,5 +11,5 @@
 
 ## Architecture
 
-- [ ] Split the schema stuff into a secondary project that can be imported into 11ty etc easier
-- [ ] Good lord, the saveThimg() and linkThing() kludges are terrible. Special casing each backend is madness. Ultimately I'd like to support KVS on the local filesystem, ArangoDB, Postgres, and Sqlite. That shouldn't be TOO bad, but will take some discipline, particularly around the way that IDs are created and exchanged. settling on URNs (`urn:fyi:type:id` would probably make sense, and internally could be shortened to `type:id`)
+- [x] Split the schema stuff into a secondary project that can be imported into 11ty etc easier
+- [x] Good lord, the saveThimg() and linkThing() kludges are terrible. Special casing each backend is madness. Ultimately I'd like to support KVS on the local filesystem, ArangoDB, Postgres, and Sqlite. That shouldn't be TOO bad, but will take some discipline, particularly around the way that IDs are created and exchanged. settling on URNs (`urn:fyi:type:id` would probably make sense, and internally could be shortened to `type:id`)
