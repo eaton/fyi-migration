@@ -30,7 +30,7 @@ export class ConferenceMigrator extends Migrator {
   }
 
   override async cacheIsFilled() {
-    return this.cache.exists('events.ndjson') === 'file';
+    return this.cache.exists('conferences.ndjson') === 'file';
   }
 
   override async fillCache() {
@@ -41,14 +41,14 @@ export class ConferenceMigrator extends Migrator {
         schema,
       );
       if (!isEmpty(items)) {
-        this.cache.write('events.ndjson', items);
+        this.cache.write('conferences.ndjson', items);
       }
     }
     return;
   }
 
   override async readCache() {
-    const data = this.cache.read('events.ndjson', 'auto');
+    const data = this.cache.read('conferences.ndjson', 'auto');
 
     if (data && Array.isArray(data)) {
       const events = data.map(e => schema.parse(e));
@@ -75,7 +75,7 @@ export class ConferenceMigrator extends Migrator {
       isPartOf: toId('event', item.isPartOf),
       name: item.name,
       url: item.url,
-      location: item.place.id,
+      location: item?.place?.id ? toId('place', item.place.id) : undefined,
       date: item.dates?.start,
       dates: item.dates,
       attendees: item.attendees,
@@ -90,6 +90,9 @@ export class ConferenceMigrator extends Migrator {
           ? toId('place', + item.place.isPartOf)
           : undefined,
         name: item.place.name,
+        latitude: item.place.latitude,
+        longitude: item.place.longitude,
+        population: item.place.population,
       });
     } else {
       return undefined;
@@ -105,6 +108,9 @@ const schema = z.object({
     id: z.string(),
     name: z.string().optional(),
     isPartOf: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    population: z.number().optional(),
   }),
   dates: z
     .object({

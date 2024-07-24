@@ -1,30 +1,58 @@
 import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
-import { Migrator, MigratorOptions } from '../shared/index.js';
-import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { SheetMigrator, SheetMigratorOptions } from '../shared/sheet-migrator.js';
 import { Organization, OrganizationSchema } from '../schemas/schema-org/organization.js';
 import { Project, ProjectSchema } from '../schemas/schema-org/CreativeWork/project.js';
-import { isEmpty } from 'emptier';
 import { toId } from '../schemas/index.js';
 
-// Read 'work' tsv file, create a project or web site record for each item
-// Create an 'organization' item for each client or employer
-// Manually update appropriate projects with detailed explanations, related articles, screenshots, etc.
+const projectImportSchema = z.object({
+  id: z.string().transform(i => i ? toId('project', i) : undefined),
+  name: z.string(),
+  additionalType: z.string().optional(),
+  rank: z.number().optional(),
+  dates: z
+    .object({
+      start: z.coerce.date().optional(),
+      end: z.coerce.date().optional(),
+    })
+    .optional(),
+  description: z.string().optional(),
+  client: z.object({
+    id: z.string().transform(i => i ? toId('org', i) : undefined),
+    name: z.string().optional(),
+    url: urlSchema.optional(),
+  }).optional(),
+  vertical: z.string().optional(),
+  employer: z.object({
+    id: z.string().transform(i => i ? toId('org', i) : undefined),
+    name: z.string().optional(),
+    url: urlSchema.optional(),
+  }).optional(),
+  url: urlSchema.optional(),
+  archivedAt: z.string().optional(),
+  usage: z.coerce.number().optional(),
+  skills: z.object({
+    production: z.coerce.boolean().default(false),
+    code: z.coerce.boolean().default(false),
+    education: z.coerce.boolean().default(false),
+    architecture: z.coerce.boolean().default(false),
+    ia: z.coerce.boolean().default(false),
+    strategy: z.coerce.boolean().default(false),
+    process: z.coerce.boolean().default(false),
+  }).optional(),
+  tech: z.array(z.string()).optional()
+});
 
-export interface ProjectMigratorOptions extends MigratorOptions {
-  documentId?: string;
-  sheetName?: string;
-}
-
-const defaults: ProjectMigratorOptions = {
+const defaults: SheetMigratorOptions = {
   name: 'projects',
   description: 'Projects and roles over the years',
   documentId: process.env.GOOGLE_SHEET_WORK,
   sheetName: 'projects',
+  schema: projectImportSchema
 };
 
-export class ProjectMigrator extends Migrator {
-  declare options: ProjectMigratorOptions;
+export class ProjectMigrator extends SheetMigrator {
+  declare options: SheetMigratorOptions;
 
   orgs: Organization[] = [];
   projects: Project[] = [];
@@ -32,33 +60,15 @@ export class ProjectMigrator extends Migrator {
   clients = new Map<string, string>()
   employers = new Map<string, string>();
 
-  constructor(options: ProjectMigratorOptions = {}) {
+  constructor(options: SheetMigratorOptions = {}) {
     super({ ...defaults, ...options });
-  }
-
-  override async cacheIsFilled() {
-    return this.cache.exists('events.ndjson') === 'file';
-  }
-
-  override async fillCache() {
-    if (this.options.documentId) {
-      const items = await fetchGoogleSheet(
-        this.options.documentId,
-        this.options.sheetName,
-        schema,
-      );
-      if (!isEmpty(items)) {
-        this.cache.write('projects.ndjson', items);
-      }
-    }
-    return;
   }
 
   override async readCache() {
     const data = this.cache.read('projects.ndjson', 'auto');
 
     if (data && Array.isArray(data)) {
-      const projects = data.map(p => schema.parse(p));
+      const projects = data.map(p => this.options.schema?.parse(p));
       for (const p of projects) {
         const { client, employer, vertical, skills, tech, ...rawProject } = p;
 
@@ -118,41 +128,3 @@ export class ProjectMigrator extends Migrator {
     return;
   }
 }
-
-const schema = z.object({
-  id: z.string().transform(i => i ? toId('project', i) : undefined),
-  name: z.string(),
-  additionalType: z.string().optional(),
-  rank: z.number().optional(),
-  dates: z
-    .object({
-      start: z.coerce.date().optional(),
-      end: z.coerce.date().optional(),
-    })
-    .optional(),
-  description: z.string().optional(),
-  client: z.object({
-    id: z.string().transform(i => i ? toId('org', i) : undefined),
-    name: z.string().optional(),
-    url: urlSchema.optional(),
-  }).optional(),
-  vertical: z.string().optional(),
-  employer: z.object({
-    id: z.string().transform(i => i ? toId('org', i) : undefined),
-    name: z.string().optional(),
-    url: urlSchema.optional(),
-  }).optional(),
-  url: urlSchema.optional(),
-  archivedAt: z.string().optional(),
-  usage: z.coerce.number().optional(),
-  skills: z.object({
-    production: z.coerce.boolean().default(false),
-    code: z.coerce.boolean().default(false),
-    education: z.coerce.boolean().default(false),
-    architecture: z.coerce.boolean().default(false),
-    ia: z.coerce.boolean().default(false),
-    strategy: z.coerce.boolean().default(false),
-    process: z.coerce.boolean().default(false),
-  }).optional(),
-  tech: z.array(z.string()).optional()
-})
