@@ -47,7 +47,11 @@ interface WithId {
 
 export function toId(type?: string, id?: string | unknown) {
   const internalType = getMeta(type || 'thing').type || 'thing';
-  return [internalType, id || nanoid()].join(idSeparator);
+  if (typeof id === 'string' && id.startsWith(internalType + idSeparator)) {
+    return id;
+  } else {
+    return [internalType, id || nanoid()].join(idSeparator);
+  }
 }
 
 /**
@@ -258,6 +262,13 @@ export function schemas(): SchemaRecord[] {
       name: 'Presentation',
       parent: 'CreativeWork',
       type: 'talk',
+      collection: 'works',
+      isCustom: true,
+    },
+    {
+      name: 'Project',
+      parent: 'CreativeWork',
+      type: 'project',
       collection: 'works',
       isCustom: true,
     },
