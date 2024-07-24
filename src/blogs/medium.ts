@@ -18,18 +18,18 @@ export class MediumMigrator extends BlogMigrator {
   }
 
   override async finalize() {
-    await this.saveThing(
-      CreativeWorkSchema.parse({
-        type: 'Blog',
-        id: toId('blog', this.name),
-        name: this.label,
-        url: 'https://medium.com/@eaton',
-      }),
-    );
+    const blog = CreativeWorkSchema.parse({
+      type: 'Blog',
+      id: toId('blog', this.name),
+      name: this.label,
+      url: 'https://medium.com/@eaton',
+    });
+
+    await this.saveThing(blog);
 
     for (const f of this.input.find({ matching: 'posts/*.md' })) {
       const markdown = this.input.read(f, 'auto');
-      const { text, ...frontmatter } = SocialMediaPostingSchema.parse({
+      const post = SocialMediaPostingSchema.parse({
         type: 'BlogPosting',
         id: toId('post', get(markdown, 'data.id')),
         name: get(markdown, 'data.title') || undefined,
@@ -39,14 +39,9 @@ export class MediumMigrator extends BlogMigrator {
         url: get(markdown, 'data.url') || undefined,
         date: get(markdown, 'data.date') || undefined,
         text: get(markdown, 'content') || undefined,
-        isPartOf: toId('blog', this.name),
+        isPartOf: blog.id,
       });
-
-      const file = this.makeFilename(frontmatter);
-      this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store == 'arango') {
-        await this.arango.set({ ...frontmatter, text });
-      }
+      await this.saveThing(post);
     }
 
     await this.copyAssets('images', 'medium');

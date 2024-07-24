@@ -161,7 +161,7 @@ export class PositivaDrupalMigrator extends BlogMigrator {
   protected prepEntry(input: drupal.Node): CreativeWork {
     return SocialMediaPostingSchema.parse({
       type: 'BlogPosting',
-      id: `post:vpd-${input.nid}`,
+      id: toId('post', `vpd-${input.nid}`),
       date: input.created,
       name: input.title,
       slug: toSlug(input.title),

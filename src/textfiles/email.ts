@@ -67,14 +67,8 @@ export class TextEmailMigrator extends Migrator {
     }
 
     const email = this.prepMail(input);
-    const file = this.makeFilename(email);
-    const { text, ...frontmatter } = email;
-
-    this.output.write(file, { data: frontmatter, content: text });
-    if (this.options.store == 'arango')
-      await this.arango.set({ ...frontmatter, text });
+    await this.saveThing(email);
     this.handleAttachments(input);
-    this.log.debug(`Wrote ${file}`);
 
     return;
   }

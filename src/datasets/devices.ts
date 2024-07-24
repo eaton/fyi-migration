@@ -1,5 +1,6 @@
 import { Device, DeviceSchema } from '../schemas/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
+import { toId } from '../shared/schemer.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 // This is very much in progress; unit conversions and such will need to be done.
@@ -61,7 +62,7 @@ export class DeviceMigrator extends Migrator {
       this.devices = data
         .map(e => DeviceSchema.parse(e))
         .map(e => {
-          e.id = 'device:' + e.id;
+          e.id = toId('device', e.id);
           return e;
         });
     }

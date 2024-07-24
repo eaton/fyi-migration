@@ -144,7 +144,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepSite(input: TumblrBlog) {
     return CreativeWorkSchema.parse({
       type: 'Blog',
-      id: 'blog:' + input.name,
+      id: toId('blog', input.name),
       name: input.title || undefined,
       description: input.description || undefined,
       url: input.url,
@@ -155,7 +155,7 @@ export class TumblrMigrator extends BlogMigrator {
   protected prepEntry(input: TumblrPost) {
     const cw: CreativeWorkInput = {
       type: 'BlogPosting',
-      id: `post:tmb-${input.id}`,
+      id: toId('post', `tmb-${input.id}`),
       name: input.title ?? undefined,
       slug: input.slug || toSlug(input.title ?? input.id?.toString() ?? ''),
       description: input.summary || undefined,

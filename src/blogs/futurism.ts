@@ -22,7 +22,7 @@ export class FuturismMigrator extends BlogMigrator {
       const html = this.input.read(f) ?? '';
       const parsed = await extract(html, template, schema);
 
-      const { text, ...frontmatter } = CreativeWorkSchema.parse({
+      const post = CreativeWorkSchema.parse({
         type: 'BlogPosting',
         id: toId('post', 'tp-' + parsed.id),
         name: parsed.name.trim(),
@@ -30,12 +30,7 @@ export class FuturismMigrator extends BlogMigrator {
         text: toMarkdown(parsed.text),
         isPartOf: toId('blog', this.name),
       });
-
-      const file = this.makeFilename(frontmatter);
-      this.output.write(file, { content: text, data: frontmatter });
-      if (this.options.store === 'arango')
-        await this.arango.set({ ...frontmatter, text });
-      this.log.debug(`'Wrote ${file}`);
+      await this.saveThing(post);
     }
 
     const site = CreativeWorkSchema.parse({

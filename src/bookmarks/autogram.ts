@@ -60,14 +60,14 @@ export class AutogramLinkMigrator extends Migrator {
 
     const autog = OrganizationSchema.parse({
       type: 'Organization',
-      id: 'org:autogram',
+      id: toId('org', 'autogram'),
       name: 'Autogram',
       url: 'https://autogram.is',
     });
 
     const autob = OrganizationSchema.parse({
       type: 'WebSite',
-      id: 'site:autogram',
+      id: toId('site', 'autogram'),
       name: 'Autogram',
       url: 'https://autogram.is',
     });

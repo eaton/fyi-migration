@@ -70,7 +70,7 @@ export class ConferenceMigrator extends Migrator {
 
   prepEvent(item: ImportType) {
     return EventSchema.parse({
-      id: 'event:' + item.id,
+      id: toId('event', item.id),
       isPartOf: toId('event', item.isPartOf),
       name: item.name,
       url: item.url,
