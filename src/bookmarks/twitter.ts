@@ -8,7 +8,7 @@ import {
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface TwitterLinkMigratorOptions extends MigratorOptions {

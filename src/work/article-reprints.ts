@@ -5,7 +5,7 @@ import {
   ArticleSchema,
 } from '../schemas/schema-org/CreativeWork/article.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 
 const defaults: MigratorOptions = {
   name: 'articles',

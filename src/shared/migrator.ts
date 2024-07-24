@@ -22,7 +22,7 @@ import { getRotator } from '../util/get-rotator.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
-import { getId, getType, idSeparator, toId } from './schemer.js';
+import { getId, getType, idSeparator, toId } from '../schemas/mapper.js';
 import { Store, StoreableData } from './store.js';
 
 /**

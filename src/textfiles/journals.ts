@@ -6,7 +6,7 @@ import { parse as parsePath } from 'path';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWork } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-journals',

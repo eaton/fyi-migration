@@ -6,7 +6,7 @@ import {
   CreativeWorkInput,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../shared/schemer.js';
+import { toId } from '../../schemas/mapper.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {

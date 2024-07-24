@@ -10,7 +10,7 @@ import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../shared/schemer.js';
+import { toId } from '../../schemas/mapper.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';

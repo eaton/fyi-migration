@@ -1,6 +1,6 @@
 import { Device, DeviceSchema } from '../schemas/index.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 
 // This is very much in progress; unit conversions and such will need to be done.

@@ -4,7 +4,7 @@ import { Config } from 'arangojs/connection.js';
 import 'dotenv/config';
 import { z } from 'zod';
 import { Thing } from '../schemas/schema-org/thing.js';
-import { getCollection, getId, getType, listCollections } from './schemer.js';
+import { getCollection, getId, getType, listCollections } from '../schemas/mapper.js';
 
 export const idSeparator = '.';
 

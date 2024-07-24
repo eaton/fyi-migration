@@ -5,7 +5,7 @@ import { BookmarkSchema } from '../schemas/custom/bookmark.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Thing } from '../schemas/schema-org/thing.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface BrowserBookmarkMigratorOptions extends MigratorOptions {

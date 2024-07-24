@@ -2,8 +2,9 @@ import { nanohash } from '@eatonfyi/ids';
 import { z } from 'zod';
 import { CreativeWorkSchema, urlSchema } from '../schemas/index.js';
 import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
-import { Migrator, MigratorOptions, toId } from '../shared/index.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 import { findLinks } from '../util/find-links.js';
+import { toId } from '../schemas/index.js';
 
 const defaults: MigratorOptions = {
   name: 'linkedin',

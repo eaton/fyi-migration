@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const idSeparator = '.';
+const idSeparator = '.';
 
 export const idPattern = new RegExp(`[\\w@-_]+${idSeparator}[\\w@-_]+`);
 export const idSchema = z.coerce

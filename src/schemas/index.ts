@@ -1,3 +1,5 @@
+export * from './mapper.js';
+
 export * from './fragments/index.js';
 
 export * from './schema-org/creative-work.js';

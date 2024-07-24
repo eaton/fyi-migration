@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
 import { Thing } from '../schemas/schema-org/thing.js';
-import { getMeta, Migrator, MigratorOptions, toId } from '../shared/index.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { getMeta, toId } from '../schemas/index.js';
 
 export interface AppearanceMigratorOptions extends MigratorOptions {
   documentId?: string;

@@ -2,9 +2,10 @@ import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
 import { Event, EventSchema } from '../schemas/schema-org/event.js';
 import { Place, PlaceSchema } from '../schemas/schema-org/place.js';
-import { Migrator, MigratorOptions, toId } from '../shared/index.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { isEmpty } from 'emptier';
+import { toId } from '../schemas/index.js';
 
 export interface ConferenceMigratorOptions extends MigratorOptions {
   documentId?: string;

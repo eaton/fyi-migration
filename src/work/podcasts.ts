@@ -8,8 +8,9 @@ import {
   Episode,
   EpisodeSchema,
 } from '../schemas/schema-org/CreativeWork/episode.js';
-import { Migrator, MigratorOptions, toId } from '../shared/index.js';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { toId } from '../schemas/index.js';
 
 export interface PodcastMigratorOptions extends MigratorOptions {
   documentId?: string;

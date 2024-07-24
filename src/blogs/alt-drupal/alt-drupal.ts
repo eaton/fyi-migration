@@ -10,7 +10,7 @@ import {
 } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
 import { Thing } from '../../schemas/schema-org/thing.js';
-import { toId } from '../../shared/schemer.js';
+import { toId } from '../../schemas/mapper.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';

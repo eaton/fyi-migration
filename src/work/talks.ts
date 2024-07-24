@@ -12,8 +12,9 @@ import {
   TalkInstance,
   TalkSchema,
 } from '../schemas/custom/talk.js';
-import { getId, Migrator, MigratorOptions, toId } from '../shared/index.js';
+import {  Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { getId, toId } from '../schemas/index.js';
 
 export interface TalkMigratorOptions extends MigratorOptions {
   documentId?: string;

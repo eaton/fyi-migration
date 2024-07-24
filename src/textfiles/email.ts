@@ -9,7 +9,7 @@ import {
   MessageSchema,
 } from '../schemas/schema-org/CreativeWork/message.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../shared/schemer.js';
+import { toId } from '../schemas/mapper.js';
 
 const parseMail = promisify<Source, ParsedMail>(simpleParser);
 
