@@ -1,12 +1,21 @@
+import { toId } from '@eatonfyi/schema';
 import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
-import { SheetMigrator, SheetMigratorOptions } from '../shared/sheet-migrator.js';
-import { Organization, OrganizationSchema } from '../schemas/schema-org/organization.js';
-import { Project, ProjectSchema } from '../schemas/schema-org/CreativeWork/project.js';
-import { toId } from '../schemas/index.js';
+import {
+  Project,
+  ProjectSchema,
+} from '../schemas/schema-org/CreativeWork/project.js';
+import {
+  Organization,
+  OrganizationSchema,
+} from '../schemas/schema-org/organization.js';
+import {
+  SheetMigrator,
+  SheetMigratorOptions,
+} from '../shared/sheet-migrator.js';
 
 const projectImportSchema = z.object({
-  id: z.string().transform(i => i ? toId('project', i) : undefined),
+  id: z.string().transform(i => (i ? toId('project', i) : undefined)),
   name: z.string(),
   additionalType: z.string().optional(),
   rank: z.number().optional(),
@@ -18,30 +27,36 @@ const projectImportSchema = z.object({
     .optional(),
   description: z.string().optional(),
   text: z.string().optional(),
-  client: z.object({
-    id: z.string().transform(i => i ? toId('org', i) : undefined),
-    name: z.string().optional(),
-    url: urlSchema.optional(),
-  }).optional(),
+  client: z
+    .object({
+      id: z.string().transform(i => (i ? toId('org', i) : undefined)),
+      name: z.string().optional(),
+      url: urlSchema.optional(),
+    })
+    .optional(),
   vertical: z.string().optional(),
-  employer: z.object({
-    id: z.string().transform(i => i ? toId('org', i) : undefined),
-    name: z.string().optional(),
-    url: urlSchema.optional(),
-  }).optional(),
+  employer: z
+    .object({
+      id: z.string().transform(i => (i ? toId('org', i) : undefined)),
+      name: z.string().optional(),
+      url: urlSchema.optional(),
+    })
+    .optional(),
   url: urlSchema.optional(),
   archivedAt: z.string().optional(),
   usage: z.coerce.number().optional(),
-  skills: z.object({
-    production: z.coerce.boolean().default(false),
-    code: z.coerce.boolean().default(false),
-    education: z.coerce.boolean().default(false),
-    architecture: z.coerce.boolean().default(false),
-    ia: z.coerce.boolean().default(false),
-    strategy: z.coerce.boolean().default(false),
-    process: z.coerce.boolean().default(false),
-  }).optional(),
-  tech: z.array(z.string()).optional()
+  skills: z
+    .object({
+      production: z.coerce.boolean().default(false),
+      code: z.coerce.boolean().default(false),
+      education: z.coerce.boolean().default(false),
+      architecture: z.coerce.boolean().default(false),
+      ia: z.coerce.boolean().default(false),
+      strategy: z.coerce.boolean().default(false),
+      process: z.coerce.boolean().default(false),
+    })
+    .optional(),
+  tech: z.array(z.string()).optional(),
 });
 
 const defaults: SheetMigratorOptions = {
@@ -49,7 +64,7 @@ const defaults: SheetMigratorOptions = {
   description: 'Projects and roles over the years',
   documentId: process.env.GOOGLE_SHEET_WORK,
   sheetName: 'projects',
-  schema: projectImportSchema
+  schema: projectImportSchema,
 };
 
 export class ProjectMigrator extends SheetMigrator {
@@ -58,7 +73,7 @@ export class ProjectMigrator extends SheetMigrator {
   orgs: Organization[] = [];
   projects: Project[] = [];
   roles: Project[] = [];
-  clients = new Map<string, string>()
+  clients = new Map<string, string>();
   employers = new Map<string, string>();
 
   constructor(options: SheetMigratorOptions = {}) {
@@ -75,7 +90,7 @@ export class ProjectMigrator extends SheetMigrator {
 
         if (p.additionalType?.endsWith('Role')) {
           this.log.error(`Skipped role '${p.name}'`);
-        } else { 
+        } else {
           const project = ProjectSchema.parse(rawProject);
 
           const keywords = tech ?? [];
@@ -95,7 +110,7 @@ export class ProjectMigrator extends SheetMigrator {
               const c = OrganizationSchema.parse(client);
               this.orgs.push(c);
             }
-              creator['sourceOrganization'] = client.id;
+            creator['sourceOrganization'] = client.id;
             this.clients.set(project.id, client.id);
           }
           if (employer && employer.id) {

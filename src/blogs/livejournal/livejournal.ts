@@ -1,14 +1,14 @@
 import { isAfter, isBefore } from '@eatonfyi/dates';
 import { autop, toMarkdown } from '@eatonfyi/html';
+import { lja, parseCutTag, parseUserTags } from '@eatonfyi/ljarchive';
 import {
   Comment,
   CommentSchema,
-} from '../../schemas/schema-org/CreativeWork/comment.js';
-import { SocialMediaPosting, SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
-import {
   CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../schemas/mapper.js';
+  SocialMediaPosting,
+  SocialMediaPostingSchema,
+  toId,
+} from '@eatonfyi/schema';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 export interface LivejournalMigrateOptions extends BlogMigratorOptions {
@@ -16,7 +16,6 @@ export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreAfter?: Date;
   ignoreComments?: boolean;
 }
-import {lja, parseCutTag, parseUserTags } from '@eatonfyi/ljarchive';
 
 const defaults: LivejournalMigrateOptions = {
   name: 'lj',
@@ -29,7 +28,7 @@ const defaults: LivejournalMigrateOptions = {
   urlsToFix: {
     'http*://www.predicate.(net|org)/users/verb/lj/': 'media://lj/',
     'http*://www.predicate.(net|org)/': 'media://predicatenet/',
-  }
+  },
 };
 
 export class LivejournalMigrator extends BlogMigrator {
@@ -64,17 +63,23 @@ export class LivejournalMigrator extends BlogMigrator {
 
     const moods = Object.fromEntries(raw.moods.map(m => [m.id, m.name]));
     const users = Object.fromEntries(raw.users.map(u => [u.id, u.name]));
-    
+
     const events = raw.events;
 
     // Construct a blog record for the journal
 
     for (const event of events) {
       // Ignore anything outside the optional dates, they're backdated duplicates from other sources
-      if (this.options.ignoreBefore && isBefore(event.date, this.options.ignoreBefore)) {
+      if (
+        this.options.ignoreBefore &&
+        isBefore(event.date, this.options.ignoreBefore)
+      ) {
         continue;
       }
-      if (this.options.ignoreAfter && isAfter(event.date, this.options.ignoreAfter)) {
+      if (
+        this.options.ignoreAfter &&
+        isAfter(event.date, this.options.ignoreAfter)
+      ) {
         continue;
       }
 
@@ -86,7 +91,8 @@ export class LivejournalMigrator extends BlogMigrator {
       // Process other fields
       const cw = this.prepEntry(event);
 
-      const comments = this.journal?.comments?.filter(c => c.eventId === event.id) ?? [];
+      const comments =
+        this.journal?.comments?.filter(c => c.eventId === event.id) ?? [];
       if (comments.length) {
         this.comments ??= {};
         this.comments[cw.id] ??= [];
@@ -95,9 +101,7 @@ export class LivejournalMigrator extends BlogMigrator {
         if (comment.userId) {
           // Swap in comment author-name
           comment.userName ??= users[comment.userId] ?? users[0];
-          this.comments[cw.id].push(
-            this.prepComment(comment),
-          )
+          this.comments[cw.id].push(this.prepComment(comment));
         }
       }
 
@@ -176,12 +180,17 @@ export class LivejournalMigrator extends BlogMigrator {
       // Replace `<lj-user name="foo">` with <a href="...">
       const users = parseUserTags(output);
       for (const [a, username] of Object.entries(users) ?? []) {
-        output = output?.replaceAll(a, `<a href="https://www.livejournal.com/users/${username}">${username}</a>`);
+        output = output?.replaceAll(
+          a,
+          `<a href="https://www.livejournal.com/users/${username}">${username}</a>`,
+        );
       }
 
       const cut = parseCutTag(output, true);
       // We're not even going to attempt to include the cut text for now. Oh well.
-      output = [cut.preCut || '', cut.hiddenText || '', cut.postCut || ''].join('\n\n'); 
+      output = [cut.preCut || '', cut.hiddenText || '', cut.postCut || ''].join(
+        '\n\n',
+      );
 
       output = autop(output);
       output = toMarkdown(output);

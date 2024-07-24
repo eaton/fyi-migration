@@ -4,17 +4,18 @@ import {
   type KeynoteDeck,
   type KeynoteSlide,
 } from '@eatonfyi/keynote-extractor';
-import { unflatten } from 'obby';
-import { z } from 'zod';
 import {
+  getId,
   Talk,
   TalkEventSchema,
   TalkInstance,
   TalkSchema,
-} from '../schemas/custom/talk.js';
-import {  Migrator, MigratorOptions } from '../shared/index.js';
+  toId,
+} from '@eatonfyi/schema';
+import { unflatten } from 'obby';
+import { z } from 'zod';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
-import { getId, toId } from '../schemas/index.js';
 
 export interface TalkMigratorOptions extends MigratorOptions {
   documentId?: string;
@@ -139,9 +140,7 @@ export class TalkMigrator extends Migrator {
     for (const talk of this.talks) {
       const timesPerformed = talk.performances?.length;
       const tKey = getId(talk.id);
-      const canon = talk.performances?.find(
-        p => p.isCanonicalVersion,
-      );
+      const canon = talk.performances?.find(p => p.isCanonicalVersion);
       for (const perf of talk.performances ?? []) {
         const pKey = getId(perf.event);
 
@@ -280,7 +279,7 @@ export class TalkMigrator extends Migrator {
       .join('\n\n---\n\n');
 
     return markdown;
-    
+
     function fixImage(input: string) {
       return input.replace('./images/', `media://talks/${getId(talk.id)}/`);
     }

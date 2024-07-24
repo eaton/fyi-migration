@@ -1,5 +1,10 @@
 import { toText } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
+import {
+  CreativeWork,
+  CreativeWorkSchema,
+  SocialMediaPosting,
+} from '@eatonfyi/schema';
 import { toSlug } from '@eatonfyi/text';
 import is from '@sindresorhus/is';
 import { get } from 'obby';
@@ -9,11 +14,6 @@ import {
   PartialTweet,
   TwitterArchive,
 } from 'twitter-archive-reader';
-import { SocialMediaPosting } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
-import {
-  CreativeWork,
-  CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../../shared/migrator.js';
 import { toShortDate } from '../../util/to-short-date.js';
 import * as prep from './prep.js';

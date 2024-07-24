@@ -1,14 +1,10 @@
 import { nanohash } from '@eatonfyi/ids';
 import { MboxStreamer } from '@eatonfyi/mbox-streamer';
+import { Message, MessageSchema, toId } from '@eatonfyi/schema';
 import is from '@sindresorhus/is';
 import { AddressObject, ParsedMail } from 'mailparser';
-import {
-  Message,
-  MessageSchema,
-} from './schemas/schema-org/CreativeWork/message.js';
+import PQueue from 'p-queue';
 import { Migrator, MigratorOptions } from './shared/migrator.js';
-import { toId } from './schemas/mapper.js';
-import PQueue from "p-queue";
 
 type MailFilter = (p: ParsedMail) => boolean;
 
@@ -42,8 +38,8 @@ export class MailboxMigrator extends Migrator {
     const mb = new MboxStreamer();
     const q = new PQueue({ autoStart: false });
 
-    mb.on('message', (input) => q.add(() => this.processMail(input)));
-  
+    mb.on('message', input => q.add(() => this.processMail(input)));
+
     for (const f of this.input.find({ matching: '**/*.mbox' }) ?? []) {
       this.log.info(`Processing ${f}`);
       q.add(() => mb.parse(this.input.path(f)));
@@ -63,7 +59,6 @@ export class MailboxMigrator extends Migrator {
     await this.saveThing(email);
     return;
   }
-
 
   protected handleAttachments(input: ParsedMail) {
     if (

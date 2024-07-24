@@ -1,5 +1,14 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import {
+  CreativeWork,
+  Thing,
+  ThingSchema,
+  getId,
+  getType,
+  idSeparator,
+  toId,
+} from '@eatonfyi/schema';
+import {
   Csv,
   Frontmatter,
   Json,
@@ -16,13 +25,10 @@ import { emptyDeep, merge } from 'obby';
 import PQueue from 'p-queue';
 import { Logger, LoggerOptions, pino } from 'pino';
 import wretch, { Wretch } from 'wretch';
-import { CreativeWork } from '../schemas/schema-org/creative-work.js';
-import { Thing, ThingSchema } from '../schemas/schema-org/thing.js';
 import { getRotator } from '../util/get-rotator.js';
 import { isLogger } from '../util/index.js';
 import { toFilename } from '../util/to-filename.js';
 import { ArangoDB } from './arango.js';
-import { getId, getType, idSeparator, toId } from '../schemas/mapper.js';
 import { Store, StoreableData } from './store.js';
 
 /**
@@ -73,7 +79,6 @@ export interface MigratorOptions {
    */
   assets?: string;
 
-  
   /**
    * A key/value list of glob strings and replacements for output markup. This can be used
    * (for example) to replace internal links and image URLs.
@@ -494,7 +499,9 @@ export class Migrator {
   fixUrls(input: string) {
     let output = input;
     if (this.options.urlsToFix) {
-      for (const [needle, replacement] of Object.entries(this.options.urlsToFix) ?? []) {
+      for (const [needle, replacement] of Object.entries(
+        this.options.urlsToFix,
+      ) ?? []) {
         output = output.replaceAll(new RegExp(needle, 'gi'), replacement);
       }
     }

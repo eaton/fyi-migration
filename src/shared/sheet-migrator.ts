@@ -1,7 +1,7 @@
-import { Migrator, MigratorOptions } from "./migrator.js";
-import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { isEmpty } from 'emptier';
 import { z } from 'zod';
+import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
+import { Migrator, MigratorOptions } from './migrator.js';
 
 export interface SheetMigratorOptions extends MigratorOptions {
   /**
@@ -14,7 +14,6 @@ export interface SheetMigratorOptions extends MigratorOptions {
    */
   sheetName?: string;
 
-  
   /**
    * An optional Zod schema used to parse *individual rows* of the sheet
    */

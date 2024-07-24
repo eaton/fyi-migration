@@ -1,16 +1,14 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
-import { z } from 'zod';
 import {
   Comment,
   CommentSchema,
-} from '../../schemas/schema-org/CreativeWork/comment.js';
-import {
+  CreativeWorkSchema,
   SocialMediaPosting,
   SocialMediaPostingSchema,
-} from '../../schemas/schema-org/CreativeWork/social-media-post.js';
-import { CreativeWorkSchema } from '../../schemas/schema-org/creative-work.js';
-import { Thing } from '../../schemas/schema-org/thing.js';
-import { toId } from '../../schemas/mapper.js';
+  Thing,
+  toId,
+} from '@eatonfyi/schema';
+import { z } from 'zod';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as drupal from './schema.js';

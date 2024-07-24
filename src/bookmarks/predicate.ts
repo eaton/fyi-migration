@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { toId } from '../schemas/mapper.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 import { getMdbInfo, parseMdbTable } from '../util/parse-mdb.js';
 

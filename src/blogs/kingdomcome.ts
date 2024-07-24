@@ -1,15 +1,12 @@
 import { nanohash } from '@eatonfyi/ids';
-import { Frontmatter } from '@eatonfyi/serializers';
-import { z } from 'zod';
 import {
+  CreativeWorkSchema,
   SocialMediaPosting,
   SocialMediaPostingSchema,
-} from '../schemas/schema-org/CreativeWork/social-media-post.js';
-import {
-  CreativeWork,
-  CreativeWorkSchema,
-} from '../schemas/schema-org/creative-work.js';
-import { toId } from '../schemas/mapper.js';
+  toId,
+} from '@eatonfyi/schema';
+import { Frontmatter } from '@eatonfyi/serializers';
+import { z } from 'zod';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {

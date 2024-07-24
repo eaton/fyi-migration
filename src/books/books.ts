@@ -1,5 +1,6 @@
 import jetpack from '@eatonfyi/fs-jetpack';
 import { nanohash } from '@eatonfyi/ids';
+import { toId } from '@eatonfyi/schema';
 import { canParse, NormalizedUrl } from '@eatonfyi/urls';
 import { emptyDeep, merge, set, unflatten } from 'obby';
 import { parse as parsePath } from 'path';
@@ -14,7 +15,6 @@ import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
 import { expandIds, getBestId } from './normalize-ids.js';
 import * as parsers from './parsers/index.js';
-import { toId } from '../schemas/index.js';
 
 export interface BookMigratorOptions extends MigratorOptions {
   documentId?: string;

@@ -59,6 +59,7 @@
     "@eatonfyi/keynote-extractor": "github:eaton/keynote-extractor",
     "@eatonfyi/ljarchive": "github:eaton/ljarchive",
     "@eatonfyi/mbox-streamer": "github:eaton/mbox-streamer",
+    "@eatonfyi/schema": "github:eaton/schema",
     "@eatonfyi/serializers": "github:eaton/serializers",
     "@eatonfyi/text": "github:eaton/text",
     "@eatonfyi/urls": "github:eaton/urls",

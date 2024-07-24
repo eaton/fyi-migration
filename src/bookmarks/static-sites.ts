@@ -2,8 +2,8 @@ import { ExtractTemplateObject, extract } from '@eatonfyi/html';
 import { ParsedUrl, canParse } from '@eatonfyi/urls';
 import { z } from 'zod';
 import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { toId } from '../schemas/mapper.js';
+import { Migrator, MigratorOptions } from '../shared/migrator.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 
 export interface StaticLinkMigratorOptions extends MigratorOptions {

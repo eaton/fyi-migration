@@ -1,6 +1,6 @@
 import { nanohash } from '@eatonfyi/ids';
+import { toId } from '@eatonfyi/schema';
 import { ParsedUrl } from '@eatonfyi/urls';
-import { toId } from '../schemas/index.js';
 
 export function prepUrlForBookmark(input?: string | URL) {
   if (!input) return {};

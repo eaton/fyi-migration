@@ -1,16 +1,14 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
-import { Frontmatter } from '@eatonfyi/serializers';
 import {
   Comment,
   CommentSchema,
-} from '../../schemas/schema-org/CreativeWork/comment.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
-import {
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../schemas/mapper.js';
+  SocialMediaPostingSchema,
+  toId,
+} from '@eatonfyi/schema';
+import { Frontmatter } from '@eatonfyi/serializers';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as Disqus from '../disqus-export.js';

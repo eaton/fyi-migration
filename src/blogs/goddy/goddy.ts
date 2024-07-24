@@ -1,14 +1,14 @@
 import { autop, toMarkdown } from '@eatonfyi/html';
-import { toSlug } from '@eatonfyi/text';
-import { ZodTypeAny, z } from 'zod';
-import { Bookmark } from '../../schemas/custom/bookmark.js';
-import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
+  Bookmark,
+  CommentSchema,
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../schemas/mapper.js';
+  SocialMediaPostingSchema,
+  toId,
+} from '@eatonfyi/schema';
+import { toSlug } from '@eatonfyi/text';
+import { ZodTypeAny, z } from 'zod';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { sortByParents } from '../../util/parent-sort.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
@@ -222,7 +222,9 @@ export class GoddyMigrator extends BlogMigrator {
         quote: input.money_quote
           ? toMarkdown(autop(input.money_quote.field_money_quote_value))
           : undefined,
-        asin: input.product ? input.product.field_product_asin?.trim() : undefined,
+        asin: input.product
+          ? input.product.field_product_asin?.trim()
+          : undefined,
         link: input.link?.field_link_url ?? undefined,
         text: toMarkdown(autop(input.body ?? '')),
         nodeType: input.type,

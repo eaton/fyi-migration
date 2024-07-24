@@ -2,12 +2,12 @@ import { min } from '@eatonfyi/dates';
 import { nanohash } from '@eatonfyi/ids';
 import { toCase, toSlug } from '@eatonfyi/text';
 import { parse as parsePath } from 'path';
+import { toId } from '../schemas/mapper.js';
 import {
   CreativeWork,
   CreativeWorkSchema,
 } from '../schemas/schema-org/creative-work.js';
 import { Migrator, MigratorOptions } from '../shared/migrator.js';
-import { toId } from '../schemas/mapper.js';
 
 const defaults: MigratorOptions = {
   name: 'txt-fiction',

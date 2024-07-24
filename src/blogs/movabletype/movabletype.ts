@@ -1,13 +1,13 @@
 import { autop, fromTextile, toMarkdown } from '@eatonfyi/html';
-import { toSlug } from '@eatonfyi/text';
-import { ZodTypeAny, z } from 'zod';
-import { CommentSchema } from '../../schemas/schema-org/CreativeWork/comment.js';
-import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import {
+  CommentSchema,
   CreativeWork,
   CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../schemas/mapper.js';
+  toId,
+} from '@eatonfyi/schema';
+import { toSlug } from '@eatonfyi/text';
+import { ZodTypeAny, z } from 'zod';
+import { SocialMediaPostingSchema } from '../../schemas/schema-org/CreativeWork/social-media-post.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import * as schemas from './schema.js';
 

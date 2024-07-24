@@ -1,9 +1,7 @@
 import { extract, ExtractTemplateObject } from '@eatonfyi/html';
 import { nanohash } from '@eatonfyi/ids';
+import { BookmarkSchema, CreativeWorkSchema, toId } from '@eatonfyi/schema';
 import { z } from 'zod';
-import { BookmarkSchema } from '../schemas/custom/bookmark.js';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
-import { toId } from '../schemas/mapper.js';
 import { prepUrlForBookmark } from '../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 

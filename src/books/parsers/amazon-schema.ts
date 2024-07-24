@@ -1,6 +1,6 @@
 import { type ExtractTemplateObject } from '@eatonfyi/html';
 import { z } from 'zod';
-import { SizeSchema } from '../../schemas/index.js';
+import { SizeSchema } from '../@eatonfyi/schema';
 
 const optionalString = z
   .string()

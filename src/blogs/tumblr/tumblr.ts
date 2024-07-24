@@ -1,12 +1,8 @@
 import { toMarkdown } from '@eatonfyi/html';
+import { CreativeWorkInput, CreativeWorkSchema, toId } from '@eatonfyi/schema';
 import { toSlug } from '@eatonfyi/text';
 import { Client } from '@serguun42/tumblr.js';
 import { BookmarkSchema } from '../../schemas/custom/bookmark.js';
-import {
-  CreativeWorkInput,
-  CreativeWorkSchema,
-} from '../../schemas/schema-org/creative-work.js';
-import { toId } from '../../schemas/mapper.js';
 import { prepUrlForBookmark } from '../../util/clean-link.js';
 import { BlogMigrator, BlogMigratorOptions } from '../blog-migrator.js';
 import {

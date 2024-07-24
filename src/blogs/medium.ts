@@ -1,7 +1,9 @@
+import {
+  CreativeWorkSchema,
+  SocialMediaPostingSchema,
+  toId,
+} from '@eatonfyi/schema';
 import { get } from 'obby';
-import { SocialMediaPostingSchema } from '../schemas/schema-org/CreativeWork/social-media-post.js';
-import { CreativeWorkSchema } from '../schemas/schema-org/creative-work.js';
-import { toId } from '../schemas/mapper.js';
 import { BlogMigrator, BlogMigratorOptions } from './blog-migrator.js';
 
 const defaults: BlogMigratorOptions = {

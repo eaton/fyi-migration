@@ -1,3 +1,4 @@
+import { toId } from '@eatonfyi/schema';
 import { z } from 'zod';
 import { urlSchema } from '../schemas/fragments/index.js';
 import {
@@ -10,7 +11,6 @@ import {
 } from '../schemas/schema-org/CreativeWork/episode.js';
 import { Migrator, MigratorOptions } from '../shared/index.js';
 import { fetchGoogleSheet } from '../util/fetch-google-sheet.js';
-import { toId } from '../schemas/index.js';
 
 export interface PodcastMigratorOptions extends MigratorOptions {
   documentId?: string;
