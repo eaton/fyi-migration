@@ -1,7 +1,9 @@
-import { ThingMigrator, PostGenerator, SocialGenerator, CommentGenerator, TalkGenerator } from "./generators/index.js";
+import { ThingGenerator, PostGenerator, SocialGenerator, CommentGenerator, TalkGenerator, ArticleGenerator, ProjectGenerator } from "./generators/index.js";
 
-await new ThingMigrator({ logger: { level: 'debug' } }).run();
-await new PostGenerator({ logger: { level: 'debug' } }).run();
-await new SocialGenerator({ logger: { level: 'debug' } }).run();
-await new CommentGenerator({ logger: { level: 'debug' } }).run();
-await new TalkGenerator({ logger: { level: 'debug' } }).run();
+await new ThingGenerator().run();
+await new PostGenerator().run();
+await new ArticleGenerator().run();
+await new SocialGenerator({ threadMinLength: 5, singleMinFavorites: 50 }).run();
+await new CommentGenerator().run();
+await new TalkGenerator().run();
+await new ProjectGenerator().run();

@@ -1,5 +1,9 @@
 # Migration errors and anomolies
 
+## Philosophy
+
+- [ ] My big ol' pile of facts system is flexible, but accumulates a lot of stuff that's just referenced or mentioned by me. Distinguishing the canonical records from those items from the canonical records of items I actually created is important, particularly once I actually generate information about projects, etc.
+
 ## Parsing issues
 
 - [ ] Loads of old LJ posts used table based layouts to format a mosaic of photos. Translating those to use CSS grids or something along those lines would be a nice upgrade.

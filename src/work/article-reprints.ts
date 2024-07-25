@@ -24,9 +24,9 @@ export class ArticleReprintMigrator extends Migrator {
       if (!raw) continue;
       const markdown = parser.parse(raw);
       const headline =
-        markdown.data.headline ?? markdown.data.subtitle
-          ? markdown.data.title + ': ' + markdown.data.subtitle
-          : undefined;
+        markdown.data.headline ?? (markdown.data.subtitle?.trim().length
+          ? (markdown.data.title + ': ' + markdown.data.subtitle)
+          : undefined);
       const article = ArticleSchema.safeParse({
         id: toId('article', markdown.data.id || nanohash(markdown.data)),
         name: markdown.data.name ?? markdown.data.title,

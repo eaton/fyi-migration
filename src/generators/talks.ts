@@ -4,7 +4,7 @@ import {  TalkSchema } from "@eatonfyi/schema";
 import { isEmpty } from "emptier";
 
 const defaults: MigratorOptions = {
-  name: 'posts',
+  name: 'talks',
   description: 'Presentations',
   input: 'input/talks',
   output: 'src/talks',

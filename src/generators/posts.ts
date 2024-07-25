@@ -17,13 +17,11 @@ export class PostGenerator extends Migrator {
 
   override async finalize() {
     const rawIgnore = this.input.read('ignore.tsv', 'auto') ?? [];
-    const ignore: string[] = rawIgnore.map((i: unknown) => {
-      if ((is.object(i) && 'id' in i && typeof i.id === 'string')) {
-        return i.id.trim();
-      } else {
-        return 'error';
+    const ignore: Record<string, string> = Object.fromEntries(rawIgnore.map((i: unknown) => {
+      if (is.object(i)) {
+        return Object.values(i);
       }
-    }); 
+    }).filter((i: unknown) => i !== undefined))
 
     const collection = this.arango.collection('works');
     const q = aql`FOR w in ${collection}
@@ -34,8 +32,8 @@ export class PostGenerator extends Migrator {
     const cws = results.map(r => CreativeWorkSchema.parse(r));
 
     for (const post of cws) {
-      if (ignore.includes(post.id)) {
-        this.log.debug(`Skipped ${post.id}: ignore list`);
+      if (ignore[post.id] !== undefined) {
+        this.log.info(`Skipped ${post.id}: ${ignore[post.id]}`);
         continue;
       }
 
