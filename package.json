@@ -28,6 +28,7 @@
     "prepare": "npm run build",
     "migrate": "node --import=tsimp ./src/migrate.ts",
     "scratchpad": "node --import=tsimp ./src/scratchpad.ts",
+    "generate": "node --import=tsimp ./src/generate.ts",
     "test": "ava"
   },
   "author": "eaton",
@@ -38,7 +39,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^8.57.0",
-    "@types/node": "^20.11.30",
     "ava": "^6.1.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^8.10.0",
@@ -47,7 +47,6 @@
     "prettier-plugin-organize-imports": "^3.2.4",
     "shx": "^0.3.4",
     "tsimp": "^2.0.11",
-    "typescript": "^5.5.3",
     "typescript-eslint": "^7.9.0"
   },
   "dependencies": {
@@ -68,16 +67,14 @@
     "@thi.ng/mime": "^2.6.11",
     "@types/jszip": "^3.4.1",
     "@types/mailparser": "^3.4.4",
+    "@types/node": "^20.14.12",
     "@typescript-eslint/typescript-estree": "^7.15.0",
     "arangojs": "^8.8.1",
     "crawlee": "^3.10.2",
     "dotenv": "^16.4.5",
-    "drizzle-kit": "^0.22.7",
-    "drizzle-orm": "^0.31.2",
     "emptier": "^1.2.0",
     "empty-deep": "^1.0.0",
     "execa": "^9.2.0",
-    "google-spreadsheet": "^4.1.2",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
     "humanize-url": "^3.0.0",
@@ -92,11 +89,9 @@
     "p-queue": "^8.0.1",
     "pino": "^9.1.0",
     "pino-pretty": "^11.1.0",
-    "postgres": "^3.4.4",
-    "public-google-sheets-parser": "github:eaton/public-google-sheets-parser",
-    "remeda": "^1.61.0",
     "tasuku": "^2.0.1",
     "twitter-archive-reader": "^7.2.0",
+    "typescript": "^5.5.4",
     "wretch": "^2.8.1",
     "zod": "^3.23.8"
   }

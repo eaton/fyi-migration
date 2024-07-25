@@ -17,7 +17,16 @@ type baseInput = Record<string, unknown>;
 export function toFilename(input: baseInput, suffix = '.md') {
   const parts: string[] = [];
   const date = get(input, 'date dates.start date.publish dates.*');
-  if (is.date(date)) parts.push(toShortDate(date)!);
+  if (is.date(date)) {
+    parts.push(toShortDate(date)!);
+  } else if (is.string(date)) {
+    try {
+      const d = toShortDate(new Date(Date.parse(date)));
+      if (d) parts.push(d);
+    } catch {
+      console.log('Failed parsing date');
+    }
+  }
 
   const name = get(input, 'slug name id');
   if (is.string(name)) {

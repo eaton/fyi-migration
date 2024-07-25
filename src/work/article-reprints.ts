@@ -29,7 +29,7 @@ export class ArticleReprintMigrator extends Migrator {
           : undefined;
       const article = ArticleSchema.safeParse({
         id: toId('article', markdown.data.id || nanohash(markdown.data)),
-        name: markdown.data.title,
+        name: markdown.data.name ?? markdown.data.title,
         date: markdown.data.date,
         headline,
         section: markdown.data.section,
