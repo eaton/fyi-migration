@@ -1,2 +1,2 @@
-import { ProjectMigrator } from './work/index.js';
-await new ProjectMigrator({ logger: { level: 'debug' } }).run();
+import { GuestBlogMigrator } from './blogs/guestblogs.js';
+await new GuestBlogMigrator({ logger: { level: 'debug' } }).run();
