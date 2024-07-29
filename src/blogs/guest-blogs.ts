@@ -29,6 +29,7 @@ export class GuestBlogMigrator extends Migrator {
 
       const post = SocialMediaPostingSchema.safeParse({
         id: toId('post', markdown.data.id || nanohash(markdown.data)),
+        type: 'BlogPosting',
         name: markdown.data.name ?? markdown.data.title,
         date: markdown.data.date,
         text: markdown.content,

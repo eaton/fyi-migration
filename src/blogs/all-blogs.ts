@@ -4,7 +4,7 @@ import { AltDrupalMigrator } from './alt-drupal/alt-drupal.js';
 import { AltJekyllMigrator } from './alt-jekyll/jekyll.js';
 import { FuturismMigrator } from './futurism.js';
 import { GoddyMigrator } from './goddy/goddy.js';
-import { GuestBlogMigrator } from './guestblogs.js';
+import { GuestBlogMigrator } from './guest-blogs.js';
 import { LivejournalMigrator } from './livejournal/livejournal.js';
 import { MediumMigrator } from './medium.js';
 import { MovableTypeMigrator } from './movabletype/movabletype.js';
