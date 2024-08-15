@@ -294,6 +294,7 @@ export class TwitterMigrator extends Migrator {
     for (const pt of archive.tweets.sortedIterator('asc')) {
       const tweet = this.parsePartialTweet(pt);
       if (this.options.saveMedia) {
+        this.cache.dir('media');
         tweet.media = await this.saveTweetMedia(archive, pt);
       }
 
@@ -303,6 +304,7 @@ export class TwitterMigrator extends Migrator {
     const user = prep.user(archive);
     if (user) {
       this.users.set(user.id, user);
+      await this.saveArchiveAvatar(archive);
     }
 
     this.log.debug(`Done with ${fileOrFolder}`);
@@ -334,16 +336,30 @@ export class TwitterMigrator extends Migrator {
     return output;
   }
 
+  protected async saveArchiveAvatar(archive: TwitterArchive) {
+    const avi = archive.user.profile_img_url;
+    const banner = archive.user.profile_banner_url;
+
+    const profiles = this.cache.dir('media/profiles');
+    if (avi) {
+      await profiles.downloadAsync(`${archive.user.screen_name}-avi-${parsePath(avi).base}`, avi);
+    }
+    if (banner) {
+      await profiles.downloadAsync(`${archive.user.screen_name}-banner-${parsePath(banner).base}`, banner);
+    }
+    return;
+  }
+
   protected async saveTweetMedia(archive: TwitterArchive, tweet: PartialTweet) {
     const mediaMap: Record<string, string[]> = {};
     for (const em of tweet.extended_entities?.media ?? []) {
-      const variant = em.video_info?.variants
+      const video = em.video_info?.variants
         ?.filter(v => v.content_type === 'video/mp4')
         .pop();
       const filename =
         tweet.id_str +
         '-' +
-        parsePath(variant?.url ?? em.media_url_https).base.split('?')[0];
+        parsePath(video?.url ?? em.media_url_https).base.split('?')[0];
 
       const buffer = await archive.medias
         .fromTweetMediaEntity(em, true)
@@ -354,11 +370,20 @@ export class TwitterMigrator extends Migrator {
           );
           return undefined;
         });
-
+      
       if (buffer && filename) {
         this.cache.write(`media/${filename}`, buffer);
         mediaMap[em.url] ??= [];
         mediaMap[em.url].push(`media://twitter/${filename}`);
+      }
+
+      // If there was a video, we *also* want to grab the thumbnail image from Twitter itself; 
+      if (video && em.media_url_https) {
+        const thumbFile = filename + parsePath(em.media_url_https).ext;
+        if (this.cache.exists(`media/${thumbFile}`) === false) {
+          await this.cache.downloadAsync(`media/${thumbFile}`, em.media_url_https)
+            .catch(() => this.log.debug(`Could not download thumbnail ${em.media_url_https}`));
+        }
       }
     }
     return mediaMap;

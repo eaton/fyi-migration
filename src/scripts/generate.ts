@@ -1,5 +1,5 @@
-import { ThingGenerator, PostGenerator, SocialGenerator, CommentGenerator, TalkGenerator, ArticleGenerator, ProjectGenerator } from "./generators/index.js";
-import { TextGenerator } from "./generators/textfiles.js";
+import { ThingGenerator, PostGenerator, SocialGenerator, CommentGenerator, TalkGenerator, ArticleGenerator, ProjectGenerator } from "../generators/index.js";
+import { TextGenerator } from "../generators/textfiles.js";
 
 await new ThingGenerator().run();
 await new PostGenerator().run();

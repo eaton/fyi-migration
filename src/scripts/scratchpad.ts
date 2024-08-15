@@ -1,2 +1,2 @@
-import { GuestBlogMigrator } from './blogs/guest-blogs.js';
-await new GuestBlogMigrator({ logger: { level: 'debug' } }).run();
+import { BookMigrator } from '../books/books.js';
+await new BookMigrator({ logger: { level: 'debug' } }).run();
