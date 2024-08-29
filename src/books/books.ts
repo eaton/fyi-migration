@@ -218,9 +218,9 @@ export class BookMigrator extends Migrator {
 
     const customCoverDir = this.input.dir('images');
     for (const cover of customCoverDir.list() ?? []) {
-      jetpack.copy(customCoverDir.path(cover), this.covers.path(cover), {
-        overwrite: true,
-      });
+      if (!this.covers.exists(cover)) {
+        jetpack.copy(customCoverDir.path(cover), this.covers.path(cover));
+      }
     }
 
     return;
