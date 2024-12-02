@@ -85,8 +85,6 @@ export class PredicateNetMigrator extends BlogMigrator {
     });
 
     await this.saveThing(site);
-    if (this.options.store === 'arango') await this.arango.set(site);
-
     await this.writeLinks();
     await this.writeQuotes();
 

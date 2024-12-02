@@ -1,7 +1,7 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { getId, CreativeWorkSchema } from "@eatonfyi/schema";
-import is from "@sindresorhus/is";
+import { CreativeWorkSchema, getId } from '@eatonfyi/schema';
+import is from '@sindresorhus/is';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
 const defaults: MigratorOptions = {
   name: 'posts',
@@ -17,11 +17,15 @@ export class PostGenerator extends Migrator {
 
   override async finalize() {
     const rawIgnore = this.input.read('ignore.tsv', 'auto') ?? [];
-    const ignore: Record<string, string> = Object.fromEntries(rawIgnore.map((i: unknown) => {
-      if (is.object(i)) {
-        return Object.values(i);
-      }
-    }).filter((i: unknown) => i !== undefined))
+    const ignore: Record<string, string> = Object.fromEntries(
+      rawIgnore
+        .map((i: unknown) => {
+          if (is.object(i)) {
+            return Object.values(i);
+          }
+        })
+        .filter((i: unknown) => i !== undefined),
+    );
 
     const collection = this.arango.collection('works');
     const q = aql`FOR w in ${collection}

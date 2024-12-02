@@ -1,10 +1,10 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { getType, ThingSchema } from "@eatonfyi/schema";
-import { groupBy } from "../util/group-by.js";
+import { getType, ThingSchema } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
+import { groupBy } from '../util/group-by.js';
 
 export interface ThingGeneratorOptions extends MigratorOptions {
-  ignore?: string | string[]
+  ignore?: string | string[];
 }
 
 const defaults: ThingGeneratorOptions = {
@@ -16,7 +16,7 @@ const defaults: ThingGeneratorOptions = {
 
 export class ThingGenerator extends Migrator {
   declare options: ThingGeneratorOptions;
-  
+
   constructor(options: ThingGeneratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -28,7 +28,9 @@ export class ThingGenerator extends Migrator {
   }
 
   async writeGroupedCollectionData(name: string) {
-    const ignore = Array.isArray(this.options.ignore) ? this.options.ignore : [this.options.ignore];
+    const ignore = Array.isArray(this.options.ignore)
+      ? this.options.ignore
+      : [this.options.ignore];
 
     const collection = this.arango.collection(name);
     const q = aql`FOR p in ${collection} RETURN UNSET(p, '_id', '_key', '_rev')`;
@@ -39,10 +41,11 @@ export class ThingGenerator extends Migrator {
     for (const [type, group] of Object.entries(grouped)) {
       if (group && !ignore.includes(type)) {
         this.output.write(`${type}.ndjson`, group);
-        this.log.info(`Saved ${group?.length} records to '_data/${type}.ndjson'`);
+        this.log.info(
+          `Saved ${group?.length} records to '_data/${type}.ndjson'`,
+        );
       }
     }
     return;
   }
 }
-

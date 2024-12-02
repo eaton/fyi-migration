@@ -1,9 +1,9 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { ProjectSchema } from "@eatonfyi/schema";
+import { ProjectSchema } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
 export interface ProjectGeneratorOptions extends MigratorOptions {
-  ignore?: string | string[]
+  ignore?: string | string[];
 }
 
 const defaults: ProjectGeneratorOptions = {
@@ -15,7 +15,7 @@ const defaults: ProjectGeneratorOptions = {
 
 export class ProjectGenerator extends Migrator {
   declare options: ProjectGeneratorOptions;
-  
+
   constructor(options: ProjectGeneratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -33,4 +33,3 @@ export class ProjectGenerator extends Migrator {
     return;
   }
 }
-

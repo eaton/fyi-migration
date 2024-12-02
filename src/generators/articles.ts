@@ -1,9 +1,8 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { ArticleSchema } from "@eatonfyi/schema";
+import { ArticleSchema } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
-export interface ArticleGeneratorOptions extends MigratorOptions {
-}
+export interface ArticleGeneratorOptions extends MigratorOptions {}
 
 const defaults: ArticleGeneratorOptions = {
   name: 'articles',
@@ -14,7 +13,7 @@ const defaults: ArticleGeneratorOptions = {
 
 export class ArticleGenerator extends Migrator {
   declare options: ArticleGeneratorOptions;
-  
+
   constructor(options: ArticleGeneratorOptions = {}) {
     super({ ...defaults, ...options });
   }

@@ -342,10 +342,16 @@ export class TwitterMigrator extends Migrator {
 
     const profiles = this.cache.dir('media/profiles');
     if (avi) {
-      await profiles.downloadAsync(`${archive.user.screen_name}-avi-${parsePath(avi).base}`, avi);
+      await profiles.downloadAsync(
+        `${archive.user.screen_name}-avi-${parsePath(avi).base}`,
+        avi,
+      );
     }
     if (banner) {
-      await profiles.downloadAsync(`${archive.user.screen_name}-banner-${parsePath(banner).base}`, banner);
+      await profiles.downloadAsync(
+        `${archive.user.screen_name}-banner-${parsePath(banner).base}`,
+        banner,
+      );
     }
     return;
   }
@@ -370,19 +376,24 @@ export class TwitterMigrator extends Migrator {
           );
           return undefined;
         });
-      
+
       if (buffer && filename) {
         this.cache.write(`media/${filename}`, buffer);
         mediaMap[em.url] ??= [];
         mediaMap[em.url].push(`media://twitter/${filename}`);
       }
 
-      // If there was a video, we *also* want to grab the thumbnail image from Twitter itself; 
+      // If there was a video, we *also* want to grab the thumbnail image from Twitter itself;
       if (video && em.media_url_https) {
         const thumbFile = filename + parsePath(em.media_url_https).ext;
         if (this.cache.exists(`media/${thumbFile}`) === false) {
-          await this.cache.downloadAsync(`media/${thumbFile}`, em.media_url_https)
-            .catch(() => this.log.debug(`Could not download thumbnail ${em.media_url_https}`));
+          await this.cache
+            .downloadAsync(`media/${thumbFile}`, em.media_url_https)
+            .catch(() =>
+              this.log.debug(
+                `Could not download thumbnail ${em.media_url_https}`,
+              ),
+            );
         }
       }
     }

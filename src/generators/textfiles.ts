@@ -1,6 +1,6 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { getId, CreativeWorkSchema } from "@eatonfyi/schema";
+import { CreativeWorkSchema, getId } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
 const defaults: MigratorOptions = {
   name: 'textfiles',

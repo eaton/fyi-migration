@@ -48,7 +48,7 @@ export function expandISBNs(input: IdList): IdList {
   }
 
   if (input.isbn10) input.isbn10.padStart(10, '0');
-  if (input.asin && asin.isIsbn10(input.asin))
+  if (input.asin && asin.isISBN(input.asin))
     input.asin = input.asin.padStart(10, '0');
   return input;
 }

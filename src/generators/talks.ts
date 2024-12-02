@@ -1,7 +1,7 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import {  TalkSchema } from "@eatonfyi/schema";
-import { isEmpty } from "emptier";
+import { TalkSchema } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { isEmpty } from 'emptier';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
 const defaults: MigratorOptions = {
   name: 'talks',

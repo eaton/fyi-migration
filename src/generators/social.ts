@@ -1,10 +1,10 @@
-import { Migrator, MigratorOptions } from "../shared/index.js";
-import { aql } from "arangojs";
-import { getId, SocialMediaPostingSchema } from "@eatonfyi/schema";
+import { getId, SocialMediaPostingSchema } from '@eatonfyi/schema';
+import { aql } from 'arangojs';
+import { Migrator, MigratorOptions } from '../shared/index.js';
 
 export interface SocialGeneratorOptions extends MigratorOptions {
-  threadMinLength?: number,
-  singleMinFavorites?: number,
+  threadMinLength?: number;
+  singleMinFavorites?: number;
 }
 
 const defaults: SocialGeneratorOptions = {
@@ -12,12 +12,12 @@ const defaults: SocialGeneratorOptions = {
   description: 'Popular tweets and long threads',
   output: 'src/social',
   threadMinLength: 5,
-  singleMinFavorites: 50
+  singleMinFavorites: 50,
 };
 
 export class SocialGenerator extends Migrator {
   declare options: SocialGeneratorOptions;
-  
+
   constructor(options: SocialGeneratorOptions = {}) {
     super({ ...defaults, ...options });
   }

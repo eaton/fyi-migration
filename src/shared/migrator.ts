@@ -13,10 +13,10 @@ import {
   Frontmatter,
   Json,
   Json5,
+  JsonDateReviver,
   NdJson,
   Tsv,
   Yaml,
-  jsonDateParser,
 } from '@eatonfyi/serializers';
 import { toSlug } from '@eatonfyi/text';
 import 'dotenv/config';
@@ -159,9 +159,9 @@ export class Migrator {
     this.options = merge(defaults, options);
 
     // Auto-serialize and deserilalize data for filenames with these suffixes
-    jetpack.setSerializer('.json', new Json(jsonDateParser, 2));
-    jetpack.setSerializer('.ndjson', new NdJson(jsonDateParser));
-    jetpack.setSerializer('.json5', new Json5(jsonDateParser, 2));
+    jetpack.setSerializer('.json', new Json(JsonDateReviver, 2));
+    jetpack.setSerializer('.ndjson', new NdJson(JsonDateReviver));
+    jetpack.setSerializer('.json5', new Json5(JsonDateReviver, 2));
     jetpack.setSerializer('.csv', new Csv());
     jetpack.setSerializer('.tsv', new Tsv());
     jetpack.setSerializer('.yaml', new Yaml());
@@ -369,6 +369,9 @@ export class Migrator {
       this.log.debug(`Wrote ${input.id} to ${filename}`);
     } else if (storage === 'arango') {
       await this.arango.set(input);
+      if (input.id === 'post.t327482764192538626') {
+        console.log(input);
+      }
       this.log.debug(`Saved ${input.id}`);
     } else {
       this.data.bucket(input.type.toLocaleLowerCase()).set(input);

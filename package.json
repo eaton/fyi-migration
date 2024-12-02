@@ -1,7 +1,7 @@
 {
   "name": "fyi-migration",
   "version": "1.0.0",
-  "description": "Migration code for eaton.fyi.",
+  "description": "Migration code for eaton.fyi",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -27,6 +27,7 @@
     "lint-and-fix": "eslint . --fix",
     "prepare": "npm run build",
     "summarize": "node --import=tsimp ./src/scripts/summarize.ts",
+    "fixhtml": "node --import=tsimp ./src/scripts/fix-book-hashes.ts",
     "migrate": "node --import=tsimp ./src/scripts/migrate.ts",
     "scratchpad": "node --import=tsimp ./src/scripts/scratchpad.ts",
     "generate": "node --import=tsimp ./src/scripts/generate.ts",
@@ -48,7 +49,7 @@
     "prettier": "^3.2.5",
     "prettier-plugin-organize-imports": "^3.2.4",
     "shx": "^0.3.4",
-    "tsimp": "^2.0.11",
+    "tsimp": "^2.0.12",
     "typescript-eslint": "^7.9.0"
   },
   "dependencies": {

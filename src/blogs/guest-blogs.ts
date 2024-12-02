@@ -10,7 +10,6 @@ const defaults: MigratorOptions = {
 };
 
 export class GuestBlogMigrator extends Migrator {
-
   constructor(options: MigratorOptions = {}) {
     super({ ...defaults, ...options });
   }
@@ -43,7 +42,7 @@ export class GuestBlogMigrator extends Migrator {
       });
 
       if (post.success) {
-        await this.saveThing(post.data)
+        await this.saveThing(post.data);
       } else {
         this.log.error(post.error, `Could not parse blog post`);
         continue;

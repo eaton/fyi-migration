@@ -1,18 +1,20 @@
+import { aql } from 'arangojs';
 import 'dotenv/config';
-import { aql } from "arangojs";
+import ollama from 'ollama';
 import { ArangoDB } from '../shared/arango.js';
-import ollama from 'ollama'
 
 export interface SummarizerOptions {
-  model?: string,
-  titlePrompt?: string,
-  summaryPrompt?: string,
+  model?: string;
+  titlePrompt?: string;
+  summaryPrompt?: string;
 }
 
 const defaults: Required<SummarizerOptions> = {
-  model: "llama3.1",
-  titlePrompt: "Summarize the following text in a single phrase, using the voice and tone of the text itself. ONLY reply with the summary itself, do not explain your reasoning or offer any other comments.\n\n",
-  summaryPrompt: "You are the author of a blog reviewing a post before publishing it. When provided with text, you will write an 2-3 sentence summary of the post written in the first-person voice that describes its key themes. ONLY reply with the summary itself, do not explain your reasoning or offer any other comments."
+  model: 'llama3.1',
+  titlePrompt:
+    'Summarize the following text in a single phrase, using the voice and tone of the text itself. ONLY reply with the summary itself, do not explain your reasoning or offer any other comments.\n\n',
+  summaryPrompt:
+    'You are the author of a blog reviewing a post before publishing it. When provided with text, you will write an 2-3 sentence summary of the post written in the first-person voice that describes its key themes. ONLY reply with the summary itself, do not explain your reasoning or offer any other comments.',
 };
 
 export class ThingSummarizer {
@@ -44,7 +46,7 @@ export class ThingSummarizer {
       const title = await ollama.generate({
         model: this.opt.model,
         system: this.opt.titlePrompt,
-        prompt: i.text
+        prompt: i.text,
       });
       //const summary = await ollama.generate({
       //  model: this.opt.model,
