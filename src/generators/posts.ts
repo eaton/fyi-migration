@@ -27,7 +27,7 @@ export class PostGenerator extends Migrator {
         .filter((i: unknown) => i !== undefined),
     );
 
-    const collection = this.arango.collection('works');
+    const collection = this.arango.collection('things');
     const q = aql`FOR w in ${collection}
     FILTER w.type == 'BlogPosting'
     RETURN UNSET(w, '_id', '_key', '_rev')`;

@@ -26,7 +26,7 @@ export class CommentGenerator extends Migrator {
       }
     });
 
-    const collection = this.arango.collection('works');
+    const collection = this.arango.collection('things');
     const q = aql`FOR w in ${collection}
     FILTER w.type == 'Comment'
     FILTER w.about != null

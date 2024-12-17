@@ -23,8 +23,6 @@ export class ThingGenerator extends Migrator {
 
   override async finalize() {
     await this.writeGroupedCollectionData('things');
-    await this.writeGroupedCollectionData('products');
-    await this.writeGroupedCollectionData('events');
   }
 
   async writeGroupedCollectionData(name: string) {

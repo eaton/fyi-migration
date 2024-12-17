@@ -19,7 +19,7 @@ export class ArticleGenerator extends Migrator {
   }
 
   override async finalize() {
-    const collection = this.arango.collection('works');
+    const collection = this.arango.collection('things');
     const q = aql`FOR w in ${collection}
     FILTER w.type == 'Article'
     RETURN UNSET(w, '_id', '_key', '_rev')`;

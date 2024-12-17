@@ -196,14 +196,13 @@ export class ArangoDB extends Database {
   }
 
   async initialize() {
-    await Promise.all(listCollections().map(d => this.ensureCollection(d)));
-
     // General use collections that aren't explicit entities
     await this.ensureCollection('text');
-    await this.ensureCollection('urls');
 
     // The big ol bucket of connections
     await this.ensureEdgeCollection('relations');
+
+    await Promise.all(listCollections().map(d => this.ensureCollection(d)));
   }
 
   async reset(confirm: () => Promise<boolean>) {
@@ -211,16 +210,15 @@ export class ArangoDB extends Database {
       throw new Error('Cannot reset the database without a confirm function.');
     }
 
-    await Promise.all(
-      listCollections().map(d => this.collection(d).truncate()),
-    );
-
     // General use collections that aren't explicit entities
     await this.collection('text').truncate();
-    await this.collection('urls').truncate();
 
     // The big ol bucket of connections
     await this.collection('relations').truncate();
+
+    await Promise.all(
+      listCollections().map(d => this.collection(d).truncate()),
+    );
   }
 
   getId(item: string | Thing) {
