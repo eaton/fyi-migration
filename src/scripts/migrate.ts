@@ -22,6 +22,7 @@ export class MigrateEverything extends Migrator {
     await new BookMigrator({ logger: this.log }).run();
     await new AllDatasetsMigrator({ logger: this.log }).run();
     await new AllWorkMigrator({ logger: this.log }).run();
+
     return;
   }
 }

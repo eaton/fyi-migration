@@ -2,6 +2,7 @@ import { isAfter, isBefore } from '@eatonfyi/dates';
 import { autop, toMarkdown } from '@eatonfyi/html';
 import { lja, parseCutTag, parseUserTags } from '@eatonfyi/ljarchive';
 import {
+  BookmarkSchema,
   Comment,
   CommentSchema,
   CreativeWorkSchema,
@@ -15,12 +16,17 @@ export interface LivejournalMigrateOptions extends BlogMigratorOptions {
   ignoreBefore?: Date;
   ignoreAfter?: Date;
   ignoreComments?: boolean;
+  saveLinks?: boolean,
+
 }
+import { NormalizedUrl } from '@eatonfyi/urls';
+import { prepUrlForBookmark } from '../../util/clean-link.js';
 
 const defaults: LivejournalMigrateOptions = {
   name: 'lj',
   label: "Predicate's Livejournal",
   description: 'Posts, comments, and images from Livejournal',
+  saveLinks: true,
   ignoreBefore: new Date('2001-06-01'),
   input: 'input/blogs/livejournal',
   cache: 'cache/blogs/livejournal',
@@ -127,6 +133,32 @@ export class LivejournalMigrator extends BlogMigrator {
     await this.saveThing(lj);
 
     for (const e of this.entries) {
+      // Match links
+      if (e.text) {
+        const fullLink = /\[([\w\s\d]+)\]\((http.?:\/\/[\w\d./?=#]+)\)/g;
+        const matches = e.text.matchAll(fullLink);
+        for (let [ full, text, url ] of matches) {
+          // lowercase one-word titles are a bad sign; wipe out the title and hope for the best.
+          if (text && text.indexOf(' ') === -1 && text.toLocaleLowerCase() === text){
+            text = '';
+          }
+
+          if (URL.canParse(url)) {
+            const u = new NormalizedUrl(url);
+            if (u.isIp || u.domain === 'livejournal.com') continue;
+            
+            const b =  BookmarkSchema.parse({
+              ...prepUrlForBookmark(u),
+              date: e.date,
+              name: text?.length < 80 ? text : undefined,
+              description: text?.length >= 80 ? text : undefined,
+              isPartOf: toId('blog', 'livejournal'),
+            });
+            await this.saveThing(b);
+          }
+        }
+      }
+
       await this.saveThing(e);
 
       if (this.comments[e.id] && this.comments[e.id].length) {

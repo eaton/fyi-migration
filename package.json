@@ -29,6 +29,7 @@
     "summarize": "node --import=tsimp ./src/scripts/summarize.ts",
     "fixhtml": "node --import=tsimp ./src/scripts/fix-book-hashes.ts",
     "migrate": "node --import=tsimp ./src/scripts/migrate.ts",
+    "raindrop": "node --import=tsimp ./src/scripts/raindrop.ts",
     "scratchpad": "node --import=tsimp ./src/scripts/scratchpad.ts",
     "generate": "node --import=tsimp ./src/scripts/generate.ts",
     "thumbs": "node --import=tsimp ./src/scripts/thumbnails.ts",
