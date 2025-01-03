@@ -22,7 +22,7 @@ export class FuturismMigrator extends BlogMigrator {
       const parsed = await extract(html, template, schema);
 
       const post = CreativeWorkSchema.parse({
-        type: 'BlogPosting',
+        type: 'post',
         id: toId('post', 'tp-' + parsed.id),
         name: parsed.name.trim(),
         date: parsed.date,
